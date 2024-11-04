@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Song } from '../utils/types';
 import SongCard from './SongCard';
+import '../styles/SongList.css';
 
 const SongList: React.FC = () => {
   const [songs, setSongs] = useState<Song[]>([]);
@@ -13,7 +14,7 @@ const SongList: React.FC = () => {
   }, []);
 
   return (
-    <div className="song-list">
+    <div className="songList">
       <h2>Available Songs</h2>
       {songs.map(song => (
         <SongCard key={song._id} song={song} />

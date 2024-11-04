@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import SongList from './components/SongList';
 import SongDetail from './components/SongDetails';
 import SongPlayer from './components/SongPlayer';
+import './App.css';
 
 const App: React.FC = () => {
   return (

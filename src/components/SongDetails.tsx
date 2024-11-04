@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Song } from '../utils/types';
+import '../styles/SongDetail.css';
 
 const SongDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +17,7 @@ const SongDetail: React.FC = () => {
   if (!song) return <div>Loading...</div>;
 
   return (
-    <div className="song-detail">
+    <div className="songDetail">
       <h2>{song.title} by {song.artist}</h2>
       <audio controls src={song.audioUrl}>
         Your browser does not support the audio element.

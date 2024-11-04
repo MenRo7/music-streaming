@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import '../styles/SongPlayer.css';
 
 interface SongPlayerProps {
   audioUrl: string;
@@ -17,7 +18,7 @@ const SongPlayer: React.FC<SongPlayerProps> = ({ audioUrl }) => {
   };
 
   return (
-    <div className="song-player">
+    <div className="songPlayer">
       <button onClick={togglePlay}>
         {isPlaying ? 'Pause' : 'Play'}
       </button>
