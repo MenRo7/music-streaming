@@ -1,26 +1,28 @@
-/* SongPlayer.css */
-.songPlayer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    border-top: 1px solid #7b4fb1;
-    background-color: #5e2d91;
-  }
-  
-  .songPlayer button {
-    font-size: 1.2rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    background-color: #7b4fb1;
-    color: #f3f0ff;
-    transition: background-color 0.3s;
-  }
-  
-  .songPlayer button:hover {
-    background-color: #d1b3ff;
-    color: #5e2d91;
-  }
-  
+.song-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: black;
+  z-index: 1000;
+}
+
+.song-player button {
+  font-size: 1.2rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #4f4c52;
+  color: #f3f0ff;
+  transition: background-color 0.3s;
+}
+
+.song-player button:hover {
+  background-color: #d1b3ff;
+  color: #5e2d91;
+}

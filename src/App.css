@@ -1,8 +1,6 @@
-/* App.module.css */
 .app {
-  font-family: Arial, sans-serif;
-  color: #f3f0ff;
-  background-color: #5e2d91;
-  padding: 20px;
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: black;
 }

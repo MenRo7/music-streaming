@@ -18,7 +18,7 @@ const SongPlayer: React.FC<SongPlayerProps> = ({ audioUrl }) => {
   };
 
   return (
-    <div className="songPlayer">
+    <div className="song-player">
       <button onClick={togglePlay}>
         {isPlaying ? 'Pause' : 'Play'}
       </button>
