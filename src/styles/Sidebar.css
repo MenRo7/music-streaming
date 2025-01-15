@@ -45,9 +45,31 @@
   color: #5e2d91;
 }
 
+.link-button.active {
+  background-color: white;
+  color: black;
+}
+
 .playlist-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   padding: 10px;
+}
+
+.reset-filters {
+  position: absolute;
+  top: 25px;
+  left: 15px;
+  cursor: pointer;
+}
+
+.filter-clear-icon {
+  color: white;
+  font-size: 1.5rem;
+  display: flex;
+}
+
+.reset-filters:hover .filter-clear-icon {
+  color: #5e2d91;
 }

@@ -1,14 +1,16 @@
 .main-content {
-    position: fixed;
-    top: 90px;
-    bottom: 75px;
-    right: 5px;
-    width: 1500px;
-    background-color: #252525;
-    color: #f3f0ff;
-    z-index: 1000;
-    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    border-radius: 5px;
-  }
+  position: fixed;
+  top: 90px;
+  bottom: 75px;
+  left: 415px;
+  width: calc(100% - 420px);
+  max-width: 1500px;
+  background-color: #252525;
+  color: #f3f0ff;
+  z-index: 1000;
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}

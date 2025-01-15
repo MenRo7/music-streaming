@@ -12,9 +12,6 @@ const App: React.FC = () => (
       <Navbar />
       <Sidebar />
       <MainContent />
-      <main>
-
-      </main>
       <SongPlayer audioUrl="" />
     </div>
   </Router>
