@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 import PlaylistCard from './PlaylistCard';
@@ -61,10 +62,18 @@ const Sidebar: React.FC = () => {
         </ul>
       </nav>
       <div className="playlist-grid">
-        <PlaylistCard title="Playlist 1" imageUrl="wilted.png" />
-        <PlaylistCard title="Playlist 2" imageUrl="krnge.png" />
-        <PlaylistCard title="Playlist 3" imageUrl="punk.png" />
-        <PlaylistCard title="Playlist 4" />
+        <Link to="/playlist/1">
+          <PlaylistCard title="Playlist 1" imageUrl="/wilted.png" />
+        </Link>
+        <Link to="/playlist/2">
+          <PlaylistCard title="Playlist 2" imageUrl="/krnge.png" />
+        </Link>
+        <Link to="/playlist/3">
+          <PlaylistCard title="Playlist 3" imageUrl="/punk.png" />
+        </Link>
+        <Link to="/playlist/4">
+          <PlaylistCard title="Playlist 4" />
+        </Link>
       </div>
     </div>
   );
