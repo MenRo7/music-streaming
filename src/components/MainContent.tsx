@@ -5,14 +5,14 @@ import '../styles/MainContent.css';
 import ProfilePage from '../pages/ProfilePage';
 
 const MainContent: React.FC = () => {
-    return (
-        <div className='main-content'>
-            <Routes>
-                <Route path="/playlist/:id" element={<PlaylistPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-            </Routes>
-        </div>
-    );
+  return (
+    <div className='main-content'>
+      <Routes>
+        <Route path="/playlist/:id" element={<PlaylistPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+      </Routes>
+    </div>
+  );
 };
 
 export default MainContent;

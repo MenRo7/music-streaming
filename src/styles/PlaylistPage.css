@@ -1,71 +1,71 @@
 .playlist-page {
-    padding: 20px;
+  padding: 20px;
 }
 
 .playlist-header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-bottom: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .playlist-page-image {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 5px;
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
 }
 
 h1 {
-    font-size: 2rem;
-    color: #f3f0ff;
-    margin: 0;
-    margin-left: 20px;
+  font-size: 2rem;
+  color: #f3f0ff;
+  margin: 0;
+  margin-left: 20px;
 }
 
 .playlist-controls {
-    display: flex;
-    justify-content: start;
-    gap: 20px;
-    margin-top: 10px;
+  display: flex;
+  justify-content: start;
+  gap: 20px;
+  margin-top: 10px;
 }
 
 .control-icon {
-    font-size: 2rem;
-    color: white;
-    cursor: pointer;
-    transition: color 0.3s;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  transition: color 0.3s;
 }
 
 .control-icon:hover {
-    color: #5e2d91;
+  color: #5e2d91;
 }
 
 .burger-menu {
-    margin-left: auto;
+  margin-left: auto;
 }
 
 .song-table {
-    width: 100%;
-    margin-top: 20px;
-    border-collapse: collapse;
-    color: #f3f0ff;
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  color: #f3f0ff;
 }
 
 .song-table th, .song-table td {
-    padding: 12px;
-    text-align: left;
+  padding: 12px;
+  text-align: left;
 }
 
 .song-table th {
-    background-color: #333;
-    color: #fff;
+  background-color: #333;
+  color: #fff;
 }
 
 .song-table tr:hover {
-    background-color: #555;
+  background-color: #555;
 }
 
 .song-table td {
-    border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
 }
