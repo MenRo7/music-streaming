@@ -9,7 +9,9 @@ import { playlists } from '../utils/constants';
 const PlaylistPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const playlistId = parseInt(id || '', 10);
-    const playlist = playlists[playlistId];
+    const playlist = playlists[playlistId-1];
+
+    console.log(playlists);
 
     if (!playlist) {
         return <div className="playlist-page">Playlist not found</div>;

@@ -5,6 +5,8 @@ import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 import PlaylistCard from './PlaylistCard';
 import '../styles/Sidebar.css';
 
+import { playlists } from '../utils/constants';
+
 const Sidebar: React.FC = () => {
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
 
@@ -61,19 +63,13 @@ const Sidebar: React.FC = () => {
           </li>
         </ul>
       </nav>
+
       <div className="playlist-grid">
-        <Link to="/playlist/1">
-          <PlaylistCard title="Playlist 1" imageUrl="/wilted.png" />
-        </Link>
-        <Link to="/playlist/2">
-          <PlaylistCard title="Playlist 2" imageUrl="/krnge.png" />
-        </Link>
-        <Link to="/playlist/3">
-          <PlaylistCard title="Playlist 3" imageUrl="/punk.png" />
-        </Link>
-        <Link to="/playlist/4">
-          <PlaylistCard title="Playlist 4" />
-        </Link>
+        {playlists.map((playlist) => (
+          <Link key={playlist.id} to={`/playlist/${playlist.id}`}>
+            <PlaylistCard title={playlist.title} imageUrl={playlist.imageUrl || '/default-image.png'} />
+          </Link>
+        ))}
       </div>
     </div>
   );
