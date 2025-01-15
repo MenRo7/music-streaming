@@ -1,0 +1,121 @@
+.profile-page {
+    padding: 20px;
+    color: #f3f0ff;
+    background-color: #252525;
+    overflow-y: auto;
+    height: 100vh;
+  }
+  
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 40px;
+    background-color: #121212;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .profile-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #5e2d91;
+  }
+  
+  .profile-info h1 {
+    font-size: 2rem;
+    margin: 0;
+    color: #f3f0ff;
+  }
+  
+  .profile-info p {
+    font-size: 1rem;
+    margin: 5px 0 0;
+    color: #aaa;
+  }
+  
+  .profile-menu-icon {
+    font-size: 1.5rem;
+    color: #f3f0ff;
+    margin-left: auto;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+  
+  .profile-menu-icon:hover {
+    color: #5e2d91;
+  }
+  
+  .profile-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  
+  .stat-card {
+    background-color: #121212;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    flex: 1;
+  }
+  
+  .stat-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  
+  .top-section {
+    margin-bottom: 40px;
+    background-color: #121212;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .top-section h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  
+  .top-artists, .top-albums, .public-playlists {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .artist-card, .album-card, .playlists-card {
+    text-align: center;
+    flex: 0 1 calc(20% - 20px);
+    background-color: #1e1e1e;
+    padding: 10px;
+    border-radius: 8px;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .artist-card img, .album-card img, .playlists-card img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+  
+  .artist-card p, .album-card p, .playlists-card p {
+    margin: 5px 0;
+    font-size: 1rem;
+    color: #f3f0ff;
+  }
+  
+  .album-card div p:last-child, .playlists-card div p:last-child {
+    font-size: 0.9rem;
+    color: #aaa;
+  }
+  
+  .artist-card:hover, .album-card:hover, .playlists-card:hover {
+    transform: scale(1.05);
+  }
+  
