@@ -1,9 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import SongPlayer from './components/SongPlayer';
-import MainContent from './components/MainContent';
+import PlaylistPage from './pages/PlaylistPage';
+import ProfilePage from './pages/ProfilePage';
+
 import './App.css';
 
 const App: React.FC = () => (
@@ -11,7 +13,10 @@ const App: React.FC = () => (
     <div className="app">
       <Navbar />
       <Sidebar />
-      <MainContent />
+      <Routes>
+        <Route path="/playlist/:id" element={<PlaylistPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+      </Routes>
       <SongPlayer audioUrl="" />
     </div>
   </Router>
