@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import SongPlayer from './components/SongPlayer';
 import PlaylistPage from './pages/PlaylistPage';
 import ProfilePage from './pages/ProfilePage';
+import MainPage from './pages/MainPage';
 
 import './App.css';
 
@@ -16,6 +17,7 @@ const App: React.FC = () => (
       <Routes>
         <Route path="/playlist/:id" element={<PlaylistPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/" element={<MainPage />} />
       </Routes>
       <SongPlayer audioUrl="" />
     </div>
