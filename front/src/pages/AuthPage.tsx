@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import { AuthContext } from '../apis/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../styles/AuthPage.css';
 
 const AuthPage: React.FC = () => {
@@ -7,11 +10,42 @@ const AuthPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const { login, user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/main');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setError('');
+
     if (isRegistering && password !== confirmPassword) {
-      alert('Les mots de passe ne correspondent pas');
+      setError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    try {
+      if (isRegistering) {
+        await axios.post('http://localhost:8000/api/register', {
+          name: username,
+          email,
+          password,
+        });
+
+        await login(email, password);
+      } else {
+        await login(email, password);
+      }
+
+      navigate('/main');
+    } catch (err) {
+      setError('Erreur lors de l\'authentification. Vérifiez vos informations.');
     }
   };
 
@@ -19,6 +53,9 @@ const AuthPage: React.FC = () => {
     <div className="auth-page">
       <div className="auth-container">
         <h2>{isRegistering ? 'Créer un compte' : 'Se connecter'}</h2>
+
+        {error && <p className="error-message">{error}</p>}
+
         <form onSubmit={handleSubmit}>
           {isRegistering && (
             <div className="input-group">
@@ -33,6 +70,7 @@ const AuthPage: React.FC = () => {
               />
             </div>
           )}
+
           <div className="input-group">
             <label htmlFor="email">Email</label>
             <input
@@ -44,6 +82,7 @@ const AuthPage: React.FC = () => {
               required
             />
           </div>
+
           <div className="input-group">
             <label htmlFor="password">Mot de passe</label>
             <input
@@ -55,6 +94,7 @@ const AuthPage: React.FC = () => {
               required
             />
           </div>
+
           {isRegistering && (
             <div className="input-group">
               <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
@@ -68,8 +108,10 @@ const AuthPage: React.FC = () => {
               />
             </div>
           )}
+
           <button type="submit">{isRegistering ? 'S\'inscrire' : 'Se connecter'}</button>
         </form>
+
         <p>
           {isRegistering ? (
             <>

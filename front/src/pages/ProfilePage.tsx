@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisH } from '@fortawesome/free-solid-svg-icons';
+import { useNavigate } from 'react-router-dom';
 import '../styles/ProfilePage.css';
 import { userStats, playlists } from '../utils/constants';
 
 const ProfilePage: React.FC = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const handleEditProfile = () => {
+    navigate('/edit-profile');
+  };
+
   return (
     <div className='main-content'>
       <div className="profile-page">
@@ -14,10 +26,18 @@ const ProfilePage: React.FC = () => {
             <h1>Mon Profil</h1>
             <p>Nom d'utilisateur</p>
           </div>
-          <FontAwesomeIcon
-            icon={faEllipsisH}
-            className="profile-menu-icon"
-          />
+          <div className="menu-container">
+            <FontAwesomeIcon
+              icon={faEllipsisH}
+              className="profile-menu-icon"
+              onClick={toggleMenu}
+            />
+            {menuOpen && (
+              <div className="dropdown-menu">
+                <button onClick={handleEditProfile}>Modifier le profil</button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="profile-stats">

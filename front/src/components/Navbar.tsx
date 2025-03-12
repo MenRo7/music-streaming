@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome } from '@fortawesome/free-solid-svg-icons';
+import { AuthContext } from '../apis/AuthContext';
 import '../styles/Navbar.css';
 
 const userProfileImageUrl = '/joker.png';
@@ -10,6 +11,8 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const profileImageRef = useRef<HTMLImageElement>(null);
+  const { logout } = useContext(AuthContext);  // Récupère la fonction logout depuis le contexte
+  const navigate = useNavigate();  // Utilise useNavigate pour rediriger après déconnexion
 
   const toggleMenu = () => {
     setIsMenuOpen((prev) => !prev);
@@ -32,13 +35,22 @@ const Navbar: React.FC = () => {
     };
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/auth');
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion", error);
+    }
+  };
+
   return (
     <div className="navbar-container">
       <nav className="navbar">
         <img src="/logo.png" alt="logo" className="navbar-logo" />
         <ul>
           <li>
-            <Link to="/">
+            <Link to="/main">
               <FontAwesomeIcon icon={faHome} />
             </Link>
           </li>
@@ -66,9 +78,7 @@ const Navbar: React.FC = () => {
                   <li>
                     <button
                       className="dropdown-item"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                      }}
+                      onClick={handleLogout}  // Appelle la fonction de déconnexion
                     >
                       Déconnexion
                     </button>
