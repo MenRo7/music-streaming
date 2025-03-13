@@ -12,14 +12,12 @@ const AuthPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
-  const { login, user } = useContext(AuthContext);
+  const { login, token } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/main');
-    }
-  }, [user, navigate]);
+    if (token) navigate('/main');
+  }, [token, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -42,8 +40,6 @@ const AuthPage: React.FC = () => {
       } else {
         await login(email, password);
       }
-
-      navigate('/main');
     } catch (err) {
       setError('Erreur lors de l\'authentification. Vérifiez vos informations.');
     }
@@ -63,7 +59,6 @@ const AuthPage: React.FC = () => {
               <input
                 type="text"
                 id="username"
-                placeholder="Entrez votre nom d'utilisateur"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -76,7 +71,6 @@ const AuthPage: React.FC = () => {
             <input
               type="email"
               id="email"
-              placeholder="Entrez votre email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -88,7 +82,6 @@ const AuthPage: React.FC = () => {
             <input
               type="password"
               id="password"
-              placeholder="Entrez votre mot de passe"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -101,7 +94,6 @@ const AuthPage: React.FC = () => {
               <input
                 type="password"
                 id="confirmPassword"
-                placeholder="Confirmez votre mot de passe"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -109,24 +101,14 @@ const AuthPage: React.FC = () => {
             </div>
           )}
 
-          <button type="submit">{isRegistering ? 'S\'inscrire' : 'Se connecter'}</button>
+          <button type="submit">{isRegistering ? "S'inscrire" : "Se connecter"}</button>
         </form>
 
         <p>
           {isRegistering ? (
-            <>
-              Vous avez déjà un compte ?{' '}
-              <span className="toggle-link" onClick={() => setIsRegistering(false)}>
-                Se connecter
-              </span>
-            </>
+            <>Vous avez déjà un compte ? <span className="toggle-link" onClick={() => setIsRegistering(false)}>Se connecter</span></>
           ) : (
-            <>
-              Vous n'avez pas de compte ?{' '}
-              <span className="toggle-link" onClick={() => setIsRegistering(true)}>
-                S'inscrire
-              </span>
-            </>
+            <>Vous n'avez pas de compte ? <span className="toggle-link" onClick={() => setIsRegistering(true)}>S'inscrire</span></>
           )}
         </p>
       </div>

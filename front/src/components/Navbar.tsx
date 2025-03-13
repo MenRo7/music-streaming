@@ -11,8 +11,8 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const profileImageRef = useRef<HTMLImageElement>(null);
-  const { logout } = useContext(AuthContext);  // Récupère la fonction logout depuis le contexte
-  const navigate = useNavigate();  // Utilise useNavigate pour rediriger après déconnexion
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen((prev) => !prev);
@@ -78,7 +78,7 @@ const Navbar: React.FC = () => {
                   <li>
                     <button
                       className="dropdown-item"
-                      onClick={handleLogout}  // Appelle la fonction de déconnexion
+                      onClick={handleLogout}
                     >
                       Déconnexion
                     </button>
