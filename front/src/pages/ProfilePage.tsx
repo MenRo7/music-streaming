@@ -73,9 +73,8 @@ const ProfilePage: React.FC = () => {
           src={user?.profile_image}
           alt="User Profile"
         />
-                  <div className="profile-info">
-            <h1>Mon Profil</h1>
-            <p>{user?.name}</p>
+          <div className="profile-info">
+            <h1>{user?.name}</h1>
           </div>
           <div className="menu-container">
             <FontAwesomeIcon
@@ -84,7 +83,7 @@ const ProfilePage: React.FC = () => {
               onClick={toggleMenu}
             />
             {menuOpen && (
-              <div className="dropdown-menu">
+              <div className="dropdown-menu-profile">
                 <button onClick={handleEditProfile}>Modifier le profil</button>
               </div>
             )}

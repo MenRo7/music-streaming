@@ -67,6 +67,41 @@
     margin: 5px 0 0;
     color: #aaa;
   }
+
+  .menu-container {
+    position: relative;
+  }
+
+  .dropdown-menu-profile {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #252525;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    padding: 10px 0;
+    min-width: 180px;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  
+  .dropdown-menu-profile button {
+    background-color: transparent;
+    color: #f3f0ff;
+    font-size: 1rem;
+    padding: 10px 20px;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .dropdown-menu-profile button:hover {
+    background-color: #5e2d91;
+  }
   
   .profile-menu-icon {
     font-size: 1.5rem;
