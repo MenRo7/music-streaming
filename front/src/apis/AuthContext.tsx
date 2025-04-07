@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       await axios.post(
-        'http://localhost:8000/api/logout',
+        `${API_URL}/logout`,
         {},
         {
           withCredentials: true,

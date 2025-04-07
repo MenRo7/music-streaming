@@ -1,7 +1,9 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { AuthContext } from '../apis/AuthContext';
 import { useNavigate } from 'react-router-dom';
+
 import axios from 'axios';
+import { AuthContext } from '../apis/AuthContext';
+
 import '../styles/AuthPage.css';
 
 const AuthPage: React.FC = () => {

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
+import { AuthContext } from '../apis/AuthContext';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome } from '@fortawesome/free-solid-svg-icons';
-import { AuthContext } from '../apis/AuthContext';
+
 import '../styles/Navbar.css';
 
 const userProfileImageUrl = '/joker.png';
