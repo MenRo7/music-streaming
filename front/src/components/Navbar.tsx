@@ -17,7 +17,7 @@ const Navbar: React.FC = () => {
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const toggleMenu = () => {
+  const handleMenu = () => {
     setIsMenuOpen((prev) => !prev);
   };
 
@@ -63,7 +63,7 @@ const Navbar: React.FC = () => {
               alt="User Profile"
               className="navbar-profile-image"
               ref={profileImageRef}
-              onClick={toggleMenu}
+              onClick={handleMenu}
             />
             {isMenuOpen && (
               <div className="dropdown-menu" ref={menuRef}>

@@ -52,11 +52,11 @@ const ProfilePage: React.FC = () => {
     setMenuOpen(!menuOpen);
   };
 
-  const handleEditProfile = () => {
+  const openProfileModal = () => {
     setIsModalOpen(true);
   };
 
-  const closeModal = () => {
+  const closeProfileModal = () => {
     setIsModalOpen(false);
   };
 
@@ -84,7 +84,7 @@ const ProfilePage: React.FC = () => {
             />
             {menuOpen && (
               <div className="dropdown-menu-profile">
-                <button onClick={handleEditProfile}>Modifier le profil</button>
+                <button onClick={openProfileModal}>Modifier le profil</button>
               </div>
             )}
           </div>
@@ -142,7 +142,7 @@ const ProfilePage: React.FC = () => {
         {isModalOpen && (
           <EditProfileModal
             isOpen={isModalOpen}
-            closeModal={closeModal}
+            closeModal={closeProfileModal}
             user={user}
             onProfileUpdate={handleProfileUpdate}
           />
