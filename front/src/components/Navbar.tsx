@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
+import { AuthContext } from '../apis/AuthContext';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome } from '@fortawesome/free-solid-svg-icons';
-import { AuthContext } from '../apis/AuthContext';
+
 import '../styles/Navbar.css';
 
 const userProfileImageUrl = '/joker.png';
@@ -14,7 +17,7 @@ const Navbar: React.FC = () => {
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const toggleMenu = () => {
+  const handleMenu = () => {
     setIsMenuOpen((prev) => !prev);
   };
 
@@ -60,7 +63,7 @@ const Navbar: React.FC = () => {
               alt="User Profile"
               className="navbar-profile-image"
               ref={profileImageRef}
-              onClick={toggleMenu}
+              onClick={handleMenu}
             />
             {isMenuOpen && (
               <div className="dropdown-menu" ref={menuRef}>

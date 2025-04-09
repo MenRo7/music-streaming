@@ -16,7 +16,7 @@ const PlaylistPage: React.FC = () => {
   }
 
   return (
-    <div className='main-content'>
+    <div className='playlist-content'>
       <div className="playlist-page">
         <div className="playlist-header">
             <img className="playlist-page-image" src={playlist.imageUrl} alt={playlist.title} />

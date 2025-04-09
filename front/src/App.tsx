@@ -24,6 +24,8 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
 
+            <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
+
             <Route path="/playlist/:id" element={<PrivateRoute element={
               <>
                 <Navbar />
