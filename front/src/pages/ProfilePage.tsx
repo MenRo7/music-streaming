@@ -65,7 +65,7 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="main-content">
+    <div className="profile-content">
       <div className="profile-page">
         <div className="profile-header">
         <img

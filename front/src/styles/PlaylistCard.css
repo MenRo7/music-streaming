@@ -14,6 +14,24 @@
   transition: transform 0.2s ease;
 }
 
+@media (max-width: 625px) {
+  .playlist-card {
+    width: 90px;
+    height: 90px;
+    background-color: #4f4c52;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+  }
+}
+
 .playlist-card:hover {
   transform: scale(1.05);
 }
