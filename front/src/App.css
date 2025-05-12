@@ -1,0 +1,10 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: black;
+}
+
+* {
+  font-family: 'Roboto', sans-serif;
+}
