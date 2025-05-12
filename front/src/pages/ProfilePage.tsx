@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { fetchUser } from "../apis/UserService";
 
 import EditProfileModal from "../components/EditProfileModal";
+import DropdownMenu from "../components/DropdownMenu";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisH } from "@fortawesome/free-solid-svg-icons";
@@ -42,10 +43,6 @@ const ProfilePage: React.FC = () => {
     };
   }, [menuOpen]);
 
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
-
   const openProfileModal = () => {
     setIsModalOpen(true);
   };
@@ -70,20 +67,21 @@ const ProfilePage: React.FC = () => {
           <div className="profile-info">
             <h1>{user?.name}</h1>
           </div>
-          <div className="menu-container">
-            <FontAwesomeIcon
-              icon={faEllipsisH}
-              className="profile-menu-icon"
-              onClick={toggleMenu}
-            />
-            {menuOpen && (
-              <div className="dropdown-menu-profile">
-                <button onClick={openProfileModal}>Modifier le profil</button>
-              </div>
-            )}
-          </div>
+          <DropdownMenu
+            trigger={
+              <FontAwesomeIcon
+                icon={faEllipsisH}
+                className="profile-menu-icon"
+              />
+            }
+            items={[
+              {
+                label: "Modifier le profil",
+                onClick: openProfileModal,
+              },
+            ]}
+          />
         </div>
-
         <div className="profile-stats">
           <div className="stat-card">
             <h2>Heures d'écoute</h2>
@@ -106,7 +104,6 @@ const ProfilePage: React.FC = () => {
             ))}
           </div>
         </div>
-
         <div className="top-section">
           <h2>Top Albums du Mois</h2>
           <div className="top-albums">
@@ -121,7 +118,6 @@ const ProfilePage: React.FC = () => {
             ))}
           </div>
         </div>
-
         <div className="top-section">
           <h2>Playlists Publiques</h2>
           <div className="public-playlists">

@@ -8,6 +8,14 @@ interface PlaylistContextType {
 
 const PlaylistContext = createContext<PlaylistContextType | undefined>(undefined);
 
+export const usePlaylists = (): PlaylistContextType => {
+  const context = useContext(PlaylistContext);
+  if (!context) {
+    throw new Error('usePlaylists must be used within a PlaylistProvider');
+  }
+  return context;
+};
+
 export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [playlists, setPlaylists] = useState<any[]>([]);
 
@@ -31,10 +39,3 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
-export const usePlaylists = (): PlaylistContextType => {
-  const context = useContext(PlaylistContext);
-  if (!context) {
-    throw new Error('usePlaylists must be used within a PlaylistProvider');
-  }
-  return context;
-};

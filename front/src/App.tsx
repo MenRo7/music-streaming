@@ -10,6 +10,7 @@ import AuthPage from './pages/AuthPage';
 
 import { AuthProvider } from './apis/AuthContext';
 import { PlaylistProvider } from './apis/PlaylistContext';
+import { UserProvider } from './apis/UserContext';
 
 import './App.css';
 
@@ -22,42 +23,44 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <PlaylistProvider>
-      <Router>
-        <div className="app">
-          <Routes>
-            <Route path="/auth" element={<AuthPage />} />
+        <UserProvider>
+          <Router>
+            <div className="app">
+              <Routes>
+                <Route path="/auth" element={<AuthPage />} />
 
-            <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
+                <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
 
-            <Route path="/playlist/:id" element={<PrivateRoute element={
-              <>
-                <Navbar />
-                <Sidebar />
-                <PlaylistPage />
-                <SongPlayer audioUrl="" />
-              </>
-            } />} />
+                <Route path="/playlist/:id" element={<PrivateRoute element={
+                  <>
+                    <Navbar />
+                    <Sidebar />
+                    <PlaylistPage />
+                    <SongPlayer audioUrl="" />
+                  </>
+                } />} />
 
-            <Route path="/profile" element={<PrivateRoute element={
-              <>
-                <Navbar />
-                <Sidebar />
-                <ProfilePage />
-                <SongPlayer audioUrl="" />
-              </>
-            } />} />
+                <Route path="/profile" element={<PrivateRoute element={
+                  <>
+                    <Navbar />
+                    <Sidebar />
+                    <ProfilePage />
+                    <SongPlayer audioUrl="" />
+                  </>
+                } />} />
 
-            <Route path="/main" element={<PrivateRoute element={
-              <>
-                <Navbar />
-                <Sidebar />
-                <MainPage />
-                <SongPlayer audioUrl="" />
-              </>
-            } />} />
-          </Routes>
-        </div>
-      </Router>
+                <Route path="/main" element={<PrivateRoute element={
+                  <>
+                    <Navbar />
+                    <Sidebar />
+                    <MainPage />
+                    <SongPlayer audioUrl="" />
+                  </>
+                } />} />
+              </Routes>
+            </div>
+          </Router>
+        </UserProvider>
       </PlaylistProvider>
     </AuthProvider>
   );
