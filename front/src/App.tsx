@@ -7,7 +7,9 @@ import PlaylistPage from './pages/PlaylistPage';
 import ProfilePage from './pages/ProfilePage';
 import MainPage from './pages/MainPage';
 import AuthPage from './pages/AuthPage';
+
 import { AuthProvider } from './apis/AuthContext';
+import { PlaylistProvider } from './apis/PlaylistContext';
 
 import './App.css';
 
@@ -19,6 +21,7 @@ const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
+      <PlaylistProvider>
       <Router>
         <div className="app">
           <Routes>
@@ -55,6 +58,7 @@ const App: React.FC = () => {
           </Routes>
         </div>
       </Router>
+      </PlaylistProvider>
     </AuthProvider>
   );
 };

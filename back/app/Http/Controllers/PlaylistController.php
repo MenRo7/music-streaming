@@ -1,0 +1,109 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Models\Playlist;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+
+class PlaylistController extends Controller
+{
+    public function index()
+    {
+        $playlists = Auth::user()->playlists->map(function ($playlist) {
+            return [
+                'id' => $playlist->id,
+                'title' => $playlist->title,
+                'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
+            ];
+        });
+
+        return response()->json($playlists);
+    }
+
+    public function show($id)
+    {
+        $playlist = Playlist::find($id);
+
+        if (!$playlist) {
+            return response()->json(['message' => 'Playlist non trouvée'], 404);
+        }
+
+        return response()->json([
+            'id' => $playlist->id,
+            'title' => $playlist->title,
+            'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'image' => 'nullable|image',
+        ]);
+
+        $playlist = new Playlist([
+            'title' => $request->input('title'),
+        ]);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('playlists', 'public');
+            $playlist->image = $path;
+        }
+
+        Auth::user()->playlists()->save($playlist);
+
+        return response()->json([
+            'message' => 'Playlist créée avec succès',
+            'playlist' => [
+                'id' => $playlist->id,
+                'title' => $playlist->title,
+                'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
+            ],
+        ], 201);        
+    }
+
+    public function update(Request $request, $id)
+    {
+        $playlist = Playlist::findOrFail($id);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png',
+        ]);
+
+        $playlist->title = $request->input('title');
+
+        if ($request->hasFile('image')) {
+            if ($playlist->image) {
+                Storage::disk('public')->delete($playlist->image);
+            }
+
+            $path = $request->file('image')->store('playlist_images', 'public');
+            $playlist->image = $path;
+        }
+
+        $playlist->save();
+
+        return response()->json([
+            'message' => 'Playlist mise à jour avec succès',
+            'playlist' => [
+                'id' => $playlist->id,
+                'title' => $playlist->title,
+                'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
+            ],
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $playlist = Auth::user()->playlists()->findOrFail($id);
+        $playlist->delete();
+
+        return response()->json(['message' => 'Playlist supprimée']);
+    }
+}

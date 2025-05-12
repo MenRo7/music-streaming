@@ -82,6 +82,14 @@
   .playlist-grid {
     grid-template-columns: 1fr;
   }
+
+  .pill-container {
+    display: flex;
+    width: 90px;
+    margin-left: 10px;
+    padding: 0;
+  }
+
 }
 
 @media (max-width: 625px) {
@@ -103,18 +111,6 @@
     font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.3s;
-    display: block;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .link-button:hover {
-    background-color: #d1b3ff;
-    color: #5e2d91;
-  }
-  
-  .link-button.active {
-    background-color: white;
-    color: black;
+    grid-template-columns: 1fr;
   }
 }

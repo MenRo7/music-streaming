@@ -8,7 +8,7 @@ const SongList: React.FC = () => {
 
   useEffect(() => {
     fetch('/api/songs')
-      .then(res => res.json())
+      .then(response => response.json())
       .then(data => setSongs(data))
       .catch(error => console.error('Error fetching songs:', error));
   }, []);

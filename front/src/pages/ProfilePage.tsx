@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import axios from "axios";
-import { API_URL } from "../apis/api";
+import { fetchUser } from "../apis/UserService";
 
 import EditProfileModal from "../components/EditProfileModal";
 
@@ -17,12 +16,7 @@ const ProfilePage: React.FC = () => {
 
   const getUser = async () => {
     try {
-      const response = await axios.get(`${API_URL}/user`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-      
+      const response = await fetchUser();
       setUser(response.data);
     } catch (error) {
       return;
@@ -106,7 +100,7 @@ const ProfilePage: React.FC = () => {
           <div className="top-artists">
             {user?.topArtists?.map((artist: any, index: number) => (
               <div key={index} className="artist-card">
-                <img src={artist.imageUrl} alt={artist.name} />
+                <img src={artist.image} alt={artist.name} />
                 <p>{artist.name}</p>
               </div>
             ))}
@@ -118,7 +112,7 @@ const ProfilePage: React.FC = () => {
           <div className="top-albums">
             {user?.topAlbums?.map((album: any, index: number) => (
               <div key={index} className="album-card">
-                <img src={album.imageUrl} alt={album.title} />
+                <img src={album.image} alt={album.title} />
                 <div>
                   <p>{album.title}</p>
                   <p>{album.artist}</p>
@@ -133,8 +127,8 @@ const ProfilePage: React.FC = () => {
           <div className="public-playlists">
             {user?.publicPlaylists?.map((playlist: any, index: number) => (
               <div key={index} className="playlists-card">
-                <img src={playlist.imageUrl} alt={playlist.title} />
-                <p>{playlist.title}</p>
+                <img src={playlist?.image} alt={playlist?.title} />
+                <p>{playlist?.title}</p>
               </div>
             ))}
           </div>
@@ -142,7 +136,7 @@ const ProfilePage: React.FC = () => {
         {isModalOpen && (
           <EditProfileModal
             isOpen={isModalOpen}
-            closeModal={closeProfileModal}
+            onClose={closeProfileModal}
             user={user}
             onProfileUpdate={handleProfileUpdate}
           />

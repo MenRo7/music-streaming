@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
+
+import { usePlaylists } from '../apis/PlaylistContext';
+
 import PlaylistCard from './PlaylistCard';
+import CreateEditPlaylistModal from './CreateEditPlaylistModal';
+
 import '../styles/Sidebar.css';
 
-import { playlists } from '../utils/constants';
-
 const Sidebar: React.FC = () => {
+  const { playlists, fetchPlaylists } = usePlaylists();
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
+  const [showModal, setShowModal] = useState(false);
+  const [editingPlaylist, setEditingPlaylist] = useState<any | null>(null);
 
   const handleFilterClick = (filter: string) => {
     setActiveFilters((prevFilters) => {
@@ -22,9 +28,21 @@ const Sidebar: React.FC = () => {
     });
   };
 
-  const resetFilters = () => {
-    setActiveFilters(new Set());
+  const resetFilters = () => setActiveFilters(new Set());
+
+  const openPlaylistModal = () => {
+    setEditingPlaylist(null);
+    setShowModal(true);
   };
+
+  const closePlaylistModal = () => {
+    setShowModal(false);
+    fetchPlaylists();
+  };
+
+  useEffect(() => {
+    fetchPlaylists();
+  }, []);
 
   return (
     <div className="sidebar">
@@ -56,7 +74,10 @@ const Sidebar: React.FC = () => {
           <li>
             <button
               className={`link-button ${activeFilters.has('create') ? 'active' : ''}`}
-              onClick={() => handleFilterClick('create')}
+              onClick={() => {
+                handleFilterClick('create');
+                openPlaylistModal();
+              }}
             >
               <FontAwesomeIcon icon={faPlus} />
             </button>
@@ -65,12 +86,19 @@ const Sidebar: React.FC = () => {
       </nav>
 
       <div className="playlist-grid">
-        {playlists.map((playlist) => (
+        {playlists.map((playlist: any) => (
           <Link key={playlist.id} to={`/playlist/${playlist.id}`}>
-            <PlaylistCard title={playlist.title} imageUrl={playlist.imageUrl || '/default-image.png'} />
+            <PlaylistCard title={playlist.title} image={playlist.image} />
           </Link>
         ))}
       </div>
+
+      <CreateEditPlaylistModal
+        isOpen={showModal}
+        onClose={closePlaylistModal}
+        initialData={editingPlaylist || { title: '', image: '' }}
+        mode={editingPlaylist ? 'edit' : 'create'}
+      />
     </div>
   );
 };
