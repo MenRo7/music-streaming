@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import { updateUserProfile } from "../apis/UserService";
+import { useUser } from "../apis/UserContext";
 
 import "../styles/EditProfileModal.css";
 
@@ -20,6 +21,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [name, setName] = useState(user.name);
   const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { refreshUser } = useUser();
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
@@ -42,6 +44,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     try {
       const response = await updateUserProfile(formData);
       onProfileUpdate(response.data.user);
+      await refreshUser();
       onClose();
     } catch (error) {
       setError("Erreur lors de la mise à jour du profil.");

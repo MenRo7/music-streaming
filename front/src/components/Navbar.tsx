@@ -4,15 +4,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome } from '@fortawesome/free-solid-svg-icons';
 
 import { AuthContext } from '../apis/AuthContext';
+import { useUser } from '../apis/UserContext';
+
 import DropdownMenu from './DropdownMenu';
 
 import '../styles/Navbar.css';
 
-const userProfileImageUrl = '/joker.png';
-
 const Navbar: React.FC = () => {
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { user: currentUser } = useUser();
 
   const handleLogout = async () => {
     try {
@@ -42,7 +43,7 @@ const Navbar: React.FC = () => {
               ]}
               trigger={
                 <img
-                  src={userProfileImageUrl}
+                  src={currentUser?.profile_image}
                   alt="User Profile"
                   className="navbar-profile-image"
                 />
