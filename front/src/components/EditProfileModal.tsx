@@ -1,18 +1,19 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { API_URL } from "../apis/api";
+
+import { updateUserProfile } from "../apis/UserService";
+
 import "../styles/EditProfileModal.css";
 
 interface EditProfileModalProps {
   isOpen: boolean;
-  closeModal: () => void;
+  onClose: () => void;
   user: any;
   onProfileUpdate: (updatedUser: any) => void;
 }
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({
   isOpen,
-  closeModal,
+  onClose,
   user,
   onProfileUpdate,
 }) => {
@@ -39,14 +40,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }
 
     try {
-      const response = await axios.post(`${API_URL}/user/update`, formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await updateUserProfile(formData);
       onProfileUpdate(response.data.user);
-      closeModal();
+      onClose();
     } catch (error) {
       setError("Erreur lors de la mise à jour du profil.");
     }
@@ -81,7 +77,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </div>
           <div className="modal-actions">
             <button type="submit">Enregistrer</button>
-            <button type="button" onClick={closeModal}>
+            <button type="button" onClick={onClose}>
               Annuler
             </button>
           </div>

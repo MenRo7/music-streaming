@@ -1,8 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import axios from 'axios';
 import { AuthContext } from '../apis/AuthContext';
+import { registerUser } from '../apis/AuthService';
 
 import '../styles/AuthPage.css';
 
@@ -32,12 +32,7 @@ const AuthPage: React.FC = () => {
 
     try {
       if (isRegistering) {
-        await axios.post('http://localhost:8000/api/register', {
-          name: username,
-          email,
-          password,
-        });
-
+        await registerUser(username, email, password);
         await login(email, password);
       } else {
         await login(email, password);
