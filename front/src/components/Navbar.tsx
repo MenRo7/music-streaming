@@ -1,12 +1,14 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome } from '@fortawesome/free-solid-svg-icons';
 
 import { AuthContext } from '../apis/AuthContext';
 import { useUser } from '../apis/UserContext';
 
 import DropdownMenu from './DropdownMenu';
+import GlobalSearchBar from './GlobalSearchBar';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHome } from '@fortawesome/free-solid-svg-icons';
 
 import '../styles/Navbar.css';
 
@@ -28,6 +30,7 @@ const Navbar: React.FC = () => {
     <div className="navbar-container">
       <nav className="navbar">
         <img src="/logo.png" alt="logo" className="navbar-logo" />
+        <GlobalSearchBar />
         <ul>
           <li>
             <Link to="/main">

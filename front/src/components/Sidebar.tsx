@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 import { usePlaylists } from '../apis/PlaylistContext';
 
 import PlaylistCard from './PlaylistCard';
 import CreateEditPlaylistModal from './CreateEditPlaylistModal';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
+
 
 import '../styles/Sidebar.css';
 
@@ -60,7 +62,7 @@ const Sidebar: React.FC = () => {
               className={`link-button ${activeFilters.has('playlists') ? 'active' : ''}`}
               onClick={() => handleFilterClick('playlists')}
             >
-              Mes Playlists
+              Playlists
             </button>
           </li>
           <li>
