@@ -1,0 +1,32 @@
+.search-result-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  color: #f3f0ff;
+  background-color: transparent;
+  transition: background-color 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-result-item:hover {
+  background-color: #333;
+}
+
+.search-result-item-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.search-result-item-image.rounded {
+  border-radius: 50%;
+}
+
+.search-result-item-label {
+  font-size: 14px;
+  color: #f3f0ff;
+}
