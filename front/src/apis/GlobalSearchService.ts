@@ -9,8 +9,16 @@ export interface User {
 
 export interface Playlist {
   id: number;
+  title: string;
+  image: string | null;
+}
+
+export interface Music {
+  id: string;
   name: string;
-  category?: string;
+  artist_name: string;
+  image: string | null;
+  audio: string;
 }
 
 export interface SearchResults {
@@ -20,19 +28,27 @@ export interface SearchResults {
   playlists?: {
     data: Playlist[];
   };
+  musics?: Music[];
 }
 
 export const search = async (
   query: string,
-  category: 'all' | 'user' | 'playlist' = 'all'
+  categories: ('user' | 'playlist' | 'music')[],
+  usersPage = 1,
+  playlistsPage = 1,
+  musicsPage = 1,
+  perPage = 10
 ): Promise<SearchResults> => {
-  if (!['all', 'user', 'playlist'].includes(category)) {
-    throw new Error('Invalid category. Valid categories are: "all", "user", "playlist".');
-  }
-
   try {
     const response = await axios.get(`${API_URL}/search`, {
-      params: { query, category },
+      params: { 
+        query,
+        categories: categories.join(','),
+        users_page: usersPage,
+        playlists_page: playlistsPage,
+        musics_page: musicsPage,
+        per_page: perPage,
+      },
       headers: {
         Authorization: `Bearer ${localStorage.getItem('authToken')}`,
       },
@@ -44,3 +60,5 @@ export const search = async (
     throw error;
   }
 };
+
+
