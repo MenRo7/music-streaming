@@ -1,4 +1,4 @@
-.playlist-content {
+.media-content {
   position: fixed;
   top: 90px;
   bottom: 75px;
@@ -18,7 +18,7 @@
 }
 
 @media (max-width: 1200px) {
-  .playlist-content {
+  .media-content {
     position: fixed;
     top: 90px;
     bottom: 75px;
@@ -39,7 +39,7 @@
 }
 
 @media (max-width: 625px) {
-  .playlist-content {
+  .media-content {
     position: fixed;
     top: 90px;
     bottom: 75px;
@@ -59,36 +59,49 @@
   }
 }
 
-.playlist-content::-webkit-scrollbar {
+.media-content::-webkit-scrollbar {
   width: 8px;
 }
 
-.playlist-content::-webkit-scrollbar-thumb {
+.media-content::-webkit-scrollbar-thumb {
   background-color: #888;
   border-radius: 4px;
 }
 
-.playlist-content::-webkit-scrollbar-thumb:hover {
+.media-content::-webkit-scrollbar-thumb:hover {
   background-color: #555;
 }
 
 
-.playlist-page {
+.media-page {
   padding: 20px;
 }
 
-.playlist-header {
+.media-header {
   display: flex;
   flex-direction: row;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.playlist-page-image {
+.media-page-image {
   width: 150px;
   height: 150px;
   object-fit: cover;
   border-radius: 5px;
+}
+
+.media-artist {
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-left: 20px;
+  margin-top: 4px;
+}
+
+.media-texts {
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
 }
 
 h1 {
@@ -98,7 +111,7 @@ h1 {
   margin-left: 20px;
 }
 
-.playlist-controls {
+.media-controls {
   display: flex;
   justify-content: start;
   gap: 20px;

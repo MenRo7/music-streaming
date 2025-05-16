@@ -12,6 +12,31 @@
   flex-direction: column;
   border-radius: 5px;
   overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 75px);
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: #d1b3ff;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background-color: #252525;
+  border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-corner {
+  background-color: transparent;
 }
 
 .nav {
@@ -89,7 +114,6 @@
     margin-left: 10px;
     padding: 0;
   }
-
 }
 
 @media (max-width: 625px) {

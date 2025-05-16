@@ -16,18 +16,32 @@ interface Playlist {
   image: string | null;
 }
 
+interface JamendoTrack {
+  id: string;
+  name: string;
+  artist_name: string;
+  audio: string;
+  image: string | null;
+}
+
 interface SearchResultsDropdownProps {
   users?: User[];
   playlists?: Playlist[];
+  musics?: JamendoTrack[];
   visible: boolean;
   onClose: () => void;
+  onLoadMore: () => void;
+  loadingMore: boolean;
 }
 
 const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
   users = [],
   playlists = [],
+  musics = [],
   visible,
-  onClose
+  onClose,
+  onLoadMore,
+  loadingMore
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -47,10 +61,24 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
     };
   }, [visible, onClose]);
 
-  if (!visible || (users.length === 0 && playlists.length === 0)) return null;
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollHeight, scrollTop, clientHeight } = e.currentTarget;
+    const bottomReached = scrollHeight - scrollTop <= clientHeight + 10;
+
+    if (bottomReached && !loadingMore) {
+      onLoadMore();
+    }
+  };
+
+  if (!visible || (users.length === 0 && playlists.length === 0 && musics.length === 0)) return null;
 
   return (
-    <div className="search-results-dropdown" ref={dropdownRef}>
+    <div
+      className="search-results-dropdown"
+      ref={dropdownRef}
+      style={{ maxHeight: '400px', overflowY: 'auto' }}
+      onScroll={handleScroll}
+    >
       {users.length > 0 && (
         <div className="search-section">
           <h4>Utilisateurs</h4>
@@ -78,6 +106,25 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
               />
             ))}
           </ul>
+        </div>
+      )}
+      {musics.length > 0 && (
+        <div className="search-section">
+          <h4>Musiques libres</h4>
+          <ul className="search-result-list">
+            {musics.map(track => (
+              <SearchResultItem
+                key={track.id}
+                image={track.image}
+                label={`${track.name} - ${track.artist_name}`}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+      {loadingMore && (
+        <div style={{ textAlign: 'center', padding: '10px' }}>
+          Chargement...
         </div>
       )}
     </div>
