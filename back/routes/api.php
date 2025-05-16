@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PlaylistController;
+use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\GlobalSearchController;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -28,3 +29,5 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::get('/search', [GlobalSearchController::class, 'search']);
+Route::get('/albums', [AlbumController::class, 'index']);
+Route::get('/albums/{id}', [AlbumController::class, 'show']);
