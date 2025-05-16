@@ -37,7 +37,6 @@ const App: React.FC = () => {
                     <Navbar />
                     <Sidebar />
                     <PlaylistPage />
-                    <SongPlayer audioUrl="" />
                   </>
                 } />} />
 
@@ -46,7 +45,6 @@ const App: React.FC = () => {
                     <Navbar />
                     <Sidebar />
                     <AlbumPage />
-                    <SongPlayer audioUrl="" />
                   </>
                 } />} />
 
@@ -55,7 +53,6 @@ const App: React.FC = () => {
                     <Navbar />
                     <Sidebar />
                     <ProfilePage />
-                    <SongPlayer audioUrl="" />
                   </>
                 } />} />
 
@@ -64,10 +61,14 @@ const App: React.FC = () => {
                     <Navbar />
                     <Sidebar />
                     <MainPage />
-                    <SongPlayer audioUrl="" />
                   </>
                 } />} />
               </Routes>
+              <SongPlayer 
+                audioUrl="/example.mp3" 
+                title="Titre démo" 
+                artist="Artiste démo" 
+              />
             </div>
           </Router>
         </UserProvider>
