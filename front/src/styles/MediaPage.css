@@ -157,3 +157,39 @@ h1 {
 .song-table td {
   border-bottom: 1px solid #ddd;
 }
+
+.song-row:hover .hover-play-icon {
+  opacity: 1;
+}
+
+.track-number-cell {
+  width: 40px;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.track-number {
+  display: inline-block;
+  transition: opacity 0.2s ease;
+}
+
+.hover-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: #fff;
+  pointer-events: none;
+}
+
+.song-row:hover .track-number {
+  opacity: 0;
+}
+
+.song-row:hover .hover-play-icon {
+  opacity: 1;
+  pointer-events: auto;
+}

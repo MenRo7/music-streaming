@@ -26,13 +26,17 @@ class AlbumController extends Controller
                     'id' => $data['id'],
                     'title' => $data['name'],
                     'image' => $data['image'],
-                    'artist_name' => $data['artist_name'], // ✅ Ajouté ici
-                    'songs' => collect($data['tracks'])->map(function ($track) {
+                    'artist_name' => $data['artist_name'],
+                    'songs' => collect($data['tracks'])->map(function ($track) use ($data) {
                         return [
                             'id' => $track['id'],
                             'name' => $track['name'],
                             'duration' => gmdate("i:s", $track['duration']),
                             'audio' => $track['audio'],
+                            'artist' => $data['artist_name'],
+                            'album_image' => $data['image'],
+                            'album' => $data['name'],
+                            'dateAdded' => now()->toDateString(),
                         ];
                     }),
                 ];

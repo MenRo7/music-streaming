@@ -14,10 +14,41 @@
   z-index: 1000;
 }
 
-.player-left, .player-center, .player-right {
+.player-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: 350px;
+  margin-left: 1rem;
+}
+
+.controls-icons {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.player-right {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.player-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 200px;
+  max-width: 250px;
+}
+
+.album-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
 }
 
 .song-info {
@@ -55,8 +86,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  width: 350px;
-  margin-left: 1rem;
+  width: 100%;
 }
 
 .time {

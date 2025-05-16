@@ -1,4 +1,7 @@
 import React from 'react';
+
+import { usePlayer } from '../apis/PlayerContext';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faRandom, faEllipsisH, faBars } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
@@ -27,6 +30,13 @@ const MediaPage: React.FC<MediaPageProps> = ({
   onDelete,
   renderModal
 }) => {
+  const { playSong } = usePlayer();
+
+  const handlePlaySong = (song: any) => {
+    if (song.audio) {
+      playSong(song.audio, song.name, song.artist, song.album_image);
+    }
+  };
   return (
     <div className="media-content">
       <div className="media-page">
@@ -56,6 +66,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
         <table className="song-table">
           <thead>
             <tr>
+              <th>#</th>
               <th>Nom</th>
               {isPlaylist && <th>Album</th>}
               {isPlaylist && <th>Artiste</th>}
@@ -65,7 +76,11 @@ const MediaPage: React.FC<MediaPageProps> = ({
           </thead>
           <tbody>
             {songs?.map((song, index) => (
-              <tr key={index}>
+              <tr key={index} className="song-row">
+                <td className="track-number-cell" onClick={() => handlePlaySong(song)}>
+                  <span className="track-number">{index + 1}</span>
+                  <FontAwesomeIcon icon={faPlay} className="hover-play-icon" />
+                </td>
                 <td>{song.name}</td>
                 {isPlaylist && <td>{song.album}</td>}
                 {isPlaylist && <td>{song.artist}</td>}
