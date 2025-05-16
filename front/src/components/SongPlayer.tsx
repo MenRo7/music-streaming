@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlay, faPause, faStepBackward, faStepForward,
-  faRedo, faListUl, faVolumeUp, faPlus
+  faRedo, faListUl, faVolumeUp, faPlus, faShuffle
 } from '@fortawesome/free-solid-svg-icons';
 
 import { usePlayer } from '../apis/PlayerContext';
@@ -24,29 +24,31 @@ const SongPlayer: React.FC = () => {
     audioRef.current = new Audio();
   }
 
-useEffect(() => {
-  const audio = audioRef.current;
-  if (audio && audioUrl) {
-    audio.src = audioUrl;
-    audio.play();
-    setIsPlaying(true);
+  const DEFAULT_IMAGE = '/default-playlist-image.png';
 
-    const updateProgress = () => setProgress(audio.currentTime);
-    const setAudioData = () => {
-      setDuration(audio.duration);
-      setProgress(audio.currentTime);
-    };
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && audioUrl) {
+      audio.src = audioUrl;
+      audio.play();
+      setIsPlaying(true);
 
-    audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('loadedmetadata', setAudioData);
+      const updateProgress = () => setProgress(audio.currentTime);
+      const setAudioData = () => {
+        setDuration(audio.duration);
+        setProgress(audio.currentTime);
+      };
 
-    return () => {
-      audio.removeEventListener('timeupdate', updateProgress);
-      audio.removeEventListener('loadedmetadata', setAudioData);
-    };
-  }
-  return undefined;
-}, [audioUrl]);
+      audio.addEventListener('timeupdate', updateProgress);
+      audio.addEventListener('loadedmetadata', setAudioData);
+
+      return () => {
+        audio.removeEventListener('timeupdate', updateProgress);
+        audio.removeEventListener('loadedmetadata', setAudioData);
+      };
+    }
+    return undefined;
+  }, [audioUrl]);
 
   const togglePlay = () => {
     const audio = audioRef.current!;
@@ -90,9 +92,7 @@ useEffect(() => {
   return (
     <div className="song-player">
       <div className="player-left">
-        {albumImage && (
-          <img src={albumImage} alt="Album" className="album-image" />
-        )}
+        <img src={albumImage ? albumImage : DEFAULT_IMAGE} alt="Album" className="album-image" />
         <div className="song-info">
           <p className="song-title">{title || 'Aucun titre'}</p>
           <p className="song-artist">{artist || 'Artiste inconnu'}</p>
@@ -102,6 +102,7 @@ useEffect(() => {
 
       <div className="player-center">
         <div className="controls-icons">
+          <FontAwesomeIcon icon={faShuffle} className="player-icon" />
           <FontAwesomeIcon icon={faStepBackward} className="player-icon" />
           <FontAwesomeIcon
             icon={isPlaying ? faPause : faPlay}
@@ -110,7 +111,6 @@ useEffect(() => {
           />
           <FontAwesomeIcon icon={faStepForward} className="player-icon" />
           <FontAwesomeIcon icon={faRedo} className="player-icon" />
-          <FontAwesomeIcon icon={faListUl} className="player-icon" />
         </div>
 
         <div className="progress-container">
@@ -131,6 +131,7 @@ useEffect(() => {
       </div>
 
       <div className="player-right">
+        <FontAwesomeIcon icon={faListUl} className="player-icon" />
         <FontAwesomeIcon icon={faVolumeUp} className="player-icon" />
         <div style={{ position: 'relative', width: '100px' }}>
           {showVolumeTooltip && (
