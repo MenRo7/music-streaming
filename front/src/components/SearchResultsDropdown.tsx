@@ -16,18 +16,25 @@ interface Playlist {
   image: string | null;
 }
 
-interface Track {
+interface Music {
   id: string;
-  name: string;
+  title: string;
   artist_name: string;
   audio: string;
+  image: string | null;
+}
+
+interface Album {
+  id: number;
+  title: string;
   image: string | null;
 }
 
 interface SearchResultsDropdownProps {
   users?: User[];
   playlists?: Playlist[];
-  musics?: Track[];
+  musics?: Music[];
+  albums?: Album[];
   visible: boolean;
   onClose: () => void;
   onLoadMore: () => void;
@@ -38,6 +45,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
   users = [],
   playlists = [],
   musics = [],
+  albums = [],
   visible,
   onClose,
   onLoadMore,
@@ -110,13 +118,27 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
       )}
       {musics.length > 0 && (
         <div className="search-section">
-          <h4>Musiques libres</h4>
+          <h4>Musiques</h4>
           <ul className="search-result-list">
             {musics.map(track => (
               <SearchResultItem
                 key={track.id}
                 image={track.image}
-                label={`${track.name} - ${track.artist_name}`}
+                label={`${track.title} - ${track.artist_name}`}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+      {albums.length > 0 && (
+        <div className="search-section">
+          <h4>Albums</h4>
+          <ul className="search-result-list">
+            {albums.map(album => (
+              <SearchResultItem
+                key={album.id}
+                image={album.image}
+                label={album.title}
               />
             ))}
           </ul>

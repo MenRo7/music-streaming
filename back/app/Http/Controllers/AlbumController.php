@@ -10,6 +10,22 @@ use Illuminate\Support\Facades\Storage;
 
 class AlbumController extends Controller
 {
+    public function index()
+    {
+        $albums = Album::all();
+        return response()->json($albums);
+    }
+
+    public function show($id)
+    {
+        $album = Album::find($id);
+
+        if (!$album) {
+            return response()->json(['message' => 'Album non trouvé'], 404);
+        }
+
+        return response()->json($album);
+    }
     public function store(Request $request)
     {
         $request->validate([

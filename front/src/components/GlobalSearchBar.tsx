@@ -12,20 +12,26 @@ import '../styles/GlobalSearchBar.css';
 
 const GlobalSearchBar: React.FC = () => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResults>({});
-  const [filters, setFilters] = useState({ user: false, playlist: false, music: false });
+  const [results, setResults] = useState<SearchResults>({ users: { data: [] }, playlists: { data: [] }, musics: { data: [] }, albums: { data: [] } });
+  const [filters, setFilters] = useState({ user: false, playlist: false, music: false, album: false });
   const [showResults, setShowResults] = useState(false);
 
   const [usersPage, setUsersPage] = useState(1);
   const [playlistsPage, setPlaylistsPage] = useState(1);
   const [musicsPage, setMusicsPage] = useState(1);
+  const [albumsPage, setAlbumsPage] = useState(1);
 
   const [loadingMore, setLoadingMore] = useState(false);
   const perPage = 10;
 
   useEffect(() => {
     if (!query.trim()) {
-      setResults({});
+      setResults({
+        users: { data: [] },
+        playlists: { data: [] },
+        musics: { data: [] },
+        albums: { data: [] },
+      });
       setShowResults(false);
       return;
     }
@@ -33,42 +39,34 @@ const GlobalSearchBar: React.FC = () => {
     const fetchResults = async () => {
       const rawCategories = Object.entries(filters)
         .filter(([_, isActive]) => isActive)
-        .map(([key]) => key as 'user' | 'playlist' | 'music');
+        .map(([key]) => key as 'user' | 'playlist' | 'music' | 'album');
 
-      const categoriesToSend: ('user' | 'playlist' | 'music')[] =
+      const categoriesToSend: ('user' | 'playlist' | 'music' | 'album')[] =
         rawCategories.length === 0
-          ? ['user', 'playlist', 'music']
+          ? ['user', 'playlist', 'music', 'album']
           : rawCategories;
 
       setLoadingMore(true);
-      const newResults = await search(query, categoriesToSend, usersPage, playlistsPage, musicsPage, perPage);
+      const newResults = await search(query, categoriesToSend, usersPage, playlistsPage, musicsPage, albumsPage, perPage);
       setLoadingMore(false);
 
       setResults((prev: any) => {
         const merged = { ...prev };
 
         if (newResults.users) {
-          merged.users = {
-            ...newResults.users,
-            data: usersPage === 1
-              ? newResults.users.data
-              : [...(prev.users?.data || []), ...newResults.users.data]
-          };
+          merged.users = { data: usersPage === 1 ? newResults.users.data : [...(prev.users?.data || []), ...newResults.users.data] };
         }
 
         if (newResults.playlists) {
-          merged.playlists = {
-            ...newResults.playlists,
-            data: playlistsPage === 1
-              ? newResults.playlists.data
-              : [...(prev.playlists?.data || []), ...newResults.playlists.data]
-          };
+          merged.playlists = { data: playlistsPage === 1 ? newResults.playlists.data : [...(prev.playlists?.data || []), ...newResults.playlists.data] };
         }
 
         if (newResults.musics) {
-          merged.musics = musicsPage === 1
-            ? newResults.musics
-            : [...(prev.musics || []), ...newResults.musics];
+          merged.musics = { data: musicsPage === 1 ? newResults.musics.data : [...(prev.musics?.data || []), ...newResults.musics.data] };
+        }
+
+        if (newResults.albums) {
+          merged.albums = { data: albumsPage === 1 ? newResults.albums.data : [...(prev.albums?.data || []), ...newResults.albums.data] };
         }
 
         return merged;
@@ -78,13 +76,14 @@ const GlobalSearchBar: React.FC = () => {
     };
 
     fetchResults();
-  }, [query, filters, usersPage, playlistsPage, musicsPage]);
+  }, [query, filters, usersPage, playlistsPage, musicsPage, albumsPage]);
 
   useEffect(() => {
     setUsersPage(1);
     setPlaylistsPage(1);
     setMusicsPage(1);
-    setResults({});
+    setAlbumsPage(1);
+    setResults({ users: { data: [] }, playlists: { data: [] }, musics: { data: [] }, albums: { data: [] } });
   }, [query, filters]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -97,7 +96,7 @@ const GlobalSearchBar: React.FC = () => {
   const handleLoadMore = () => {
     if (loadingMore) return;
 
-    const anyFilter = filters.user || filters.playlist || filters.music;
+    const anyFilter = filters.user || filters.playlist || filters.music || filters.album;
 
     if (filters.user || !anyFilter) {
       setUsersPage(prev => prev + 1);
@@ -107,6 +106,9 @@ const GlobalSearchBar: React.FC = () => {
     }
     if (filters.music || !anyFilter) {
       setMusicsPage(prev => prev + 1);
+    }
+    if (filters.album || !anyFilter) {
+      setAlbumsPage(prev => prev + 1);
     }
   };
 
@@ -130,18 +132,10 @@ const GlobalSearchBar: React.FC = () => {
             trigger={<FontAwesomeIcon icon={faFilter} className="global-search-filter-icon" />}
             menuClassName="search-filter-menu"
             items={[
-              {
-                label: `${filters.user ? '✅' : '☐'} Utilisateurs`,
-                onClick: () => setFilters(prev => ({ ...prev, user: !prev.user })),
-              },
-              {
-                label: `${filters.playlist ? '✅' : '☐'} Playlists`,
-                onClick: () => setFilters(prev => ({ ...prev, playlist: !prev.playlist })),
-              },
-              {
-                label: `${filters.music ? '✅' : '☐'} Titres`,
-                onClick: () => setFilters(prev => ({ ...prev, music: !prev.music })),
-              },
+              { label: `${filters.user ? '✅' : '☐'} Utilisateurs`, onClick: () => setFilters(prev => ({ ...prev, user: !prev.user })) },
+              { label: `${filters.playlist ? '✅' : '☐'} Playlists`, onClick: () => setFilters(prev => ({ ...prev, playlist: !prev.playlist })) },
+              { label: `${filters.music ? '✅' : '☐'} Titres`, onClick: () => setFilters(prev => ({ ...prev, music: !prev.music })) },
+              { label: `${filters.album ? '✅' : '☐'} Albums`, onClick: () => setFilters(prev => ({ ...prev, album: !prev.album })) },
             ]}
           />
         </div>
@@ -154,7 +148,8 @@ const GlobalSearchBar: React.FC = () => {
           <SearchResultsDropdown
             users={results?.users?.data}
             playlists={results?.playlists?.data}
-            musics={results?.musics}
+            musics={results?.musics?.data}
+            albums={results?.albums?.data}
             visible={showResults}
             onClose={() => setShowResults(false)}
             onLoadMore={handleLoadMore}

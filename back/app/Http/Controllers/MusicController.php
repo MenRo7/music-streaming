@@ -10,6 +10,23 @@ use Illuminate\Support\Facades\Storage;
 
 class MusicController extends Controller
 {
+    public function index()
+    {
+        $musics = Music::all();
+        return response()->json($musics);
+    }
+
+    public function show($id)
+    {
+        $music = Music::find($id);
+
+        if (!$music) {
+            return response()->json(['message' => 'Musique non trouvée'], 404);
+        }
+
+        return response()->json($music);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
