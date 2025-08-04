@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-
+import React, { useRef, useEffect } from 'react';
+import { usePlayer } from '../apis/PlayerContext'; // Import du PlayerContext
 import SearchResultItem from './SearchResultItem';
-
 import '../styles/SearchResultsDropdown.css';
 
 interface User {
@@ -51,7 +50,12 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
   onLoadMore,
   loadingMore
 }) => {
+  const { playSong } = usePlayer(); // Utilisation du PlayerContext pour jouer une chanson
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleMusicClick = (music: Music) => {
+    playSong(music.audio, music.title, music.artist_name, music.image ?? "");
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -78,7 +82,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
     }
   };
 
-  if (!visible || (users.length === 0 && playlists.length === 0 && musics.length === 0)) return null;
+    if (!visible || (users.length === 0 && playlists.length === 0 && musics.length === 0)) return null;
 
   return (
     <div
@@ -125,6 +129,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
                 key={track.id}
                 image={track.image}
                 label={`${track.title} - ${track.artist_name}`}
+                onClick={() => handleMusicClick(track)}
               />
             ))}
           </ul>

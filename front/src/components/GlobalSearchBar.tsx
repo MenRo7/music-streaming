@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { search, SearchResults } from '../apis/GlobalSearchService';
+import { usePlayer } from '../apis/PlayerContext';
 
 import DropdownMenu from './DropdownMenu';
 import SearchResultsDropdown from './SearchResultsDropdown';
@@ -8,7 +9,7 @@ import SearchResultsDropdown from './SearchResultsDropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFilter } from '@fortawesome/free-solid-svg-icons';
 
-import '../styles/GlobalSearchBar.css';
+import '../styles/GlobalSearchBar.css'; 
 
 const GlobalSearchBar: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -23,6 +24,8 @@ const GlobalSearchBar: React.FC = () => {
 
   const [loadingMore, setLoadingMore] = useState(false);
   const perPage = 10;
+
+  const { playSong } = usePlayer();
 
   useEffect(() => {
     if (!query.trim()) {
