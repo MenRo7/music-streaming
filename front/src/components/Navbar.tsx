@@ -8,7 +8,7 @@ import DropdownMenu from './DropdownMenu';
 import GlobalSearchBar from './GlobalSearchBar';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faUpload } from '@fortawesome/free-solid-svg-icons';
 
 import '../styles/Navbar.css';
 
@@ -26,6 +26,10 @@ const Navbar: React.FC = () => {
     }
   };
 
+  const redirect = (type: 'music' | 'album') => {
+    navigate(`/import?type=${type}`);
+  };
+
   return (
     <div className="navbar-container">
       <nav className="navbar">
@@ -35,6 +39,11 @@ const Navbar: React.FC = () => {
           <li>
             <Link to="/main">
               <FontAwesomeIcon icon={faHome} />
+            </Link>
+          </li>
+          <li>
+            <Link to="/import">
+              <FontAwesomeIcon icon={faUpload} />
             </Link>
           </li>
           <li className="navbar-profile">

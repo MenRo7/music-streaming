@@ -85,36 +85,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {
                 \Log::error('FreeMusicAPI error: ' . $e->getMessage());
             }
-
-            try {
-                $jamendoResponse = Http::get('https://api.jamendo.com/v3.0/tracks/', [
-                    'client_id' => env('JAMENDO_CLIENT_ID'),
-                    'format' => 'json',
-                    'limit' => $limit,
-                    'offset' => $offset,
-                    'search' => $query,
-                    'include' => 'musicinfo',
-                    'audioformat' => 'mp31',
-                ]);
-
-                if ($jamendoResponse->successful()) {
-                    $jamendoData = $jamendoResponse->json();
-                    $jamendoTracks = collect($jamendoData['results'])->map(function ($track) {
-                        return [
-                            'id' => $track['id'] ?? uniqid(),
-                            'name' => $track['name'] ?? 'Unknown Title',
-                            'artist_name' => $track['artist_name'] ?? 'Unknown Artist',
-                            'image' => $track['album_image'] ?? null,
-                            'audio' => $track['audio'] ?? null,
-                        ];
-                    });
-
-                    $allTracks = $allTracks->merge($jamendoTracks);
-                }
-            } catch (\Exception $e) {
-                \Log::error('Jamendo API error: ' . $e->getMessage());
-            }
-
             $results['musics'] = $allTracks->values();
         }
 

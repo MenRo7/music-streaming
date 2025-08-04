@@ -9,42 +9,33 @@ class AlbumController extends Controller
     public function show($id)
     {
         try {
-            $response = Http::get('https://api.jamendo.com/v3.0/albums/tracks', [
-                'client_id' => env('JAMENDO_CLIENT_ID'),
-                'format' => 'json',
-                'id' => $id,
-            ]);
+            $album = Album::find($id);
 
-            if ($response->successful()) {
-                $data = $response->json()['results'][0] ?? null;
-
-                if (!$data) {
-                    return response()->json(['error' => 'Album not found'], 404);
-                }
-
-                $album = [
-                    'id' => $data['id'],
-                    'title' => $data['name'],
-                    'image' => $data['image'],
-                    'artist_name' => $data['artist_name'],
-                    'songs' => collect($data['tracks'])->map(function ($track) use ($data) {
-                        return [
-                            'id' => $track['id'],
-                            'name' => $track['name'],
-                            'duration' => gmdate("i:s", $track['duration']),
-                            'audio' => $track['audio'],
-                            'artist' => $data['artist_name'],
-                            'album_image' => $data['image'],
-                            'album' => $data['name'],
-                            'dateAdded' => now()->toDateString(),
-                        ];
-                    }),
-                ];
-
-                return response()->json($album);
+            if (!$album) {
+                return response()->json(['error' => 'Album not found'], 404);
             }
 
-            return response()->json(['error' => 'Failed to fetch album'], 500);
+            $songs = $album->tracks()->get();
+
+            $albumData = [
+                'id' => $album->id,
+                'title' => $album->title,
+                'image' => $album->image,
+                'artist_name' => $album->artist_name,
+                'songs' => $songs->map(function ($track) {
+                    return [
+                        'id' => $track->id,
+                        'name' => $track->name,
+                        'duration' => gmdate("i:s", $track->duration),
+                        'audio' => asset('storage/' . $track->audio),
+                        'artist' => $track->artist_name,
+                        'album_image' => asset('storage/' . $track->album_image),
+                        'album' => $track->album_name,
+                    ];
+                }),
+            ];
+
+            return response()->json($albumData);
         } catch (\Exception $e) {
             \Log::error('Album fetch error: ' . $e->getMessage());
             return response()->json([

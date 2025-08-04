@@ -70,7 +70,7 @@ const Sidebar: React.FC = () => {
               className={`link-button ${activeFilters.has('history') ? 'active' : ''}`}
               onClick={() => handleFilterClick('history')}
             >
-              Historique
+              Ma biliothèque
             </button>
           </li>
           <li>

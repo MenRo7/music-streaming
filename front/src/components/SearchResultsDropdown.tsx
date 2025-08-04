@@ -16,7 +16,7 @@ interface Playlist {
   image: string | null;
 }
 
-interface JamendoTrack {
+interface Track {
   id: string;
   name: string;
   artist_name: string;
@@ -27,7 +27,7 @@ interface JamendoTrack {
 interface SearchResultsDropdownProps {
   users?: User[];
   playlists?: Playlist[];
-  musics?: JamendoTrack[];
+  musics?: Track[];
   visible: boolean;
   onClose: () => void;
   onLoadMore: () => void;

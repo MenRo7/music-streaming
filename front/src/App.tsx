@@ -8,6 +8,7 @@ import ProfilePage from './pages/ProfilePage';
 import MainPage from './pages/MainPage';
 import AuthPage from './pages/AuthPage';
 import AlbumPage from './pages/AlbumPage';
+import ImportPage from './pages/ImportPage';
 
 import { AuthProvider } from './apis/AuthContext';
 import { PlaylistProvider } from './apis/PlaylistContext';
@@ -33,6 +34,14 @@ const App: React.FC = () => {
                   <Route path="/auth" element={<AuthPage />} />
 
                   <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
+
+                  <Route path="/import" element={<PrivateRoute element={
+                    <>
+                      <Navbar />
+                      <Sidebar />
+                      <ImportPage />
+                    </>
+                  } />} />
 
                   <Route path="/playlist/:id" element={<PrivateRoute element={
                     <>
