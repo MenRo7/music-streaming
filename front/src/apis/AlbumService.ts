@@ -1,30 +1,13 @@
 import axios from 'axios';
 import { API_URL } from './api';
 
-export interface Album {
-  id: string;
-  title: string;
-  image: string;
-  artist_name?: string;
-  songs?: Song[];
-}
-
-export interface Song {
-  id: string;
-  name: string;
-  artist: string;
-  album: string;
-  dateAdded: string;
-  duration: string;
-  audio?: string;
-}
-
-export const getAlbumById = async (id: string): Promise<Album> => {
-  const response = await axios.get(`${API_URL}/albums/${id}`, {
+export const createAlbum = async (formData: FormData) => {
+  const token = localStorage.getItem('authToken');
+  const response = await axios.post(`${API_URL}/album`, formData, {
     headers: {
-      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
     },
   });
   return response.data;
 };
-

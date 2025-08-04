@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { API_URL } from '../apis/api';
+import { createMusic } from '../apis/MusicService';
+
 import '../styles/ImportPage.css';
 
 interface Song {
@@ -11,7 +15,10 @@ const ImportPage = () => {
   const [albumType, setAlbumType] = useState('single');
   const [songs, setSongs] = useState<Song[]>([{ title: '', file: null }]);
   const [albumImage, setAlbumImage] = useState<File | null>(null);
-  const [importType, setImportType] = useState<'music' | 'album'>('music'); // Type importé
+  const [musicTitle, setMusicTitle] = useState('');
+  const [musicFile, setMusicFile] = useState<File | null>(null);
+  const [musicImage, setMusicImage] = useState<File | null>(null);
+  const [importType, setImportType] = useState<'music' | 'album'>('music');
 
   const addSong = () => {
     setSongs([...songs, { title: '', file: null }]);
@@ -26,6 +33,40 @@ const ImportPage = () => {
     const updatedSongs = [...songs];
     updatedSongs[index][field] = value;
     setSongs(updatedSongs);
+  };
+
+  const submitMusic = async () => {
+    const formData = new FormData();
+    formData.append('title', musicTitle);
+    formData.append('audio', musicFile!);
+    if (musicImage) formData.append('image', musicImage);
+
+    try {
+      await createMusic(formData); 
+    } catch (error) {
+      console.error('Error adding music:', error);
+    }
+  };
+
+  const submitAlbum = async () => {
+    const formData = new FormData();
+    formData.append('title', albumName);
+    formData.append('type', albumType);
+    if (albumImage) formData.append('image', albumImage);
+
+    songs.forEach((song, index) => {
+      formData.append(`songs[${index}][title]`, song.title);
+      if (song.file) formData.append(`songs[${index}][audio]`, song.file);
+      if (albumImage) formData.append(`songs[${index}][image]`, albumImage);
+    });
+
+    try {
+      await axios.post(`${API_URL}/album`, formData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+      });
+    } catch (error) {
+      console.error('Error adding album:', error);
+    }
   };
 
   return (
@@ -55,13 +96,26 @@ const ImportPage = () => {
               <input
                 type="text"
                 placeholder="Entrez le titre de la musique"
+                value={musicTitle}
+                onChange={(e) => setMusicTitle(e.target.value)}
               />
             </div>
             <div className="import-form">
               <label>Fichier audio</label>
-              <input type="file" accept="audio/*" />
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setMusicFile(e.target.files ? e.target.files[0] : null)}
+              />
             </div>
-            <button className="submit-btn">Importer</button>
+            <div className="import-form">
+              <label>Image de la musique</label>
+              <input
+                type="file"
+                onChange={(e) => setMusicImage(e.target.files ? e.target.files[0] : null)}
+              />
+            </div>
+            <button className="submit-btn" onClick={submitMusic}>Ajouter la musique</button>
           </div>
         )}
 
@@ -93,7 +147,6 @@ const ImportPage = () => {
               <label>Image de l'album</label>
               <input
                 type="file"
-                accept="image/*"
                 onChange={(e) => setAlbumImage(e.target.files ? e.target.files[0] : null)}
               />
             </div>
@@ -124,7 +177,7 @@ const ImportPage = () => {
               <button className="add-song-btn" onClick={addSong}>Ajouter un morceau</button>
             </div>
 
-            <button className="submit-btn">Importer l'album</button>
+            <button className="submit-btn" onClick={submitAlbum}>Ajouter l'album</button>
           </div>
         )}
       </div>

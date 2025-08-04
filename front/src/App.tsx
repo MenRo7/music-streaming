@@ -7,7 +7,7 @@ import PlaylistPage from './pages/PlaylistPage';
 import ProfilePage from './pages/ProfilePage';
 import MainPage from './pages/MainPage';
 import AuthPage from './pages/AuthPage';
-import AlbumPage from './pages/AlbumPage';
+// import AlbumPage from './pages/AlbumPage';
 import ImportPage from './pages/ImportPage';
 
 import { AuthProvider } from './apis/AuthContext';
@@ -51,13 +51,13 @@ const App: React.FC = () => {
                     </>
                   } />} />
 
-                  <Route path="/albums/:id" element={<PrivateRoute element={
+{/*                   <Route path="/albums/:id" element={<PrivateRoute element={
                     <>
                       <Navbar />
                       <Sidebar />
                       <AlbumPage />
                     </>
-                  } />} />
+                  } />} /> */}
 
                   <Route path="/profile" element={<PrivateRoute element={
                     <>

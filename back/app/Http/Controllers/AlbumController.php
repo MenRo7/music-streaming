@@ -2,46 +2,65 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Http;
+use App\Models\Album;
+use App\Models\Music;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AlbumController extends Controller
 {
-    public function show($id)
+    public function store(Request $request)
     {
-        try {
-            $album = Album::find($id);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'type' => 'required|in:single,ep,album,compilation',
+            'image' => 'nullable|image',
+            'songs' => 'required|array|min:1',
+            'songs.*.title' => 'required|string|max:255',
+            'songs.*.audio' => 'required|mimes:mp3,wav,flac',
+        ]);
 
-            if (!$album) {
-                return response()->json(['error' => 'Album not found'], 404);
+        $user = Auth::user();
+
+        $album = new Album();
+        $album->title = $request->title;
+        $album->type = $request->type;
+        $album->artist_name = $user->name;
+        $album->user_id = $user->id;
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('album_images', 'public');
+            $album->image = $imagePath;
+        }
+
+        $album->save();
+
+        foreach ($request->songs as $songData) {
+            $music = new Music();
+            $music->title = $songData['title'];
+            $music->artist_name = $user->name;
+            $music->user_id = $user->id;
+            $music->album_id = $album->id;
+
+            if (isset($songData['audio'])) {
+                $audioPath = Storage::disk('public')->put('musics', $songData['audio']);
+                $music->audio = $audioPath;
             }
 
-            $songs = $album->tracks()->get();
+            if (isset($songData['image'])) {
+                $imagePath = Storage::disk('public')->put('music_images', $songData['image']);
+                $music->image = $imagePath;
+            }
 
-            $albumData = [
-                'id' => $album->id,
-                'title' => $album->title,
-                'image' => $album->image,
-                'artist_name' => $album->artist_name,
-                'songs' => $songs->map(function ($track) {
-                    return [
-                        'id' => $track->id,
-                        'name' => $track->name,
-                        'duration' => gmdate("i:s", $track->duration),
-                        'audio' => asset('storage/' . $track->audio),
-                        'artist' => $track->artist_name,
-                        'album_image' => asset('storage/' . $track->album_image),
-                        'album' => $track->album_name,
-                    ];
-                }),
-            ];
-
-            return response()->json($albumData);
-        } catch (\Exception $e) {
-            \Log::error('Album fetch error: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Exception while fetching album',
-                'exception' => $e->getMessage(),
-            ], 500);
+            $music->save();
         }
+
+        return response()->json([
+            'message' => 'Album et morceaux ajoutés avec succès',
+            'album' => $album,
+        ]);
     }
 }
+
+
