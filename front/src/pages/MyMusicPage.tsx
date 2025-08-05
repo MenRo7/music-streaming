@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import { getUserMusics, getUserAlbums } from '../apis/MyMusicService';
 import { usePlayer } from '../apis/PlayerContext';
 import PlaylistCard from '../components/PlaylistCard';
+import DropdownMenu from '../components/DropdownMenu';
 
 import '../styles/MyMusicPage.css';
 
 const MyMusicPage: React.FC = () => {
   const [musics, setMusics] = useState<any[]>([]);
   const [albums, setAlbums] = useState<any[]>([]);
-  const { playSong } = usePlayer();
+  const { playSong, currentTrackId, isPlaying } = usePlayer();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,10 +26,9 @@ const MyMusicPage: React.FC = () => {
           name: music.title,
           artist: music.artist_name,
           album: albumData.find((a: any) => a.id === music.album_id)?.title || 'Inconnu',
-          album_image: music.image ? `/storage/${music.image}` : '',
-          audio: `/storage/${music.audio}`,
+          album_image: music.image || '',
+          audio: music.audio || '',
           dateAdded: new Date(music.created_at).toLocaleDateString(),
-          duration: '3:45',
         }));
 
         setMusics(formattedSongs);
@@ -43,7 +43,7 @@ const MyMusicPage: React.FC = () => {
 
   const handlePlaySong = (song: any) => {
     if (song.audio) {
-      playSong(song.audio, song.name, song.artist, song.album_image);
+      playSong(song.audio, song.name, song.artist, song.album_image, song.id);
     }
   };
 
@@ -59,12 +59,12 @@ const MyMusicPage: React.FC = () => {
               <th>Album</th>
               <th>Artiste</th>
               <th>Date d'ajout</th>
-              <th>Durée</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {musics.map((song, index) => (
-              <tr key={index} className="song-row">
+              <tr key={index} className={`song-row ${isPlaying && currentTrackId === song.id ? 'playing' : ''}`}>
                 <td className="track-number-cell" onClick={() => handlePlaySong(song)}>
                   <span className="track-number">{index + 1}</span>
                   <FontAwesomeIcon icon={faPlay} className="hover-play-icon" />
@@ -73,7 +73,18 @@ const MyMusicPage: React.FC = () => {
                 <td>{song.album}</td>
                 <td>{song.artist}</td>
                 <td>{song.dateAdded}</td>
-                <td>{song.duration}</td>
+                <td>
+                  <DropdownMenu
+                    items={[
+                      {
+                        label: 'Action à venir',
+                        onClick: () => console.log('Clicked action'),
+                      },
+                    ]}
+                    trigger={<FontAwesomeIcon icon={faEllipsisV} className="action-icon" />}
+                    menuClassName="song-dropdown-menu"
+                  />
+                </td>
               </tr>
             ))}
           </tbody>

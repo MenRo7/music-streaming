@@ -134,3 +134,25 @@ h2 {
 .album-row::-webkit-scrollbar-thumb:hover {
   background-color: #555;
 }
+
+.action-icon {
+  font-size: 1.1rem;
+  color: #f3f0ff;
+  cursor: pointer;
+  padding: 6px;
+  transition: color 0.3s;
+}
+
+.action-icon:hover {
+  color: #5e2d91;
+}
+
+.song-dropdown-menu {
+  top: 25px;
+  right: 10px;
+}
+
+.song-row.playing {
+  background-color: #5e2d91;
+  color: #fff;
+}

@@ -64,6 +64,13 @@ class MusicController extends Controller
     {
         $user = Auth::user();
         $musics = Music::where('user_id', $user->id)->get();
+
+        $musics->transform(function ($music) {
+            $music->audio = $music->audio ? asset('storage/' . $music->audio) : null;
+            $music->image = $music->image ? asset('storage/' . $music->image) : null;
+            return $music;
+        });
+
         return response()->json($musics);
     }
 }
