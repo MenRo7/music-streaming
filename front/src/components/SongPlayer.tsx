@@ -92,7 +92,7 @@ const SongPlayer: React.FC = () => {
   return (
     <div className="song-player">
       <div className="player-left">
-        <img src={albumImage ? albumImage : DEFAULT_IMAGE} alt="Album" className="album-image" />
+        <img src={albumImage ? albumImage : DEFAULT_IMAGE} alt="Album" className="player-album-image" />
         <div className="song-info">
           <p className="song-title">{title || 'Aucun titre'}</p>
           <p className="song-artist">{artist || 'Artiste inconnu'}</p>

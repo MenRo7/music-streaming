@@ -17,11 +17,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user', [AuthController::class, 'user']);
 
+    Route::get('/my-musics', [MusicController::class, 'myMusic']);
     Route::post('/music', [MusicController::class, 'store']);
     Route::get('/music', [MusicController::class, 'index']);
     Route::get('/music/{id}', [MusicController::class, 'show']);
     Route::put('/music/{id}', [MusicController::class, 'update']);
     Route::delete('/music/{id}', [MusicController::class, 'destroy']);
+    
+    Route::get('/my-albums', [AlbumController::class, 'myAlbums']);
     Route::post('/album', [AlbumController::class, 'store']);
     Route::get('/album', [AlbumController::class, 'index']);
     Route::get('/album/{id}', [AlbumController::class, 'show']);

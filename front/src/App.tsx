@@ -9,6 +9,7 @@ import MainPage from './pages/MainPage';
 import AuthPage from './pages/AuthPage';
 // import AlbumPage from './pages/AlbumPage';
 import ImportPage from './pages/ImportPage';
+import MyMusicPage from './pages/MyMusicPage';
 
 import { AuthProvider } from './apis/AuthContext';
 import { PlaylistProvider } from './apis/PlaylistContext';
@@ -64,6 +65,14 @@ const App: React.FC = () => {
                       <Navbar />
                       <Sidebar />
                       <ProfilePage />
+                    </>
+                  } />} />
+
+                  <Route path="/my-music" element={<PrivateRoute element={
+                    <>
+                      <Navbar />
+                      <Sidebar />
+                      <MyMusicPage />
                     </>
                   } />} />
 

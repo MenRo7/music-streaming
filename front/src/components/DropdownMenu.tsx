@@ -1,4 +1,3 @@
-// src/components/DropdownMenu.tsx
 import React, { useState, useRef, useEffect, ReactNode } from 'react';
 import '../styles/DropdownMenu.css';
 

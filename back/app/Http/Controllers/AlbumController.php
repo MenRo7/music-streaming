@@ -12,7 +12,18 @@ class AlbumController extends Controller
 {
     public function index()
     {
-        $albums = Album::all();
+        $albums = Auth::user()->albums->map(function ($album) {
+        return [
+            'id' => $album->id,
+            'title' => $album->title,
+            'type' => $album->type,
+            'image' => $album->image ? asset('storage/' . $album->image) : null,
+            'user_id' => $album->user_id,
+            'artist_name' => $album->artist_name,
+            'created_at' => $album->created_at,
+        ];
+    });
+
         return response()->json($albums);
     }
 
@@ -24,8 +35,17 @@ class AlbumController extends Controller
             return response()->json(['message' => 'Album non trouvé'], 404);
         }
 
-        return response()->json($album);
+        return response()->json([
+            'id' => $album->id,
+            'title' => $album->title,
+            'type' => $album->type,
+            'image' => $album->image ? asset('storage/' . $album->image) : null,
+            'user_id' => $album->user_id,
+            'artist_name' => $album->artist_name,
+            'created_at' => $album->created_at,
+        ]);
     }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -76,6 +96,26 @@ class AlbumController extends Controller
             'message' => 'Album et morceaux ajoutés avec succès',
             'album' => $album,
         ]);
+    }
+
+    public function myAlbums()
+    {
+        $user = Auth::user();
+        $albums = Album::where('user_id', $user->id)->get();
+
+        $formattedAlbums = $albums->map(function ($album) {
+            return [
+                'id' => $album->id,
+                'title' => $album->title,
+                'type' => $album->type,
+                'image' => $album->image ? asset('storage/' . $album->image) : null,
+                'user_id' => $album->user_id,
+                'artist_name' => $album->artist_name,
+                'created_at' => $album->created_at,
+            ];
+        });
+
+        return response()->json($formattedAlbums);
     }
 }
 

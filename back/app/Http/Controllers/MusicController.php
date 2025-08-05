@@ -60,4 +60,10 @@ class MusicController extends Controller
         ]);
     }
 
+    public function myMusic()
+    {
+        $user = Auth::user();
+        $musics = Music::where('user_id', $user->id)->get();
+        return response()->json($musics);
+    }
 }
