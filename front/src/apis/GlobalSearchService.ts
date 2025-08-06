@@ -15,10 +15,16 @@ export interface Playlist {
 
 export interface Music {
   id: string;
-  name: string;
+  title: string;
   artist_name: string;
-  image: string | null;
   audio: string;
+  image: string | null;
+}
+
+export interface Album {
+  id: number;
+  title: string;
+  image: string | null;
 }
 
 export interface SearchResults {
@@ -28,15 +34,21 @@ export interface SearchResults {
   playlists?: {
     data: Playlist[];
   };
-  musics?: Music[];
+  musics?: {
+    data: Music[];
+  };
+  albums?: {
+    data: Album[];
+  };
 }
 
 export const search = async (
   query: string,
-  categories: ('user' | 'playlist' | 'music')[],
+  categories: ('user' | 'playlist' | 'music' | 'album')[],
   usersPage = 1,
   playlistsPage = 1,
   musicsPage = 1,
+  albumsPage = 1,
   perPage = 10
 ): Promise<SearchResults> => {
   try {
@@ -47,6 +59,7 @@ export const search = async (
         users_page: usersPage,
         playlists_page: playlistsPage,
         musics_page: musicsPage,
+        albums_page: albumsPage,
         per_page: perPage,
       },
       headers: {
@@ -60,5 +73,3 @@ export const search = async (
     throw error;
   }
 };
-
-

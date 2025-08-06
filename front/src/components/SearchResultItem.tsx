@@ -6,14 +6,15 @@ interface SearchResultItemProps {
   image: string | null;
   label: string;
   isRounded?: boolean;
+  onClick?: () => void;
   children?: ReactNode;
 }
 
-const DEFAULT_IMAGE = '../../public/default-playlist-image.png';
+const DEFAULT_IMAGE = '/default-playlist-image.png';
 
-const SearchResultItem: React.FC<SearchResultItemProps> = ({ image, label, isRounded, children }) => {
+const SearchResultItem: React.FC<SearchResultItemProps> = ({ image, label, isRounded, onClick, children }) => {
   return (
-    <li className="search-result-item">
+    <li className="search-result-item" onClick={onClick}>  {/* Ajout de onClick sur l'élément */}
       {image && (
         <img
           src={image || DEFAULT_IMAGE}

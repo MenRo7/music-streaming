@@ -1,20 +1,33 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faRandom, faEllipsisH, faBars } from '@fortawesome/free-solid-svg-icons';
+
 import DropdownMenu from '../components/DropdownMenu';
+import SongList from '../components/SongList';
 
 import '../styles/MediaPage.css';
 
+interface Song {
+  id: number;
+  name: string;
+  artist: string;
+  album?: string;
+  album_image?: string;
+  audio: string;
+  dateAdded?: string;
+  duration?: string;
+}
 
 interface MediaPageProps {
   title: string;
   artist?: string;
   image: string;
-  songs: any[];
+  songs: Song[];
   isPlaylist?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
   renderModal?: React.ReactNode;
+  getActions?: (song: Song) => { label: string; onClick: () => void }[]; // 👈 ajouter ceci
 }
 
 const MediaPage: React.FC<MediaPageProps> = ({
@@ -22,10 +35,11 @@ const MediaPage: React.FC<MediaPageProps> = ({
   artist,
   image,
   songs,
-  isPlaylist = true,
+  isPlaylist = false,
   onEdit,
   onDelete,
-  renderModal
+  renderModal,
+  getActions, // 👈 ici aussi
 }) => {
   return (
     <div className="media-content">
@@ -45,7 +59,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
             <DropdownMenu
               items={[
                 ...(onEdit ? [{ label: 'Modifier', onClick: onEdit }] : []),
-                ...(onDelete ? [{ label: 'Supprimer', onClick: onDelete }] : [])
+                ...(onDelete ? [{ label: 'Supprimer', onClick: onDelete }] : []),
               ]}
               trigger={<FontAwesomeIcon icon={faEllipsisH} className="control-icon" />}
             />
@@ -53,29 +67,16 @@ const MediaPage: React.FC<MediaPageProps> = ({
           <FontAwesomeIcon icon={faBars} className="control-icon burger-menu" />
         </div>
 
-        <table className="song-table">
-          <thead>
-            <tr>
-              <th>Nom</th>
-              {isPlaylist && <th>Album</th>}
-              {isPlaylist && <th>Artiste</th>}
-              {isPlaylist && <th>Date d'ajout</th>}
-              <th>Durée</th>
-            </tr>
-          </thead>
-          <tbody>
-            {songs?.map((song, index) => (
-              <tr key={index}>
-                <td>{song.name}</td>
-                {isPlaylist && <td>{song.album}</td>}
-                {isPlaylist && <td>{song.artist}</td>}
-                {isPlaylist && <td>{song.dateAdded}</td>}
-                <td>{song.duration}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <SongList
+          songs={songs}
+          showAlbum={true}
+          showArtist={true}
+          showDateAdded={true}
+          showDuration={false}
+          getActions={isPlaylist ? getActions : undefined} // 👈 passe les actions seulement si c’est une playlist
+        />
       </div>
+
       {renderModal}
     </div>
   );

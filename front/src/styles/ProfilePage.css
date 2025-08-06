@@ -1,4 +1,4 @@
-.profile-content {
+.profile-page {
   position: fixed;
   top: 90px;
   bottom: 75px;
@@ -18,7 +18,7 @@
 }
 
 @media (max-width: 1200px) {
-  .profile-content {
+  .profile-page {
     position: fixed;
     top: 90px;
     bottom: 75px;
@@ -39,7 +39,7 @@
 }
 
 @media (max-width: 625px) {
-  .profile-content {
+  .profile-page {
     position: fixed;
     top: 90px;
     bottom: 75px;
@@ -59,20 +59,20 @@
   }
 }
 
-.profile-content::-webkit-scrollbar {
+.profile-page::-webkit-scrollbar {
   width: 8px;
 }
 
-.profile-content::-webkit-scrollbar-thumb {
+.profile-page::-webkit-scrollbar-thumb {
   background-color: #888;
   border-radius: 4px;
 }
 
-.profile-content::-webkit-scrollbar-thumb:hover {
+.profile-page::-webkit-scrollbar-thumb:hover {
   background-color: #555;
 }
 
-.profile-page {
+.profile-content {
     padding: 20px;
     color: #f3f0ff;
     background-color: #252525;

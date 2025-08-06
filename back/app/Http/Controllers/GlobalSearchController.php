@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Playlist;
+use App\Models\Music;
+use App\Models\Album;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -18,6 +20,7 @@ class GlobalSearchController extends Controller
             'users_page' => 'integer|min:1',
             'playlists_page' => 'integer|min:1',
             'musics_page' => 'integer|min:1',
+            'albums_page' => 'integer|min:1',
             'per_page' => 'integer|min:1|max:50',
         ]);
 
@@ -27,6 +30,7 @@ class GlobalSearchController extends Controller
         $usersPage = $request->input('users_page', 1);
         $playlistsPage = $request->input('playlists_page', 1);
         $musicsPage = $request->input('musics_page', 1);
+        $albumsPage = $request->input('albums_page', 1);
 
         $results = [];
 
@@ -40,7 +44,7 @@ class GlobalSearchController extends Controller
                 return $user;
             });
 
-            $results['users'] = $users;
+            $results['users'] = ['data' => $users->items()];
         }
 
         if (in_array('playlist', $categories)) {
@@ -53,72 +57,36 @@ class GlobalSearchController extends Controller
                 return $playlist;
             });
 
-            $results['playlists'] = $playlists;
+            $results['playlists'] = ['data' => $playlists->items()];
         }
 
         if (in_array('music', $categories)) {
-            $allTracks = collect();
+            $musics = Music::where('title', 'like', '%' . $query . '%')
+                ->select('id', 'title', 'audio', 'image', 'artist_name')
+                ->paginate($perPage, ['*'], 'musics_page', $musicsPage);
 
-            $limit = $perPage;
-            $offset = ($musicsPage - 1) * $limit;
+            $musics->getCollection()->transform(function ($music) {
+                $music->audio = asset('storage/' . $music->audio);
+                $music->image = $music->image ? asset('storage/' . $music->image) : null;
+                return $music;
+            });
 
-            try {
-                $externalResponse = Http::get('https://freemusicapi.vercel.app/api/tracks', [
-                    'q' => $query,
-                ]);
+            $results['musics'] = ['data' => $musics->items()];
+        }
 
-                if ($externalResponse->successful()) {
-                    $tracks = collect($externalResponse->json())->slice($offset, $limit);
+        if (in_array('album', $categories)) {
+            $albums = Album::where('title', 'like', '%' . $query . '%')
+                ->select('id', 'title', 'image')
+                ->paginate($perPage, ['*'], 'albums_page', $albumsPage);
 
-                    $formattedTracks = $tracks->map(function ($track) {
-                        return [
-                            'id' => $track['id'] ?? uniqid(),
-                            'name' => $track['title'] ?? 'Unknown Title',
-                            'artist_name' => $track['artist'] ?? 'Unknown Artist',
-                            'image' => $track['thumbnail'] ?? null,
-                            'audio' => $track['audio_url'] ?? null,
-                        ];
-                    });
+            $albums->getCollection()->transform(function ($album) {
+                $album->image = $album->image ? asset('storage/' . $album->image) : null;
+                return $album;
+            });
 
-                    $allTracks = $allTracks->merge($formattedTracks);
-                }
-            } catch (\Exception $e) {
-                \Log::error('FreeMusicAPI error: ' . $e->getMessage());
-            }
-
-            try {
-                $jamendoResponse = Http::get('https://api.jamendo.com/v3.0/tracks/', [
-                    'client_id' => env('JAMENDO_CLIENT_ID'),
-                    'format' => 'json',
-                    'limit' => $limit,
-                    'offset' => $offset,
-                    'search' => $query,
-                    'include' => 'musicinfo',
-                    'audioformat' => 'mp31',
-                ]);
-
-                if ($jamendoResponse->successful()) {
-                    $jamendoData = $jamendoResponse->json();
-                    $jamendoTracks = collect($jamendoData['results'])->map(function ($track) {
-                        return [
-                            'id' => $track['id'] ?? uniqid(),
-                            'name' => $track['name'] ?? 'Unknown Title',
-                            'artist_name' => $track['artist_name'] ?? 'Unknown Artist',
-                            'image' => $track['album_image'] ?? null,
-                            'audio' => $track['audio'] ?? null,
-                        ];
-                    });
-
-                    $allTracks = $allTracks->merge($jamendoTracks);
-                }
-            } catch (\Exception $e) {
-                \Log::error('Jamendo API error: ' . $e->getMessage());
-            }
-
-            $results['musics'] = $allTracks->values();
+            $results['albums'] = ['data' => $albums->items()];
         }
 
         return response()->json($results);
     }
-
 }

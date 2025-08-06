@@ -56,8 +56,8 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="profile-content">
-      <div className="profile-page">
+    <div className="profile-page">
+      <div className="profile-content">
         <div className="profile-header">
         <img
           className="profile-image"

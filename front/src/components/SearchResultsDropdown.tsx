@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-
+import React, { useRef, useEffect } from 'react';
+import { usePlayer } from '../apis/PlayerContext'; // Import du PlayerContext
 import SearchResultItem from './SearchResultItem';
-
 import '../styles/SearchResultsDropdown.css';
 
 interface User {
@@ -16,18 +15,25 @@ interface Playlist {
   image: string | null;
 }
 
-interface JamendoTrack {
+interface Music {
   id: string;
-  name: string;
+  title: string;
   artist_name: string;
   audio: string;
+  image: string | null;
+}
+
+interface Album {
+  id: number;
+  title: string;
   image: string | null;
 }
 
 interface SearchResultsDropdownProps {
   users?: User[];
   playlists?: Playlist[];
-  musics?: JamendoTrack[];
+  musics?: Music[];
+  albums?: Album[];
   visible: boolean;
   onClose: () => void;
   onLoadMore: () => void;
@@ -38,12 +44,18 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
   users = [],
   playlists = [],
   musics = [],
+  albums = [],
   visible,
   onClose,
   onLoadMore,
   loadingMore
 }) => {
+  const { playSong } = usePlayer(); // Utilisation du PlayerContext pour jouer une chanson
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleMusicClick = (music: Music) => {
+    playSong(music.audio, music.title, music.artist_name, music.image ?? "");
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,7 +82,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
     }
   };
 
-  if (!visible || (users.length === 0 && playlists.length === 0 && musics.length === 0)) return null;
+    if (!visible || (users.length === 0 && playlists.length === 0 && musics.length === 0)) return null;
 
   return (
     <div
@@ -110,13 +122,28 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
       )}
       {musics.length > 0 && (
         <div className="search-section">
-          <h4>Musiques libres</h4>
+          <h4>Musiques</h4>
           <ul className="search-result-list">
             {musics.map(track => (
               <SearchResultItem
                 key={track.id}
                 image={track.image}
-                label={`${track.name} - ${track.artist_name}`}
+                label={`${track.title} - ${track.artist_name}`}
+                onClick={() => handleMusicClick(track)}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+      {albums.length > 0 && (
+        <div className="search-section">
+          <h4>Albums</h4>
+          <ul className="search-result-list">
+            {albums.map(album => (
+              <SearchResultItem
+                key={album.id}
+                image={album.image}
+                label={album.title}
               />
             ))}
           </ul>

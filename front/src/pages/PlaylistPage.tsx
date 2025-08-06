@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+
 import MediaPage from './MediaPage';
-import { getPlaylistById, deletePlaylist } from '../apis/PlaylistService';
+import {
+  getPlaylistById,
+  deletePlaylist,
+  removeMusicFromPlaylist,
+} from '../apis/PlaylistService';
 import { usePlaylists } from '../apis/PlaylistContext';
 import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
 
@@ -20,6 +25,19 @@ const PlaylistPage: React.FC = () => {
       setPlaylist(data);
     } catch (error) {
       console.error('Erreur de chargement de la playlist:', error);
+    }
+  };
+
+  const handleRemoveMusicFromPlaylist = async (songId: number) => {
+    if (!playlist) return;
+    try {
+      await removeMusicFromPlaylist(playlist.id, songId);
+      setPlaylist((prev: any) => ({
+        ...prev,
+        songs: prev.songs.filter((song: any) => song.id !== songId),
+      }));
+    } catch (error) {
+      alert("Erreur lors de la suppression de la musique de la playlist.");
     }
   };
 
@@ -64,6 +82,12 @@ const PlaylistPage: React.FC = () => {
           mode="edit"
         />
       }
+      getActions={(song) => [
+        {
+          label: 'Supprimer de cette playlist',
+          onClick: () => handleRemoveMusicFromPlaylist(song.id),
+        },
+      ]}
     />
   );
 };
