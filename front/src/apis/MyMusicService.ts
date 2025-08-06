@@ -29,3 +29,31 @@ export const getUserAlbums = async () => {
     throw error;
   }
 };
+
+export const deleteMusic = async (id: number) => {
+  try {
+    const response = await axios.delete(`${API_URL}/music/${id}`, getAuthHeaders());
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la musique :", error);
+    throw error;
+  }
+};
+
+export const updateMusic = async (id: number, data: FormData) => {
+  const token = localStorage.getItem('authToken');
+  data.append('_method', 'PUT');
+
+  try {
+    const response = await axios.post(`${API_URL}/music/${id}`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la musique :", error);
+    throw error;
+  }
+};

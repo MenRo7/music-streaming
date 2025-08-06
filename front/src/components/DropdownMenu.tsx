@@ -4,6 +4,7 @@ import '../styles/DropdownMenu.css';
 interface DropdownItem {
   label: string;
   onClick: () => void;
+  customContent?: ReactNode;
 }
 
 interface DropdownMenuProps {
@@ -47,9 +48,13 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
           <ul>
             {items.map((item, index) => (
               <li key={index}>
-                <button className="dropdown-item" onClick={() => { item.onClick(); setOpen(false); }}>
-                  {item.label}
-                </button>
+                {item.customContent ? (
+                  item.customContent
+                ) : (
+                  <button className="dropdown-item" onClick={() => { item.onClick?.(); setOpen(false); }}>
+                    {item.label}
+                  </button>
+                )}
               </li>
             ))}
           </ul>

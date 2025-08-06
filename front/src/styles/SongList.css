@@ -1,14 +1,80 @@
-/* SongList.css */
-.songList {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    color: #f3f0ff;
-  }
-  
-  .songList h2 {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-    color: #d1b3ff;
-  }
-  
+.song-table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  color: #f3f0ff;
+}
+
+.song-table th,
+.song-table td {
+  padding: 12px;
+  text-align: left;
+}
+
+.song-table th {
+  background-color: #333;
+  color: #fff;
+}
+
+.song-table td {
+  border-bottom: 1px solid #ddd;
+}
+
+.song-table tr:hover {
+  background-color: #555;
+}
+
+.track-number-cell {
+  width: 40px;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.track-number {
+  display: inline-block;
+  transition: opacity 0.2s ease;
+}
+
+.hover-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: #fff;
+  pointer-events: none;
+}
+
+.song-row:hover .track-number {
+  opacity: 0;
+}
+
+.song-row:hover .hover-play-icon {
+  opacity: 1;
+  pointer-events: auto;
+  color: #5e2d91;
+}
+
+.song-row.playing {
+  background-color: #5e2d91;
+  color: #fff;
+}
+
+.action-icon {
+  font-size: 1.1rem;
+  color: #f3f0ff;
+  cursor: pointer;
+  padding: 6px;
+  transition: color 0.3s;
+}
+
+.action-icon:hover {
+  color: #5e2d91;
+}
+
+.song-dropdown-menu {
+  top: 25px;
+  right: 10px;
+}

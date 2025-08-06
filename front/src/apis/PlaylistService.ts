@@ -38,8 +38,25 @@ export const updatePlaylist = async (id: number, playlist: FormData) => {
   return response.data;
 };
 
-
 export const deletePlaylist = async (id: number) => {
   const response = await axios.delete(`${API_URL}/playlists/${id}`, getAuthHeaders());
+  return response.data;
+};
+
+export const addMusicToPlaylist = async (playlistId: number, musicId: number) => {
+  const response = await axios.post(
+    `${API_URL}/playlists/${playlistId}/add-music`,
+    { music_id: musicId },
+    getAuthHeaders()
+  );
+  return response.data;
+};
+
+export const removeMusicFromPlaylist = async (playlistId: number, musicId: number) => {
+  const response = await axios.post(
+    `${API_URL}/playlists/${playlistId}/remove-music`,
+    { music_id: musicId },
+    getAuthHeaders()
+  );
   return response.data;
 };

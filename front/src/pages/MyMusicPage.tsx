@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
-import { getUserMusics, getUserAlbums } from '../apis/MyMusicService';
-import { usePlayer } from '../apis/PlayerContext';
+import { useNavigate } from 'react-router-dom';
+
+import {
+  getUserMusics,
+  getUserAlbums,
+  deleteMusic,
+} from '../apis/MyMusicService';
+import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
+
 import PlaylistCard from '../components/PlaylistCard';
-import DropdownMenu from '../components/DropdownMenu';
+import SongList from '../components/SongList';
 
 import '../styles/MyMusicPage.css';
 
 const MyMusicPage: React.FC = () => {
+  const navigate = useNavigate();
   const [musics, setMusics] = useState<any[]>([]);
   const [albums, setAlbums] = useState<any[]>([]);
-  const { playSong, currentTrackId, isPlaying } = usePlayer();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,6 +34,7 @@ const MyMusicPage: React.FC = () => {
           album_image: music.image || '',
           audio: music.audio || '',
           dateAdded: new Date(music.created_at).toLocaleDateString(),
+          playlistIds: music.playlist_ids || [],
         }));
 
         setMusics(formattedSongs);
@@ -41,9 +47,15 @@ const MyMusicPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const handlePlaySong = (song: any) => {
-    if (song.audio) {
-      playSong(song.audio, song.name, song.artist, song.album_image, song.id);
+  const handleTogglePlaylist = async (playlistId: number, checked: boolean, songId: number) => {
+    try {
+      if (checked) {
+        await addMusicToPlaylist(playlistId, songId);
+      } else {
+        await removeMusicFromPlaylist(playlistId, songId);
+      }
+    } catch (error) {
+      alert("Erreur lors de la modification de la playlist.");
     }
   };
 
@@ -51,44 +63,44 @@ const MyMusicPage: React.FC = () => {
     <div className="media-content">
       <div className="media-page">
         <h2>Ma musique</h2>
-        <table className="song-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Nom</th>
-              <th>Album</th>
-              <th>Artiste</th>
-              <th>Date d'ajout</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {musics.map((song, index) => (
-              <tr key={index} className={`song-row ${isPlaying && currentTrackId === song.id ? 'playing' : ''}`}>
-                <td className="track-number-cell" onClick={() => handlePlaySong(song)}>
-                  <span className="track-number">{index + 1}</span>
-                  <FontAwesomeIcon icon={faPlay} className="hover-play-icon" />
-                </td>
-                <td>{song.name}</td>
-                <td>{song.album}</td>
-                <td>{song.artist}</td>
-                <td>{song.dateAdded}</td>
-                <td>
-                  <DropdownMenu
-                    items={[
-                      {
-                        label: 'Action à venir',
-                        onClick: () => console.log('Clicked action'),
-                      },
-                    ]}
-                    trigger={<FontAwesomeIcon icon={faEllipsisV} className="action-icon" />}
-                    menuClassName="song-dropdown-menu"
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+        <SongList
+          songs={musics}
+          showAlbum
+          showArtist
+          showDateAdded
+          showDuration={false}
+          getActions={(song) => [
+            {
+              label: 'Ajouter à une playlist',
+              onClick: () => {},
+              withPlaylistMenu: true,
+              songId: song.id,
+              existingPlaylistIds: song.playlistIds,
+              onToggle: (playlistId: number, checked: boolean) =>
+                handleTogglePlaylist(playlistId, checked, song.id),
+            },
+            {
+              label: 'Modifier la musique',
+              onClick: () => {
+                navigate(`/edit-music/${song.id}`);
+              },
+            },
+            {
+              label: 'Supprimer',
+              onClick: async () => {
+                const confirm = window.confirm('Voulez-vous vraiment supprimer cette musique ?');
+                if (!confirm) return;
+                try {
+                  await deleteMusic(song.id);
+                  setMusics((prev) => prev.filter((m) => m.id !== song.id));
+                } catch (err) {
+                  alert('Erreur lors de la suppression');
+                }
+              },
+            },
+          ]}
+        />
 
         <h2 style={{ marginTop: '40px' }}>Mes Albums</h2>
         <div className="album-row">

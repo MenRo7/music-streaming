@@ -18,7 +18,12 @@ class Music extends Model
 
     public function album()
     {
-        return $this->belongsTo(Album::class)->nullable();
+        return $this->belongsTo(Album::class);
+    }
+
+    public function playlists()
+    {
+        return $this->belongsToMany(Playlist::class, 'music_playlist', 'music_id', 'playlist_id');
     }
 }
 

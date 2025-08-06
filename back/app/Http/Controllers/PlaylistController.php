@@ -26,7 +26,7 @@ class PlaylistController extends Controller
 
     public function show($id)
     {
-        $playlist = Playlist::find($id);
+        $playlist = Playlist::with('musics')->find($id);
 
         if (!$playlist) {
             return response()->json(['message' => 'Playlist non trouvée'], 404);
@@ -36,6 +36,18 @@ class PlaylistController extends Controller
             'id' => $playlist->id,
             'title' => $playlist->title,
             'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
+            'songs' => $playlist->musics->map(function ($music) {
+                return [
+                    'id' => $music->id,
+                    'name' => $music->title,
+                    'artist' => $music->artist_name,
+                    'album' => optional($music->album)->title ?? 'Inconnu',
+                    'album_image' => $music->image ? asset('storage/' . $music->image) : null,
+                    'audio' => $music->audio ? asset('storage/' . $music->audio) : null,
+                    'dateAdded' => optional($music->pivot->created_at)->format('d/m/Y'),
+                    'playlistIds' => $music->playlists->pluck('id'),
+                ];
+            }),
         ]);
     }
 
@@ -105,5 +117,19 @@ class PlaylistController extends Controller
         $playlist->delete();
 
         return response()->json(['message' => 'Playlist supprimée']);
+    }
+
+    public function addMusic(Request $request, Playlist $playlist)
+    {
+        $musicId = $request->input('music_id');
+        $playlist->musics()->attach($musicId);
+        return response()->json(['message' => 'Musique ajoutée']);
+    }
+
+    public function removeMusic(Request $request, Playlist $playlist)
+    {
+        $musicId = $request->input('music_id');
+        $playlist->musics()->detach($musicId);
+        return response()->json(['message' => 'Musique retirée']);
     }
 }

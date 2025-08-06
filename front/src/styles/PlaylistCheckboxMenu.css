@@ -1,0 +1,50 @@
+.playlist-checkbox-menu {
+  display: flex;
+  flex-direction: column;
+  background-color: #1e1e1e;
+  border-radius: 5px;
+  padding: 8px 12px;
+  min-width: 180px;
+  max-height: 250px;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+.playlist-checkbox-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.playlist-checkbox-menu::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+}
+
+.playlist-checkbox-menu::-webkit-scrollbar-thumb:hover {
+  background-color: #777;
+}
+
+.playlist-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.playlist-checkbox-item:hover {
+  background-color: #2e2e2e;
+}
+
+.playlist-checkbox-item input[type='checkbox'] {
+  accent-color: #5e2d91;
+  cursor: pointer;
+}
+
+.playlist-checkbox-item label {
+  color: #f3f0ff;
+  font-size: 0.95rem;
+  flex: 1;
+  cursor: pointer;
+}

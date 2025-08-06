@@ -19,43 +19,15 @@
 
 @media (max-width: 1200px) {
   .media-content {
-    position: fixed;
-    top: 90px;
-    bottom: 75px;
     left: 215px;
     width: calc(100% - 220px);
-    max-width: 1500px;
-    background-color: #252525;
-    color: #f3f0ff;
-    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    border-radius: 5px;
-    transition: width 0.3s ease;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #888 #252525;
   }
 }
 
 @media (max-width: 625px) {
   .media-content {
-    position: fixed;
-    top: 90px;
-    bottom: 75px;
     left: 125px;
     width: calc(100% - 130px);
-    max-width: 1500px;
-    background-color: #252525;
-    color: #f3f0ff;
-    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    border-radius: 5px;
-    transition: width 0.3s ease;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #888 #252525;
   }
 }
 
@@ -71,7 +43,6 @@
 .media-content::-webkit-scrollbar-thumb:hover {
   background-color: #555;
 }
-
 
 .media-page {
   padding: 20px;
@@ -91,17 +62,17 @@
   border-radius: 5px;
 }
 
+.media-texts {
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+}
+
 .media-artist {
   font-size: 0.9rem;
   color: #ccc;
   margin-left: 20px;
   margin-top: 4px;
-}
-
-.media-texts {
-  display: flex;
-  flex-direction: column;
-  margin-left: 20px;
 }
 
 h1 {
@@ -131,65 +102,4 @@ h1 {
 
 .burger-menu {
   margin-left: auto;
-}
-
-.song-table {
-  width: 100%;
-  margin-top: 20px;
-  border-collapse: collapse;
-  color: #f3f0ff;
-}
-
-.song-table th, .song-table td {
-  padding: 12px;
-  text-align: left;
-}
-
-.song-table th {
-  background-color: #333;
-  color: #fff;
-}
-
-.song-table tr:hover {
-  background-color: #555;
-}
-
-.song-table td {
-  border-bottom: 1px solid #ddd;
-}
-
-.song-row:hover .hover-play-icon {
-  opacity: 1;
-}
-
-.track-number-cell {
-  width: 40px;
-  text-align: center;
-  position: relative;
-  cursor: pointer;
-}
-
-.track-number {
-  display: inline-block;
-  transition: opacity 0.2s ease;
-}
-
-.hover-play-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  color: #fff;
-  pointer-events: none;
-}
-
-.song-row:hover .track-number {
-  opacity: 0;
-}
-
-.song-row:hover .hover-play-icon {
-  opacity: 1;
-  pointer-events: auto;
 }
