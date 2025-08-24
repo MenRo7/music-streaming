@@ -122,7 +122,7 @@ class PlaylistController extends Controller
     public function addMusic(Request $request, Playlist $playlist)
     {
         $musicId = $request->input('music_id');
-        $playlist->musics()->attach($musicId);
+        $playlist->musics()->syncWithoutDetaching([$musicId]);
         return response()->json(['message' => 'Musique ajoutée']);
     }
 

@@ -3,7 +3,7 @@
   top: 90px;
   bottom: 75px;
   left: 415px;
-  width: calc(100% - 420px);
+  width: calc(100% - 830px);
   max-width: 1500px;
   background-color: #252525;
   color: #f3f0ff;
@@ -19,11 +19,8 @@
 
 @media (max-width: 1200px) {
   .main-content {
-    position: fixed;
-    top: 90px;
-    bottom: 75px;
     left: 215px;
-    width: calc(100% - 220px);
+    width: calc(100% - 430px);
     max-width: 1500px;
     background-color: #252525;
     color: #f3f0ff;
@@ -40,11 +37,8 @@
 
 @media (max-width: 625px) {
   .main-content {
-    position: fixed;
-    top: 90px;
-    bottom: 75px;
     left: 125px;
-    width: calc(100% - 130px);
+    width: calc(100% - 250px);
     max-width: 1500px;
     background-color: #252525;
     color: #f3f0ff;
@@ -58,6 +52,3 @@
     scrollbar-color: #888 #252525;
   }
 }
-
-
-  

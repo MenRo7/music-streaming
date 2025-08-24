@@ -3,7 +3,7 @@
   top: 90px;
   bottom: 75px;
   left: 415px;
-  width: calc(100% - 420px);
+  width: calc(100% - 830px);
   max-width: 1500px;
   background-color: #252525;
   color: #f3f0ff;
@@ -20,14 +20,14 @@
 @media (max-width: 1200px) {
   .media-content {
     left: 215px;
-    width: calc(100% - 220px);
+    width: calc(100% - 430px);
   }
 }
 
 @media (max-width: 625px) {
   .media-content {
     left: 125px;
-    width: calc(100% - 130px);
+    width: calc(100% - 250px);
   }
 }
 
@@ -68,18 +68,18 @@
   margin-left: 20px;
 }
 
+.media-page h1 {
+  font-size: 2rem;
+  color: #f3f0ff;
+  margin: 0;
+  margin-left: 20px;
+}
+
 .media-artist {
   font-size: 0.9rem;
   color: #ccc;
   margin-left: 20px;
   margin-top: 4px;
-}
-
-h1 {
-  font-size: 2rem;
-  color: #f3f0ff;
-  margin: 0;
-  margin-left: 20px;
 }
 
 .media-controls {
@@ -102,4 +102,32 @@ h1 {
 
 .burger-menu {
   margin-left: auto;
+}
+
+.media-page h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.album-row {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #252525;
+}
+
+.album-row::-webkit-scrollbar {
+  height: 8px;
+}
+
+.album-row::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.album-row::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
 }

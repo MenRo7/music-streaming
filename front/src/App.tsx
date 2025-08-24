@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import MusicQueue from './components/MusicQueue';
 import SongPlayer from './components/SongPlayer';
 import PlaylistPage from './pages/PlaylistPage';
 import ProfilePage from './pages/ProfilePage';
@@ -36,54 +37,103 @@ const App: React.FC = () => {
 
                   <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
 
-                  <Route path="/import" element={<PrivateRoute element={
-                    <>
-                      <Navbar />
-                      <Sidebar />
-                      <ImportPage />
-                    </>
-                  } />} />
+                  <Route
+                    path="/import"
+                    element={
+                      <PrivateRoute
+                        element={
+                          <>
+                            <Navbar />
+                            <Sidebar />
+                            <MusicQueue />
+                            <ImportPage />
+                          </>
+                        }
+                      />
+                    }
+                  />
 
-                  <Route path="/playlist/:id" element={<PrivateRoute element={
-                    <>
-                      <Navbar />
-                      <Sidebar />
-                      <PlaylistPage />
-                    </>
-                  } />} />
+                  <Route
+                    path="/playlist/:id"
+                    element={
+                      <PrivateRoute
+                        element={
+                          <>
+                            <Navbar />
+                            <Sidebar />
+                            <MusicQueue />
+                            <PlaylistPage />
+                          </>
+                        }
+                      />
+                    }
+                  />
 
-{/*                   <Route path="/albums/:id" element={<PrivateRoute element={
-                    <>
-                      <Navbar />
-                      <Sidebar />
-                      <AlbumPage />
-                    </>
-                  } />} /> */}
+                  {/* <Route
+                    path="/albums/:id"
+                    element={
+                      <PrivateRoute
+                        element={
+                          <>
+                            <Navbar />
+                            <Sidebar />
+                            <MusicQueue /> 
+                            <AlbumPage />
+                          </>
+                        }
+                      />
+                    }
+                  /> */}
 
-                  <Route path="/profile" element={<PrivateRoute element={
-                    <>
-                      <Navbar />
-                      <Sidebar />
-                      <ProfilePage />
-                    </>
-                  } />} />
+                  <Route
+                    path="/profile"
+                    element={
+                      <PrivateRoute
+                        element={
+                          <>
+                            <Navbar />
+                            <Sidebar />
+                            <MusicQueue />
+                            <ProfilePage />
+                          </>
+                        }
+                      />
+                    }
+                  />
 
-                  <Route path="/my-music" element={<PrivateRoute element={
-                    <>
-                      <Navbar />
-                      <Sidebar />
-                      <MyMusicPage />
-                    </>
-                  } />} />
+                  <Route
+                    path="/my-music"
+                    element={
+                      <PrivateRoute
+                        element={
+                          <>
+                            <Navbar />
+                            <Sidebar />
+                            <MusicQueue />
+                            <MyMusicPage />
+                          </>
+                        }
+                      />
+                    }
+                  />
 
-                  <Route path="/main" element={<PrivateRoute element={
-                    <>
-                      <Navbar />
-                      <Sidebar />
-                      <MainPage />
-                    </>
-                  } />} />
+                  <Route
+                    path="/main"
+                    element={
+                      <PrivateRoute
+                        element={
+                          <>
+                            <Navbar />
+                            <Sidebar />
+                            <MusicQueue />
+                            <MainPage />
+                          </>
+                        }
+                      />
+                    }
+                  />
                 </Routes>
+
                 <SongPlayer />
               </div>
             </Router>

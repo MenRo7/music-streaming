@@ -11,8 +11,6 @@ import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistSer
 import PlaylistCard from '../components/PlaylistCard';
 import SongList from '../components/SongList';
 
-import '../styles/MyMusicPage.css';
-
 const MyMusicPage: React.FC = () => {
   const navigate = useNavigate();
   const [musics, setMusics] = useState<any[]>([]);
