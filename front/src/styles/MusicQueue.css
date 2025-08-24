@@ -16,7 +16,6 @@
   max-height: calc(100vh - 75px);
 }
 
-/* Scrollbar comme la sidebar */
 .music-queue::-webkit-scrollbar {
   width: 10px;
 }
