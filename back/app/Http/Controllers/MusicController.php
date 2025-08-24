@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Music;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -66,9 +65,9 @@ class MusicController extends Controller
         $musics = Music::where('user_id', $user->id)->get();
 
         $musics->transform(function ($music) {
-            $music->audio = $music->audio ? asset('storage/' . $music->audio) : null;
+            $music->audio = $music->audio ? route('stream.music', ['filename' => $music->audio]) : null;
             $music->image = $music->image ? asset('storage/' . $music->image) : null;
-            $music->playlist_ids = $music->playlists()->pluck('playlists.id'); // ✅ corrigé ici
+            $music->playlist_ids = $music->playlists()->pluck('playlists.id');
             return $music;
         });
 

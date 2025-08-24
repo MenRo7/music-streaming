@@ -31,7 +31,6 @@ export const updatePlaylist = async (id: number, playlist: FormData) => {
   const response = await axios.post(`${API_URL}/playlists/${id}`, playlist, {
     headers: {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'multipart/form-data',
     },
   });
 

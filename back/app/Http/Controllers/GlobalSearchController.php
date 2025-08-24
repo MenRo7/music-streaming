@@ -7,9 +7,7 @@ use App\Models\User;
 use App\Models\Playlist;
 use App\Models\Music;
 use App\Models\Album;
-
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class GlobalSearchController extends Controller
 {
@@ -66,7 +64,7 @@ class GlobalSearchController extends Controller
                 ->paginate($perPage, ['*'], 'musics_page', $musicsPage);
 
             $musics->getCollection()->transform(function ($music) {
-                $music->audio = asset('storage/' . $music->audio);
+                $music->audio = $music->audio ? route('stream.music', ['filename' => $music->audio]) : null;
                 $music->image = $music->image ? asset('storage/' . $music->image) : null;
                 return $music;
             });

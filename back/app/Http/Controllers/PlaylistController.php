@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Playlist;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -43,7 +41,7 @@ class PlaylistController extends Controller
                     'artist' => $music->artist_name,
                     'album' => optional($music->album)->title ?? 'Inconnu',
                     'album_image' => $music->image ? asset('storage/' . $music->image) : null,
-                    'audio' => $music->audio ? asset('storage/' . $music->audio) : null,
+                    'audio' => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
                     'dateAdded' => optional($music->pivot->created_at)->format('d/m/Y'),
                     'playlistIds' => $music->playlists->pluck('id'),
                 ];
@@ -76,7 +74,7 @@ class PlaylistController extends Controller
                 'title' => $playlist->title,
                 'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
             ],
-        ], 201);        
+        ], 201);
     }
 
     public function update(Request $request, $id)
