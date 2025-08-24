@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlay, faPause, faStepBackward, faStepForward,
@@ -7,13 +6,16 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { usePlayer } from '../apis/PlayerContext';
-
 import '../styles/SongPlayer.css';
 
 const SongPlayer: React.FC = () => {
-  const { audioUrl, title, artist, albumImage } = usePlayer();
+  const {
+    audioUrl, title, artist, albumImage,
+    isPlaying, setIsPlaying,
+    next, prev, toggleShuffle, cycleRepeat, repeat, shuffle,
+  } = usePlayer();
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(100);
@@ -24,38 +26,63 @@ const SongPlayer: React.FC = () => {
     audioRef.current = new Audio();
   }
 
+  const nextRef = useRef(next);
+  const repeatRef = useRef(repeat);
+  useEffect(() => { nextRef.current = next; }, [next]);
+  useEffect(() => { repeatRef.current = repeat; }, [repeat]);
+
   const DEFAULT_IMAGE = '/default-playlist-image.png';
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (audio && audioUrl) {
-      audio.src = audioUrl;
-      audio.play();
-      setIsPlaying(true);
+    const audio = audioRef.current!;
+    if (!audioUrl) return;
 
-      const updateProgress = () => setProgress(audio.currentTime);
-      const setAudioData = () => {
-        setDuration(audio.duration);
-        setProgress(audio.currentTime);
-      };
+    audio.src = audioUrl;
+    audio.currentTime = 0;
+    audio.volume = volume / 100;
+    setProgress(0);
+    setDuration(0);
 
-      audio.addEventListener('timeupdate', updateProgress);
-      audio.addEventListener('loadedmetadata', setAudioData);
+    const updateProgress = () => setProgress(audio.currentTime);
+    const setAudioData = () => {
+      setDuration(audio.duration || 0);
+      setProgress(audio.currentTime || 0);
+    };
+    const onEnded = () => {
+      const rep = repeatRef.current;
+      if (rep === 'one') {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      } else {
+        nextRef.current();
+      }
+    };
 
-      return () => {
-        audio.removeEventListener('timeupdate', updateProgress);
-        audio.removeEventListener('loadedmetadata', setAudioData);
-      };
-    }
-    return undefined;
-  }, [audioUrl]);
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('loadedmetadata', setAudioData);
+    audio.addEventListener('ended', onEnded);
+
+    audio.play().then(() => setIsPlaying(true)).catch(() => {});
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateProgress);
+      audio.removeEventListener('loadedmetadata', setAudioData);
+      audio.removeEventListener('ended', onEnded);
+    };
+  }, [audioUrl, setIsPlaying, volume]);
+
+  useEffect(() => {
+    const audio = audioRef.current!;
+    if (!audio) return;
+    if (isPlaying) audio.play().catch(() => {}); else audio.pause();
+  }, [isPlaying]);
 
   const togglePlay = () => {
     const audio = audioRef.current!;
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.play();
+      audio.play().catch(() => {});
     }
     setIsPlaying(!isPlaying);
   };
@@ -102,15 +129,16 @@ const SongPlayer: React.FC = () => {
 
       <div className="player-center">
         <div className="controls-icons">
-          <FontAwesomeIcon icon={faShuffle} className="player-icon" />
-          <FontAwesomeIcon icon={faStepBackward} className="player-icon" />
+          <FontAwesomeIcon icon={faShuffle} className="player-icon" title="Lecture aléatoire" onClick={toggleShuffle} />
+          <FontAwesomeIcon icon={faStepBackward} className="player-icon" title="Piste précédente" onClick={prev} />
           <FontAwesomeIcon
             icon={isPlaying ? faPause : faPlay}
             className="player-icon main-control"
             onClick={togglePlay}
+            title={isPlaying ? 'Pause' : 'Lecture'}
           />
-          <FontAwesomeIcon icon={faStepForward} className="player-icon" />
-          <FontAwesomeIcon icon={faRedo} className="player-icon" />
+          <FontAwesomeIcon icon={faStepForward} className="player-icon" title="Piste suivante" onClick={next} />
+          <FontAwesomeIcon icon={faRedo} className="player-icon" title="Répéter (off → all → one)" onClick={cycleRepeat} />
         </div>
 
         <div className="progress-container">

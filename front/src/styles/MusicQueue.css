@@ -199,4 +199,10 @@
   .mq-artist {
     display: none;
   }
+
+  .mq-row-actions { display: flex; align-items: center; gap: 6px; }
+  .mq-badge { background: #5e2d91; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; }
+  .mq-item.draggable { cursor: grab; }
+  .mq-drag-handle { color: #aaa; padding: 6px; cursor: grab; }
+
 }

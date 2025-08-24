@@ -1,22 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faRandom, faEllipsisH, faBars } from '@fortawesome/free-solid-svg-icons';
-
 import DropdownMenu from '../components/DropdownMenu';
 import SongList from '../components/SongList';
-
+import { usePlayer, Track } from '../apis/PlayerContext';
 import '../styles/MediaPage.css';
 
-interface Song {
-  id: number;
-  name: string;
-  artist: string;
-  album?: string;
-  album_image?: string;
-  audio: string;
-  dateAdded?: string;
-  duration?: string;
-}
+interface Song extends Track { dateAdded?: string; }
 
 interface MediaPageProps {
   title: string;
@@ -24,23 +14,33 @@ interface MediaPageProps {
   image: string;
   songs: Song[];
   isPlaylist?: boolean;
+  collectionType?: 'playlist' | 'album';
+  collectionId?: number;
   onEdit?: () => void;
   onDelete?: () => void;
   renderModal?: React.ReactNode;
-  getActions?: (song: Song) => { label: string; onClick: () => void }[]; // 👈 ajouter ceci
+  getActions?: (song: Song) => { label: string; onClick: () => void }[];
 }
 
 const MediaPage: React.FC<MediaPageProps> = ({
-  title,
-  artist,
-  image,
-  songs,
-  isPlaylist = false,
-  onEdit,
-  onDelete,
-  renderModal,
-  getActions, // 👈 ici aussi
+  title, artist, image, songs, isPlaylist = false,
+  collectionType, collectionId, onEdit, onDelete, renderModal, getActions,
 }) => {
+  const { setCollectionContext, toggleShuffle, playSong, addToQueue } = usePlayer();
+
+  useEffect(() => {
+    if (collectionType && typeof collectionId === 'number') {
+      setCollectionContext({ type: collectionType, id: collectionId }, songs);
+    }
+  }, [collectionType, collectionId, songs, setCollectionContext]);
+
+  const onPlayAll = () => {
+    const first = songs[0];
+    if (first) playSong(first.audio, first.name, first.artist, first.album_image || '', first.id);
+  };
+
+  const onShuffleAll = () => { toggleShuffle(); onPlayAll(); };
+
   return (
     <div className="media-content">
       <div className="media-page">
@@ -53,8 +53,8 @@ const MediaPage: React.FC<MediaPageProps> = ({
         </div>
 
         <div className="media-controls">
-          <FontAwesomeIcon icon={faPlay} className="control-icon" />
-          <FontAwesomeIcon icon={faRandom} className="control-icon" />
+          <FontAwesomeIcon icon={faPlay} className="control-icon" onClick={onPlayAll} />
+          <FontAwesomeIcon icon={faRandom} className="control-icon" onClick={onShuffleAll} />
           {(onEdit || onDelete) && (
             <DropdownMenu
               items={[
@@ -69,14 +69,16 @@ const MediaPage: React.FC<MediaPageProps> = ({
 
         <SongList
           songs={songs}
-          showAlbum={true}
-          showArtist={true}
-          showDateAdded={true}
+          showAlbum
+          showArtist
+          showDateAdded
           showDuration={false}
-          getActions={isPlaylist ? getActions : undefined} // 👈 passe les actions seulement si c’est une playlist
+          getActions={(song) => [
+            { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+            ...(isPlaylist && getActions ? getActions(song) : []),
+          ]}
         />
       </div>
-
       {renderModal}
     </div>
   );

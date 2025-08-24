@@ -7,12 +7,14 @@ import {
   deleteMusic,
 } from '../apis/MyMusicService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
+import { usePlayer } from '../apis/PlayerContext';
 
 import PlaylistCard from '../components/PlaylistCard';
 import SongList from '../components/SongList';
 
 const MyMusicPage: React.FC = () => {
   const navigate = useNavigate();
+  const { addToQueue } = usePlayer();
   const [musics, setMusics] = useState<any[]>([]);
   const [albums, setAlbums] = useState<any[]>([]);
 
@@ -96,6 +98,10 @@ const MyMusicPage: React.FC = () => {
                   alert('Erreur lors de la suppression');
                 }
               },
+            },
+            { 
+              label: 'Ajouter à la file d’attente', 
+              onClick: () => addToQueue(song)
             },
           ]}
         />

@@ -72,6 +72,8 @@ const PlaylistPage: React.FC = () => {
       image={playlist?.image}
       songs={playlist?.songs || []}
       isPlaylist={true}
+      collectionType="playlist"
+      collectionId={playlist?.id}
       onEdit={handleEditPlaylist}
       onDelete={handleDeletePlaylist}
       renderModal={
