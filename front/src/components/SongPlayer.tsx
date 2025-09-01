@@ -39,7 +39,13 @@ const SongPlayer: React.FC = () => {
   const [volume, setVolume] = useState(100);
   const [showVolumeTooltip, setShowVolumeTooltip] = useState(false);
   const [volumeTooltipX, setVolumeTooltipX] = useState(0);
-  const [isSeeking, setIsSeeking] = useState(false);
+
+  const [isSeeking, _setIsSeeking] = useState(false);
+  const seekingRef = useRef(false);
+  const setIsSeeking = (v: boolean) => {
+    seekingRef.current = v;
+    _setIsSeeking(v);
+  };
 
   if (!audioRef.current) {
     const a = new Audio();
@@ -50,20 +56,14 @@ const SongPlayer: React.FC = () => {
 
   const nextRef = useRef(next);
   const repeatRef = useRef(repeat);
-  useEffect(() => {
-    nextRef.current = next;
-  }, [next]);
-  useEffect(() => {
-    repeatRef.current = repeat;
-  }, [repeat]);
+  useEffect(() => { nextRef.current = next; }, [next]);
+  useEffect(() => { repeatRef.current = repeat; }, [repeat]);
 
   const lastUrlRef = useRef<string | null>(null);
   const DEFAULT_IMAGE = '/default-playlist-image.png';
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
-    }
+    if (audioRef.current) audioRef.current.volume = volume / 100;
   }, [volume]);
 
   useEffect(() => {
@@ -75,28 +75,27 @@ const SongPlayer: React.FC = () => {
       audio.src = audioUrl;
       lastUrlRef.current = audioUrl;
       audio.currentTime = 0;
+      seekingRef.current = false;
       setProgressSec(0);
       setDuration(0);
       setSliderPct(0);
-      setIsSeeking(false);
     }
 
     const updateProgress = () => {
+      if (seekingRef.current) return;
       const cur = audio.currentTime || 0;
-      if (!isSeeking) {
-        setProgressSec(cur);
-        setSliderPct(duration > 0 ? (cur / duration) * 100 : 0);
-      }
+      const dur = isFinite(audio.duration) ? audio.duration : 0;
+      setProgressSec(cur);
+      setSliderPct(dur > 0 ? (cur / dur) * 100 : 0);
     };
 
     const setAudioData = () => {
-      const d = isFinite(audio.duration) ? audio.duration : 0;
-      setDuration(d);
-      if (!isSeeking) {
-        const cur = audio.currentTime || 0;
-        setProgressSec(cur);
-        setSliderPct(d > 0 ? (cur / d) * 100 : 0);
-      }
+      const dur = isFinite(audio.duration) ? audio.duration : 0;
+      setDuration(dur);
+      if (seekingRef.current) return;
+      const cur = audio.currentTime || 0;
+      setProgressSec(cur);
+      setSliderPct(dur > 0 ? (cur / dur) * 100 : 0);
     };
 
     const onEnded = () => {
@@ -115,10 +114,7 @@ const SongPlayer: React.FC = () => {
     audio.addEventListener('ended', onEnded);
 
     if (isNewSource) {
-      audio
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => {});
+      audio.play().then(() => setIsPlaying(true)).catch(() => {});
     }
 
     return () => {
@@ -127,13 +123,13 @@ const SongPlayer: React.FC = () => {
       audio.removeEventListener('durationchange', setAudioData);
       audio.removeEventListener('ended', onEnded);
     };
-  }, [audioUrl, setIsPlaying, isSeeking, duration]);
+
+  }, [audioUrl, setIsPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current!;
     if (!audio) return;
-    if (isPlaying) audio.play().catch(() => {});
-    else audio.pause();
+    if (isPlaying) audio.play().catch(() => {}); else audio.pause();
   }, [isPlaying]);
 
   const togglePlay = () => {
@@ -148,9 +144,10 @@ const SongPlayer: React.FC = () => {
   const onSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const pct = Number(e.target.value);
     setSliderPct(pct);
-    if (duration > 0) {
-      const target = (pct / 100) * duration;
-      const audio = audioRef.current!;
+    const audio = audioRef.current!;
+    const dur = isFinite(audio.duration) ? audio.duration : duration;
+    if (dur > 0) {
+      const target = (pct / 100) * dur;
       audio.currentTime = target;
       setProgressSec(target);
     }
@@ -164,9 +161,10 @@ const SongPlayer: React.FC = () => {
   ) => {
     const pct = Number((e.currentTarget as HTMLInputElement).value);
     setSliderPct(pct);
-    if (duration > 0) {
-      const target = (pct / 100) * duration;
-      const audio = audioRef.current!;
+    const audio = audioRef.current!;
+    const dur = isFinite(audio.duration) ? audio.duration : duration;
+    if (dur > 0) {
+      const target = (pct / 100) * dur;
       audio.currentTime = target;
       setProgressSec(target);
     }

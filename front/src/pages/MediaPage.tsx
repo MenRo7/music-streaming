@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faRandom, faEllipsisH, faBars } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
@@ -28,18 +28,39 @@ const MediaPage: React.FC<MediaPageProps> = ({
 }) => {
   const { setCollectionContext, toggleShuffle, playSong, addToQueue } = usePlayer();
 
+  const src = useMemo(
+    () => (collectionType && typeof collectionId === 'number'
+      ? { type: collectionType, id: collectionId } as const
+      : null),
+    [collectionType, collectionId]
+  );
+
+  const tracks = useMemo<Track[]>(
+    () => songs.map(s => ({
+      id: s.id,
+      name: s.name,
+      artist: s.artist,
+      album: s.album,
+      album_image: s.album_image,
+      audio: s.audio,
+      duration: s.duration,
+    })),
+    [songs]
+  );
+
   useEffect(() => {
-    if (collectionType && typeof collectionId === 'number') {
-      setCollectionContext({ type: collectionType, id: collectionId }, songs);
-    }
-  }, [collectionType, collectionId, songs, setCollectionContext]);
+    if (src) setCollectionContext(src, tracks);
+  }, [src, tracks]);
 
   const onPlayAll = () => {
     const first = songs[0];
     if (first) playSong(first.audio, first.name, first.artist, first.album_image || '', first.id);
   };
 
-  const onShuffleAll = () => { toggleShuffle(); onPlayAll(); };
+  const onShuffleAll = () => {
+    toggleShuffle();
+    onPlayAll();
+  };
 
   return (
     <div className="media-content">

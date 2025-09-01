@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useMemo, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react';
 
 export type Track = {
   id: number;
@@ -32,6 +41,7 @@ export interface PlayerContextType {
   isPlaying: boolean;
   playSong: (url: string, title: string, artist: string, albumImage: string, trackId?: number) => void;
   setIsPlaying: (playing: boolean) => void;
+
   currentItem: QueueItem | null;
   upNext: QueueItem[];
   queueManual: QueueItem[];
@@ -65,6 +75,12 @@ const shuffleArray = <T,>(arr: T[]) => {
   return a;
 };
 
+const sameSource = (a: SourceRef, b: SourceRef) =>
+  a.type === b.type && ('id' in a ? a.id : undefined) === ('id' in b ? b.id : undefined);
+
+const sameTracks = (a: Track[], b: Track[]) =>
+  a.length === b.length && a.every((t, i) => t.id === b[i]?.id);
+
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [audioUrl, setAudioUrl] = useState('');
   const [title, setTitle] = useState('');
@@ -83,18 +99,23 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [source, setSource] = useState<SourceRef>({ type: 'none' });
   const [collection, setCollection] = useState<Track[]>([]);
 
+  const sourceRef = useRef(source);
+  const collectionRef = useRef(collection);
+  useEffect(() => { sourceRef.current = source; }, [source]);
+  useEffect(() => { collectionRef.current = collection; }, [collection]);
+
   const upNext = useMemo(() => [...queueManual, ...queueAuto], [queueManual, queueAuto]);
 
-  const applyCurrentToCompatFields = (t: Track) => {
+  const applyCurrentToCompatFields = useCallback((t: Track) => {
     setAudioUrl(t.audio || '');
     setTitle(t.name || '');
     setArtist(t.artist || '');
     setAlbumImage(t.album_image || '');
     setCurrentTrackId(t.id ?? null);
     setIsPlaying(true);
-  };
+  }, []);
 
-  const rebuildAutoFromIndex = (tracks: Track[], startIndex: number, src: SourceRef) => {
+  const rebuildAutoFromIndex = useCallback((tracks: Track[], startIndex: number, src: SourceRef) => {
     const now = tracks[startIndex];
     const before = tracks.slice(0, startIndex);
     let tail = tracks.slice(startIndex + 1);
@@ -105,18 +126,23 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setHistory(before.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
     setQueueAuto(tail.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
     applyCurrentToCompatFields(now);
-  };
+  }, [applyCurrentToCompatFields, shuffle]);
 
-  const setCollectionContext: PlayerContextType['setCollectionContext'] = (src, tracks) => {
+  const setCollectionContext = useCallback<PlayerContextType['setCollectionContext']>((src, tracks) => {
+    const t = tracks || [];
+    // no-op si rien n'a vraiment changé
+    if (sameSource(sourceRef.current, src) && sameTracks(collectionRef.current, t)) {
+      return;
+    }
     setSource(src);
-    setCollection(tracks || []);
-  };
+    setCollection(t);
+  }, []);
 
-  const playSong: PlayerContextType['playSong'] = (url, name, art, img, trackId) => {
+  const playSong = useCallback<PlayerContextType['playSong']>((url, name, art, img, trackId) => {
     if (trackId != null) {
-      const idx = collection.findIndex(t => t.id === trackId);
-      if (idx >= 0 && source.type !== 'none') {
-        rebuildAutoFromIndex(collection, idx, source);
+      const idx = collectionRef.current.findIndex(t => t.id === trackId);
+      if (idx >= 0 && sourceRef.current.type !== 'none') {
+        rebuildAutoFromIndex(collectionRef.current, idx, sourceRef.current);
         return;
       }
     }
@@ -127,16 +153,16 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       album_image: img,
       audio: url,
     };
-    setCurrentItem({ ...t, qid: uid(), origin: 'manual', from: source });
+    setCurrentItem({ ...t, qid: uid(), origin: 'manual', from: sourceRef.current });
     setIsPlaying(true);
     applyCurrentToCompatFields(t);
-  };
+  }, [applyCurrentToCompatFields, rebuildAutoFromIndex]);
 
-  const addToQueue: PlayerContextType['addToQueue'] = (track) => {
-    setQueueManual(q => [...q, { ...track, qid: uid(), origin: 'manual', from: source }]);
-  };
+  const addToQueue = useCallback<PlayerContextType['addToQueue']>((track) => {
+    setQueueManual(q => [...q, { ...track, qid: uid(), origin: 'manual', from: sourceRef.current }]);
+  }, []);
 
-  const clearQueue: PlayerContextType['clearQueue'] = (keepCurrent = true) => {
+  const clearQueue = useCallback<PlayerContextType['clearQueue']>((keepCurrent = true) => {
     setQueueManual([]);
     setQueueAuto([]);
     if (!keepCurrent) {
@@ -151,90 +177,124 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setAlbumImage('');
       setCurrentTrackId(null);
     }
-  };
+  }, []);
 
-  const removeFromQueue: PlayerContextType['removeFromQueue'] = (qid) => {
+  const removeFromQueue = useCallback<PlayerContextType['removeFromQueue']>((qid) => {
     setQueueManual(m => m.filter(i => i.qid !== qid));
     setQueueAuto(a => a.filter(i => i.qid !== qid));
-  };
+  }, []);
 
-  const moveManual: PlayerContextType['moveManual'] = (from, to) => {
+  const moveManual = useCallback<PlayerContextType['moveManual']>((from, to) => {
     setQueueManual(list => {
       const l = list.slice();
       const [item] = l.splice(from, 1);
       l.splice(to, 0, item);
       return l;
     });
-  };
+  }, []);
 
-  const playNowFromQueue: PlayerContextType['playNowFromQueue'] = (qid) => {
-    const item = queueManual.find(i => i.qid === qid) || queueAuto.find(i => i.qid === qid);
+  const playNowFromQueue = useCallback<PlayerContextType['playNowFromQueue']>((qid) => {
+    let item: QueueItem | undefined;
+    setQueueManual(m => {
+      const found = m.find(i => i.qid === qid);
+      if (found) item = found;
+      return m.filter(i => i.qid !== qid);
+    });
+    setQueueAuto(a => {
+      if (!item) {
+        const found = a.find(i => i.qid === qid);
+        if (found) item = found;
+      }
+      return a.filter(i => i.qid !== qid);
+    });
     if (!item) return;
-    if (currentItem) setHistory(h => [...h, currentItem]);
-    setQueueManual(m => m.filter(i => i.qid !== qid));
-    setQueueAuto(a => a.filter(i => i.qid !== qid));
-    setCurrentItem(item);
+    setCurrentItem(prev => (prev ? (setHistory(h => [...h, prev]), item!) : item!));
     applyCurrentToCompatFields(item);
-  };
+  }, [applyCurrentToCompatFields]);
 
-  const next = () => {
-    if (!currentItem) return;
-    if (repeat === 'one') {
-      setIsPlaying(true);
-      return;
-    }
-    setHistory(h => [...h, currentItem]);
+  const next = useCallback(() => {
+    setCurrentItem(cur => {
+      if (!cur) return cur;
+      if (repeat === 'one') {
+        setIsPlaying(true);
+        return cur;
+      }
+      setHistory(h => [...h, cur]);
 
-    if (queueManual.length > 0) {
-      const [n, ...rest] = queueManual;
-      setQueueManual(rest);
-      setCurrentItem(n);
-      applyCurrentToCompatFields(n);
-      return;
-    }
-    if (queueAuto.length > 0) {
-      const [n, ...rest] = queueAuto;
-      setQueueAuto(rest);
-      setCurrentItem(n);
-      applyCurrentToCompatFields(n);
-      return;
-    }
+      let nextItem: QueueItem | undefined;
 
-    if (repeat === 'all' && source.type !== 'none' && collection.length > 0) {
-      rebuildAutoFromIndex(collection, 0, source);
-      return;
-    }
-    setIsPlaying(false);
-  };
+      setQueueManual(m => {
+        if (m.length > 0) {
+          [nextItem, ...m] = m;
+          setQueueManual(m.slice(1));
+        }
+        return m;
+      });
 
-  const prev = () => {
-    if (history.length === 0) return;
-    const h = history.slice();
-    const last = h.pop()!;
-    if (currentItem) setQueueAuto(a => [currentItem, ...a]);
-    setHistory(h);
-    setCurrentItem(last);
-    applyCurrentToCompatFields(last);
-  };
+      if (!nextItem) {
+        setQueueAuto(a => {
+          if (a.length > 0) {
+            [nextItem, ...a] = a;
+            setQueueAuto(a.slice(1));
+          }
+          return a;
+        });
+      }
 
-  const toggleShuffle = () => {
+      if (nextItem) {
+        applyCurrentToCompatFields(nextItem);
+        return nextItem;
+      }
+
+      if (repeat === 'all' && sourceRef.current.type !== 'none' && collectionRef.current.length > 0) {
+        rebuildAutoFromIndex(collectionRef.current, 0, sourceRef.current);
+        return cur; // sera remplacé par rebuild
+      }
+
+      setIsPlaying(false);
+      return cur;
+    });
+  }, [applyCurrentToCompatFields, rebuildAutoFromIndex, repeat]);
+
+  const prev = useCallback(() => {
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const copy = h.slice();
+      const last = copy.pop()!;
+      setCurrentItem(cur => {
+        if (cur) setQueueAuto(a => [cur, ...a]);
+        applyCurrentToCompatFields(last);
+        return last;
+      });
+      return copy;
+    });
+  }, [applyCurrentToCompatFields]);
+
+  const toggleShuffle = useCallback(() => {
     setShuffle(s => {
       const ns = !s;
       setQueueAuto(a => (ns ? shuffleArray(a) : a));
       return ns;
     });
-  };
+  }, []);
 
-  const cycleRepeat = () => {
+  const cycleRepeat = useCallback(() => {
     setRepeat(r => (r === 'off' ? 'all' : r === 'all' ? 'one' : 'off'));
-  };
+  }, []);
 
-  const value: PlayerContextType = {
-    audioUrl, title, artist, albumImage, currentTrackId, isPlaying, playSong, setIsPlaying,
+  const value: PlayerContextType = useMemo(() => ({
+    audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
+    playSong, setIsPlaying,
     currentItem, upNext, queueManual, queueAuto, shuffle, repeat, source,
     setCollectionContext, addToQueue, clearQueue, removeFromQueue, moveManual, playNowFromQueue,
     next, prev, toggleShuffle, cycleRepeat,
-  };
+  }), [
+    audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
+    currentItem, upNext, queueManual, queueAuto, shuffle, repeat, source,
+    playSong, setIsPlaying,
+    setCollectionContext, addToQueue, clearQueue, removeFromQueue, moveManual, playNowFromQueue,
+    next, prev, toggleShuffle, cycleRepeat,
+  ]);
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;
 };
