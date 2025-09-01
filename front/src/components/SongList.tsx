@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
@@ -47,11 +47,22 @@ const SongList: React.FC<SongListProps> = ({
   getActions,
 }) => {
   const { playSong, currentTrackId, isPlaying } = usePlayer();
+  const [overridePlaylists, setOverridePlaylists] = useState<Record<number, number[]>>({});
 
   const handlePlaySong = (song: Song) => {
     if (song.audio) {
       playSong(song.audio, song.name, song.artist, song.album_image || '', song.id);
     }
+  };
+
+  const toggleLocal = (song: Song, playlistId: number, checked: boolean) => {
+    setOverridePlaylists(prev => {
+      const base = prev[song.id] ?? song.playlistIds ?? [];
+      const next = checked
+        ? (base.includes(playlistId) ? base : [...base, playlistId])
+        : base.filter(id => id !== playlistId);
+      return { ...prev, [song.id]: next };
+    });
   };
 
   return (
@@ -79,8 +90,13 @@ const SongList: React.FC<SongListProps> = ({
                   submenuContent: (
                     <PlaylistCheckboxMenu
                       songId={action.songId ?? song.id}
-                      existingPlaylistIds={action.existingPlaylistIds || song.playlistIds || []}
-                      onToggle={action.onToggle || (() => {})}
+                      existingPlaylistIds={
+                        overridePlaylists[song.id] ?? action.existingPlaylistIds ?? song.playlistIds ?? []
+                      }
+                      onToggle={(playlistId, checked) => {
+                        toggleLocal(song, playlistId, checked);
+                        action.onToggle?.(playlistId, checked);
+                      }}
                     />
                   ),
                 }]

@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faList,
-  faTrash,
-  faPlay,
-  faEllipsisV,
-} from '@fortawesome/free-solid-svg-icons';
+import { faList, faTrash, faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { usePlayer } from '../apis/PlayerContext';
@@ -22,6 +17,8 @@ const MusicQueue: React.FC = () => {
     moveManual,
   } = usePlayer();
 
+  const [queuePlaylists, setQueuePlaylists] = useState<Record<string, number[]>>({});
+
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
@@ -30,9 +27,7 @@ const MusicQueue: React.FC = () => {
 
   const isInteractive = (el: HTMLElement | null): boolean => {
     if (!el) return false;
-    return !!el.closest(
-      'button, [role="button"], a, input, textarea, select, .mq-cover-play, .dropdown-wrapper'
-    );
+    return !!el.closest('button, [role="button"], a, input, textarea, select, .mq-cover-play, .dropdown-wrapper');
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
@@ -121,9 +116,7 @@ const MusicQueue: React.FC = () => {
                   <span className="mq-track" title={currentItem.name}>
                     {currentItem.name}
                   </span>
-                  {currentItem.duration && (
-                    <span className="mq-duration">{currentItem.duration}</span>
-                  )}
+                  {currentItem.duration && <span className="mq-duration">{currentItem.duration}</span>}
                 </div>
                 <span className="mq-artist" title={currentItem.artist}>
                   {currentItem.artist}
@@ -138,6 +131,7 @@ const MusicQueue: React.FC = () => {
 
           {upNext.map((t, idx) => {
             const manual = isManualIdx(idx);
+            const existingIds = queuePlaylists[t.qid] ?? [];
 
             return (
               <li
@@ -197,8 +191,15 @@ const MusicQueue: React.FC = () => {
                         onClick: () => {},
                         submenuContent: (
                           <PlaylistCheckboxMenu
-                            existingPlaylistIds={[]}
+                            existingPlaylistIds={existingIds}
                             onToggle={(playlistId, checked) => {
+                              setQueuePlaylists(prev => {
+                                const cur = prev[t.qid] ?? [];
+                                const next = checked
+                                  ? (cur.includes(playlistId) ? cur : [...cur, playlistId])
+                                  : cur.filter(id => id !== playlistId);
+                                return { ...prev, [t.qid]: next };
+                              });
                               console.log('toggle playlist from queue', { qid: t.qid, playlistId, checked });
                             }}
                           />
