@@ -10,7 +10,7 @@
   background-color: #1e1e1e;
   border-radius: 5px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  width: 160px;
+  min-width: 180px;
   z-index: 2000;
 }
 
@@ -47,6 +47,49 @@
 .dropdown-portal-menu {
   position: fixed;
   z-index: 2000;
+}
+
+.dropdown-li--submenu .dropdown-submenu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dropdown-li--submenu.open > .dropdown-submenu-toggle {
+  background-color: #333;
+}
+
+.submenu-caret {
+  opacity: 0.7;
+}
+
+.dropdown-submenu-flyout {
+  position: fixed;
+  z-index: 2100;
+  background-color: #1e1e1e;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.3);
+  max-height: 300px;
+  overflow: auto;
+  padding: 8px 0;
+}
+
+.dropdown-submenu-flyout .playlist-checkbox-menu {
+  background: transparent;
+  box-shadow: none;
+  padding: 4px 0;
+  max-height: none;
+}
+
+.dropdown-submenu-flyout .playlist-checkbox-item {
+  padding: 6px 10px;
+  border-bottom: none;
+  text-align: left;
+}
+
+.dropdown-submenu-flyout .playlist-checkbox-item:hover {
+  background-color: #2e2e2e;
 }
 
 @media (max-width: 625px) {

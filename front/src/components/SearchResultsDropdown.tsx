@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { usePlayer } from '../apis/PlayerContext'; // Import du PlayerContext
+import { usePlayer } from '../apis/PlayerContext';
 import SearchResultItem from './SearchResultItem';
 import '../styles/SearchResultsDropdown.css';
 
@@ -50,7 +50,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
   onLoadMore,
   loadingMore
 }) => {
-  const { playSong } = usePlayer(); // Utilisation du PlayerContext pour jouer une chanson
+  const { playSong } = usePlayer();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleMusicClick = (music: Music) => {

@@ -130,7 +130,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const setCollectionContext = useCallback<PlayerContextType['setCollectionContext']>((src, tracks) => {
     const t = tracks || [];
-    // no-op si rien n'a vraiment changé
     if (sameSource(sourceRef.current, src) && sameTracks(collectionRef.current, t)) {
       return;
     }
@@ -248,7 +247,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       if (repeat === 'all' && sourceRef.current.type !== 'none' && collectionRef.current.length > 0) {
         rebuildAutoFromIndex(collectionRef.current, 0, sourceRef.current);
-        return cur; // sera remplacé par rebuild
+        return cur;
       }
 
       setIsPlaying(false);

@@ -4,7 +4,7 @@ import { usePlaylists } from '../apis/PlaylistContext';
 import '../styles/PlaylistCheckboxMenu.css';
 
 interface PlaylistCheckboxMenuProps {
-  songId: number;
+  songId?: number;
   existingPlaylistIds: number[];
   onToggle: (playlistId: number, checked: boolean) => void;
 }
@@ -34,14 +34,15 @@ const PlaylistCheckboxMenu: React.FC<PlaylistCheckboxMenuProps> = ({
   return (
     <div className="playlist-checkbox-menu">
       {playlists.map((playlist) => (
-        <label key={playlist.id} className="playlist-item">
+        <div key={playlist.id} className="playlist-checkbox-item">
           <input
+            id={`pl-${playlist.id}`}
             type="checkbox"
             checked={selected.includes(playlist.id)}
             onChange={() => handleChange(playlist.id)}
           />
-          {playlist.title}
-        </label>
+          <label htmlFor={`pl-${playlist.id}`}>{playlist.title}</label>
+        </div>
       ))}
     </div>
   );

@@ -6,6 +6,7 @@ interface DropdownItem {
   label: string;
   onClick: () => void;
   customContent?: ReactNode;
+  submenuContent?: ReactNode;
 }
 
 interface DropdownMenuProps {
@@ -18,6 +19,7 @@ interface DropdownMenuProps {
 type Pos = { top: number; left: number; minWidth?: number };
 
 const MENU_MIN_WIDTH = 180;
+const SUBMENU_MIN_WIDTH = 220;
 const GUTTER = 8;
 
 const DropdownMenu: React.FC<DropdownMenuProps> = ({
@@ -28,10 +30,15 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<Pos | null>(null);
+  const [openSubIndex, setOpenSubIndex] = useState<number | null>(null);
+  const [submenuPos, setSubmenuPos] = useState<Pos | null>(null);
+
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const submenuRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Array<HTMLLIElement | null>>([]);
 
-  const computePos = () => {
+  const computeMenuPos = () => {
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
@@ -47,18 +54,35 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
     setPos({ top, left, minWidth: Math.max(MENU_MIN_WIDTH, r.width) });
   };
 
+  const computeSubmenuPos = (index: number, width = SUBMENU_MIN_WIDTH) => {
+    const li = itemRefs.current[index];
+    if (!li) return;
+    const r = li.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const preferRight = r.right + 8 + width + GUTTER <= vw;
+    const left = preferRight ? r.right + 8 : Math.max(GUTTER, r.left - width - 8);
+    const top = Math.min(Math.max(GUTTER, r.top), vh - GUTTER);
+
+    setSubmenuPos({ top, left, minWidth: width });
+  };
+
   useEffect(() => {
     if (!open) return;
-    computePos();
-    const onScroll = () => computePos();
-    const onResize = () => computePos();
+    computeMenuPos();
+    const onScroll = () => {
+      computeMenuPos();
+      if (openSubIndex !== null) computeSubmenuPos(openSubIndex);
+    };
+    const onResize = onScroll;
     window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', onResize);
     return () => {
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', onResize);
     };
-  }, [open]);
+  }, [open, openSubIndex]);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -66,7 +90,11 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
       const t = e.target as Node;
       const insideTrigger = !!triggerRef.current?.contains(t);
       const insideMenu = !!menuRef.current?.contains(t);
-      if (!insideTrigger && !insideMenu) setOpen(false);
+      const insideSubmenu = !!submenuRef.current?.contains(t);
+      if (!insideTrigger && !insideMenu && !insideSubmenu) {
+        setOpen(false);
+        setOpenSubIndex(null);
+      }
     };
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);
@@ -91,23 +119,75 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
             role="menu"
           >
             <ul>
-              {items.map((item, index) => (
-                <li key={index}>
-                  {item.customContent ? (
-                    item.customContent
-                  ) : (
+              {items.map((item, index) => {
+                if (item.customContent && !item.submenuContent) {
+                  return (
+                    <li
+                      key={index}
+                      ref={el => (itemRefs.current[index] = el)}
+                      className="dropdown-custom"
+                    >
+                      {item.customContent}
+                    </li>
+                  );
+                }
+
+                if (item.submenuContent) {
+                  const isOpen = openSubIndex === index;
+                  return (
+                    <li
+                      key={index}
+                      ref={el => (itemRefs.current[index] = el)}
+                      className={`dropdown-li--submenu ${isOpen ? 'open' : ''}`}
+                      onMouseEnter={() => {
+                        setOpenSubIndex(index);
+                        computeSubmenuPos(index);
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const next = openSubIndex === index ? null : index;
+                        setOpenSubIndex(next);
+                        if (next !== null) computeSubmenuPos(index);
+                      }}
+                    >
+                      <button className="dropdown-item dropdown-submenu-toggle">
+                        <span>{item.label}</span>
+                        <span className="submenu-caret" aria-hidden>›</span>
+                      </button>
+
+                      {isOpen && submenuPos &&
+                        createPortal(
+                          <div
+                            ref={submenuRef}
+                            className="dropdown-menu dropdown-submenu-flyout"
+                            style={{ top: submenuPos.top, left: submenuPos.left, minWidth: submenuPos.minWidth }}
+                            role="menu"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {item.submenuContent}
+                          </div>,
+                          document.body
+                        )
+                      }
+                    </li>
+                  );
+                }
+
+                return (
+                  <li key={index} ref={el => (itemRefs.current[index] = el)}>
                     <button
                       className="dropdown-item"
                       onClick={() => {
                         item.onClick?.();
                         setOpen(false);
+                        setOpenSubIndex(null);
                       }}
                     >
                       {item.label}
                     </button>
-                  )}
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           </div>,
           document.body

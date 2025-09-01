@@ -4,9 +4,10 @@ import {
   faList,
   faTrash,
   faPlay,
-  faEllipsisV, // 3 points
+  faEllipsisV,
 } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
+import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { usePlayer } from '../apis/PlayerContext';
 import '../styles/MusicQueue.css';
 
@@ -34,24 +35,12 @@ const MusicQueue: React.FC = () => {
     );
   };
 
-  const handleDragStart = (
-    e: React.DragEvent<HTMLLIElement>,
-    idx: number
-  ) => {
-    if (!isManualIdx(idx)) {
-      e.preventDefault();
-      return;
-    }
-    if (isInteractive(e.target as HTMLElement)) {
-      // évite de déclencher le drag depuis un bouton/menu
-      e.preventDefault();
-      return;
-    }
+  const handleDragStart = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
+    if (!isManualIdx(idx)) { e.preventDefault(); return; }
+    if (isInteractive(e.target as HTMLElement)) { e.preventDefault(); return; }
     setDragIndex(idx);
     (e.currentTarget as HTMLElement).classList.add('dragging');
-    // hint pour le DnD
     e.dataTransfer.effectAllowed = 'move';
-    // data nécessaire sur Firefox
     e.dataTransfer.setData('text/plain', String(idx));
   };
 
@@ -63,17 +52,12 @@ const MusicQueue: React.FC = () => {
 
   const handleDragOver = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
     if (!isManualIdx(idx)) return;
-    e.preventDefault(); // nécessaire pour autoriser le drop
+    e.preventDefault();
   };
 
   const handleDrop = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
     e.preventDefault();
-    if (
-      dragIndex !== null &&
-      isManualIdx(dragIndex) &&
-      isManualIdx(idx) &&
-      dragIndex !== idx
-    ) {
+    if (dragIndex !== null && isManualIdx(dragIndex) && isManualIdx(idx) && dragIndex !== idx) {
       moveManual(dragIndex, idx);
     }
     setDragIndex(null);
@@ -158,9 +142,7 @@ const MusicQueue: React.FC = () => {
             return (
               <li
                 key={t.qid}
-                className={`mq-item ${manual ? 'draggable' : ''} ${
-                  overIndex === idx ? 'drag-over' : ''
-                }`}
+                className={`mq-item ${manual ? 'draggable' : ''} ${overIndex === idx ? 'drag-over' : ''}`}
                 draggable={manual}
                 onDragStart={(e) => handleDragStart(e, idx)}
                 onDragEnter={(e) => handleDragEnter(e, idx)}
@@ -210,7 +192,18 @@ const MusicQueue: React.FC = () => {
                       />
                     }
                     items={[
-                      { label: 'Ajouter à une playlist', onClick: () => console.log('Ajouter à une playlist', t) },
+                      {
+                        label: 'Ajouter à une playlist',
+                        onClick: () => {},
+                        submenuContent: (
+                          <PlaylistCheckboxMenu
+                            existingPlaylistIds={[]}
+                            onToggle={(playlistId, checked) => {
+                              console.log('toggle playlist from queue', { qid: t.qid, playlistId, checked });
+                            }}
+                          />
+                        ),
+                      },
                       { label: 'Supprimer de la file d’attente', onClick: () => removeFromQueue(t.qid) },
                       { label: 'Aller à l’album', onClick: () => console.log('Aller à l’album', t) },
                       { label: 'Voir l’artiste', onClick: () => console.log('Voir l’artiste', t) },
