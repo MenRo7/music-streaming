@@ -104,6 +104,11 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => { sourceRef.current = source; }, [source]);
   useEffect(() => { collectionRef.current = collection; }, [collection]);
 
+  const queueManualRef = useRef<QueueItem[]>(queueManual);
+  const queueAutoRef = useRef<QueueItem[]>(queueAuto);
+  useEffect(() => { queueManualRef.current = queueManual; }, [queueManual]);
+  useEffect(() => { queueAutoRef.current = queueAuto; }, [queueAuto]);
+
   const upNext = useMemo(() => [...queueManual, ...queueAuto], [queueManual, queueAuto]);
 
   const applyCurrentToCompatFields = useCallback((t: Track) => {
@@ -193,21 +198,23 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   const playNowFromQueue = useCallback<PlayerContextType['playNowFromQueue']>((qid) => {
-    let item: QueueItem | undefined;
-    setQueueManual(m => {
-      const found = m.find(i => i.qid === qid);
-      if (found) item = found;
-      return m.filter(i => i.qid !== qid);
-    });
-    setQueueAuto(a => {
-      if (!item) {
-        const found = a.find(i => i.qid === qid);
-        if (found) item = found;
-      }
-      return a.filter(i => i.qid !== qid);
-    });
+    const manual = queueManualRef.current;
+    const auto = queueAutoRef.current;
+
+    const item =
+      manual.find(i => i.qid === qid) ||
+      auto.find(i => i.qid === qid);
+
     if (!item) return;
-    setCurrentItem(prev => (prev ? (setHistory(h => [...h, prev]), item!) : item!));
+
+    setQueueManual(manual.filter(i => i.qid !== qid));
+    setQueueAuto(auto.filter(i => i.qid !== qid));
+
+    setCurrentItem(prev => {
+      if (prev) setHistory(h => [...h, prev]);
+      return item;
+    });
+
     applyCurrentToCompatFields(item);
   }, [applyCurrentToCompatFields]);
 
