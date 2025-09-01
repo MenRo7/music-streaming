@@ -43,3 +43,14 @@
 .dropdown-item:hover {
   background-color: #333;
 }
+
+.dropdown-portal-menu {
+  position: fixed;
+  z-index: 2000;
+}
+
+@media (max-width: 625px) {
+  .dropdown-portal-menu {
+    min-width: 150px;
+  }
+}
