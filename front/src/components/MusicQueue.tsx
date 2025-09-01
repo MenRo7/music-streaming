@@ -6,6 +6,8 @@ import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { usePlayer } from '../apis/PlayerContext';
 import '../styles/MusicQueue.css';
 
+type WithPlaylistIds = { playlistIds?: number[] };
+
 const MusicQueue: React.FC = () => {
   const {
     currentItem,
@@ -65,6 +67,18 @@ const MusicQueue: React.FC = () => {
     setOverIndex(null);
   };
 
+  const getExistingIds = (t: unknown, qid: string): number[] => {
+    const override = queuePlaylists[qid];
+    if (override) return override;
+
+    if (t && typeof t === 'object') {
+      const ids = (t as WithPlaylistIds).playlistIds;
+      if (Array.isArray(ids)) return ids;
+    }
+
+    return [];
+  };
+
   return (
     <aside className="music-queue" aria-label="File d'attente">
       <div className="mq-header">
@@ -116,7 +130,9 @@ const MusicQueue: React.FC = () => {
                   <span className="mq-track" title={currentItem.name}>
                     {currentItem.name}
                   </span>
-                  {currentItem.duration && <span className="mq-duration">{currentItem.duration}</span>}
+                  {currentItem.duration && (
+                    <span className="mq-duration">{currentItem.duration}</span>
+                  )}
                 </div>
                 <span className="mq-artist" title={currentItem.artist}>
                   {currentItem.artist}
@@ -131,7 +147,7 @@ const MusicQueue: React.FC = () => {
 
           {upNext.map((t, idx) => {
             const manual = isManualIdx(idx);
-            const existingIds = queuePlaylists[t.qid] ?? [];
+            const existingIds = getExistingIds(t, t.qid);
 
             return (
               <li
@@ -194,7 +210,7 @@ const MusicQueue: React.FC = () => {
                             existingPlaylistIds={existingIds}
                             onToggle={(playlistId, checked) => {
                               setQueuePlaylists(prev => {
-                                const cur = prev[t.qid] ?? [];
+                                const cur = prev[t.qid] ?? existingIds; // partir de l'état visible actuel
                                 const next = checked
                                   ? (cur.includes(playlistId) ? cur : [...cur, playlistId])
                                   : cur.filter(id => id !== playlistId);
