@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Music;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +37,7 @@ class UserController extends Controller
             'image' => 'nullable|image|mimes:jpg,jpeg,png',
         ]);
 
+        $oldName = $user->name;
         $user->name = $request->input('name');
 
         if ($request->hasFile('image')) {
@@ -48,6 +50,10 @@ class UserController extends Controller
         }
 
         $user->save();
+
+        if ($oldName !== $user->name) {
+            Music::where('user_id', $user->id)->update(['artist_name' => $user->name]);
+        }
 
         return response()->json([
             'message' => 'Profil mis à jour avec succès',

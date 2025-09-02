@@ -11,19 +11,36 @@ class MusicController extends Controller
 {
     public function index()
     {
-        $musics = Music::all();
+        $musics = \App\Models\Music::with(['user', 'album'])->get()->map(function ($m) {
+            return [
+                'id' => $m->id,
+                'name' => $m->title,
+                'artist' => optional($m->user)->name ?? $m->artist_name,
+                'album' => optional($m->album)->title ?? 'Inconnu',
+                'album_image' => $m->image ? asset('storage/' . $m->image) : null,
+                'audio' => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+            ];
+        });
+
         return response()->json($musics);
     }
 
     public function show($id)
     {
-        $music = Music::find($id);
+        $music = \App\Models\Music::with(['user', 'album'])->find($id);
 
         if (!$music) {
             return response()->json(['message' => 'Musique non trouvée'], 404);
         }
 
-        return response()->json($music);
+        return response()->json([
+            'id' => $music->id,
+            'name' => $music->title,
+            'artist' => optional($music->user)->name ?? $music->artist_name,
+            'album' => optional($music->album)->title ?? 'Inconnu',
+            'album_image' => $music->image ? asset('storage/' . $music->image) : null,
+            'audio' => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
+        ]);
     }
 
     public function store(Request $request)
@@ -62,12 +79,18 @@ class MusicController extends Controller
     public function myMusic()
     {
         $user = Auth::user();
-        $musics = Music::where('user_id', $user->id)->get();
+        $musics = \App\Models\Music::where('user_id', $user->id)
+        ->with(['user', 'playlists'])
+        ->get();
 
         $musics->transform(function ($music) {
+            $music->name   = $music->title;
+            $music->artist = optional($music->user)->name ?? $music->artist_name;
             $music->audio = $music->audio ? route('stream.music', ['filename' => $music->audio]) : null;
-            $music->image = $music->image ? asset('storage/' . $music->image) : null;
-            $music->playlist_ids = $music->playlists()->pluck('playlists.id');
+            $music->album = optional($music->album)->title ?? 'Inconnu';
+            $music->album_image = $music->image ? asset('storage/' . $music->image) : null;
+            $music->playlistIds = $music->playlists->pluck('id');
+
             return $music;
         });
 

@@ -24,7 +24,7 @@ class PlaylistController extends Controller
 
     public function show($id)
     {
-        $playlist = Playlist::with('musics')->find($id);
+        $playlist = Playlist::with(['musics.user', 'musics.playlists', 'musics.album'])->find($id);
 
         if (!$playlist) {
             return response()->json(['message' => 'Playlist non trouvée'], 404);
@@ -38,7 +38,7 @@ class PlaylistController extends Controller
                 return [
                     'id' => $music->id,
                     'name' => $music->title,
-                    'artist' => $music->artist_name,
+                    'artist' => optional($music->user)->name ?? $music->artist_name,
                     'album' => optional($music->album)->title ?? 'Inconnu',
                     'album_image' => $music->image ? asset('storage/' . $music->image) : null,
                     'audio' => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
