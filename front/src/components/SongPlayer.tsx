@@ -123,7 +123,6 @@ const SongPlayer: React.FC = () => {
       audio.removeEventListener('durationchange', setAudioData);
       audio.removeEventListener('ended', onEnded);
     };
-
   }, [audioUrl, setIsPlaying]);
 
   useEffect(() => {
@@ -196,6 +195,15 @@ const SongPlayer: React.FC = () => {
     ? Math.max(0, Math.min(100, sliderPct))
     : 0;
 
+  const onPrevClick = () => {
+    const audio = audioRef.current!;
+    if (audio && audio.currentTime > 3) {
+      audio.currentTime = 0;
+    } else {
+      prev();
+    }
+  };
+
   return (
     <div className="song-player">
       <div className="player-left">
@@ -223,7 +231,7 @@ const SongPlayer: React.FC = () => {
             icon={faStepBackward}
             className="player-icon"
             title="Piste précédente"
-            onClick={prev}
+            onClick={onPrevClick}
           />
           <FontAwesomeIcon
             icon={isPlaying ? faPause : faPlay}
@@ -271,9 +279,7 @@ const SongPlayer: React.FC = () => {
 
         <div
           className="volume-wrapper"
-          style={
-            { ['--tooltip-left' as any]: `${volumeTooltipX}px` } as CSSVars
-          }
+          style={{ ['--tooltip-left' as any]: `${volumeTooltipX}px` } as CSSVars}
         >
           {showVolumeTooltip && (
             <div className="volume-tooltip">{volume}%</div>

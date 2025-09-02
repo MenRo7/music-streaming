@@ -210,7 +210,7 @@ const MusicQueue: React.FC = () => {
                             existingPlaylistIds={existingIds}
                             onToggle={(playlistId, checked) => {
                               setQueuePlaylists(prev => {
-                                const cur = prev[t.qid] ?? existingIds; // partir de l'état visible actuel
+                                const cur = prev[t.qid] ?? existingIds;
                                 const next = checked
                                   ? (cur.includes(playlistId) ? cur : [...cur, playlistId])
                                   : cur.filter(id => id !== playlistId);

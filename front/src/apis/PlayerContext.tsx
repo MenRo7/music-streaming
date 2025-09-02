@@ -120,18 +120,21 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setIsPlaying(true);
   }, []);
 
-  const rebuildAutoFromIndex = useCallback((tracks: Track[], startIndex: number, src: SourceRef) => {
-    const now = tracks[startIndex];
-    const before = tracks.slice(0, startIndex);
-    let tail = tracks.slice(startIndex + 1);
-    tail = shuffle ? shuffleArray(tail) : tail;
+  const rebuildAutoFromIndex = useCallback(
+    (tracks: Track[], startIndex: number, src: SourceRef) => {
+      const now = tracks[startIndex];
+      const before = tracks.slice(0, startIndex);
+      let tail = tracks.slice(startIndex + 1);
+      tail = shuffle ? shuffleArray(tail) : tail;
 
-    const nowItem: QueueItem = { ...now, qid: uid(), origin: 'auto', from: src };
-    setCurrentItem(nowItem);
-    setHistory(before.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
-    setQueueAuto(tail.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
-    applyCurrentToCompatFields(now);
-  }, [applyCurrentToCompatFields, shuffle]);
+      const nowItem: QueueItem = { ...now, qid: uid(), origin: 'auto', from: src };
+      setCurrentItem(nowItem);
+      setHistory(before.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
+      setQueueAuto(tail.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
+      applyCurrentToCompatFields(now);
+    },
+    [applyCurrentToCompatFields, shuffle]
+  );
 
   const setCollectionContext = useCallback<PlayerContextType['setCollectionContext']>((src, tracks) => {
     const t = tracks || [];
@@ -219,35 +222,34 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [applyCurrentToCompatFields]);
 
   const next = useCallback(() => {
-    setCurrentItem(cur => {
+    setCurrentItem((cur) => {
       if (!cur) return cur;
+
       if (repeat === 'one') {
         setIsPlaying(true);
         return cur;
       }
-      setHistory(h => [...h, cur]);
+
+      setHistory((h) => [...h, cur]);
+
+      const manual = queueManualRef.current;
+      const auto = queueAutoRef.current;
 
       let nextItem: QueueItem | undefined;
+      let nextManual = manual;
+      let nextAuto = auto;
 
-      setQueueManual(m => {
-        if (m.length > 0) {
-          [nextItem, ...m] = m;
-          setQueueManual(m.slice(1));
-        }
-        return m;
-      });
-
-      if (!nextItem) {
-        setQueueAuto(a => {
-          if (a.length > 0) {
-            [nextItem, ...a] = a;
-            setQueueAuto(a.slice(1));
-          }
-          return a;
-        });
+      if (manual.length > 0) {
+        nextItem = manual[0];
+        nextManual = manual.slice(1);
+      } else if (auto.length > 0) {
+        nextItem = auto[0];
+        nextAuto = auto.slice(1);
       }
 
       if (nextItem) {
+        setQueueManual(nextManual);
+        setQueueAuto(nextAuto);
         applyCurrentToCompatFields(nextItem);
         return nextItem;
       }
@@ -257,21 +259,31 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return cur;
       }
 
+      // Sinon: stop
       setIsPlaying(false);
       return cur;
     });
   }, [applyCurrentToCompatFields, rebuildAutoFromIndex, repeat]);
 
   const prev = useCallback(() => {
-    setHistory(h => {
+    setHistory((h) => {
       if (h.length === 0) return h;
+
       const copy = h.slice();
       const last = copy.pop()!;
-      setCurrentItem(cur => {
-        if (cur) setQueueAuto(a => [cur, ...a]);
+
+      setCurrentItem((cur) => {
+        if (cur) {
+          if (cur.origin === 'manual') {
+            setQueueManual((m) => [cur, ...m]);
+          } else {
+            setQueueAuto((a) => [cur, ...a]);
+          }
+        }
         applyCurrentToCompatFields(last);
         return last;
       });
+
       return copy;
     });
   }, [applyCurrentToCompatFields]);
@@ -297,7 +309,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }), [
     audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
     currentItem, upNext, queueManual, queueAuto, shuffle, repeat, source,
-    playSong, setIsPlaying,
+    playSong,
     setCollectionContext, addToQueue, clearQueue, removeFromQueue, moveManual, playNowFromQueue,
     next, prev, toggleShuffle, cycleRepeat,
   ]);
