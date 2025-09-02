@@ -1,5 +1,12 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation
+} from 'react-router-dom';
+
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import MusicQueue from './components/MusicQueue';
@@ -24,6 +31,120 @@ const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   return token ? element : <Navigate to="/auth" />;
 };
 
+const AppShell: React.FC = () => {
+  const location = useLocation();
+  const isAuthed = Boolean(localStorage.getItem('authToken'));
+  const onAuthPage = location.pathname.startsWith('/auth');
+
+  return (
+    <div className="app">
+      <Routes>
+        <Route path="/auth" element={<AuthPage />} />
+
+        <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
+
+        <Route
+          path="/import"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <ImportPage />
+                </>
+              }
+            />
+          }
+        />
+
+        <Route
+          path="/playlist/:id"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <PlaylistPage />
+                </>
+              }
+            />
+          }
+        />
+
+        {/* <Route
+          path="/albums/:id"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <AlbumPage />
+                </>
+              }
+            />
+          }
+        /> */}
+
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <ProfilePage />
+                </>
+              }
+            />
+          }
+        />
+
+        <Route
+          path="/my-music"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <MyMusicPage />
+                </>
+              }
+            />
+          }
+        />
+
+        <Route
+          path="/main"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <MainPage />
+                </>
+              }
+            />
+          }
+        />
+      </Routes>
+
+      {isAuthed && !onAuthPage && <SongPlayer />}
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   return (
     <PlayerProvider>
@@ -31,111 +152,7 @@ const App: React.FC = () => {
         <PlaylistProvider>
           <UserProvider>
             <Router>
-              <div className="app">
-                <Routes>
-                  <Route path="/auth" element={<AuthPage />} />
-
-                  <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
-
-                  <Route
-                    path="/import"
-                    element={
-                      <PrivateRoute
-                        element={
-                          <>
-                            <Navbar />
-                            <Sidebar />
-                            <MusicQueue />
-                            <ImportPage />
-                          </>
-                        }
-                      />
-                    }
-                  />
-
-                  <Route
-                    path="/playlist/:id"
-                    element={
-                      <PrivateRoute
-                        element={
-                          <>
-                            <Navbar />
-                            <Sidebar />
-                            <MusicQueue />
-                            <PlaylistPage />
-                          </>
-                        }
-                      />
-                    }
-                  />
-
-                  {/* <Route
-                    path="/albums/:id"
-                    element={
-                      <PrivateRoute
-                        element={
-                          <>
-                            <Navbar />
-                            <Sidebar />
-                            <MusicQueue /> 
-                            <AlbumPage />
-                          </>
-                        }
-                      />
-                    }
-                  /> */}
-
-                  <Route
-                    path="/profile"
-                    element={
-                      <PrivateRoute
-                        element={
-                          <>
-                            <Navbar />
-                            <Sidebar />
-                            <MusicQueue />
-                            <ProfilePage />
-                          </>
-                        }
-                      />
-                    }
-                  />
-
-                  <Route
-                    path="/my-music"
-                    element={
-                      <PrivateRoute
-                        element={
-                          <>
-                            <Navbar />
-                            <Sidebar />
-                            <MusicQueue />
-                            <MyMusicPage />
-                          </>
-                        }
-                      />
-                    }
-                  />
-
-                  <Route
-                    path="/main"
-                    element={
-                      <PrivateRoute
-                        element={
-                          <>
-                            <Navbar />
-                            <Sidebar />
-                            <MusicQueue />
-                            <MainPage />
-                          </>
-                        }
-                      />
-                    }
-                  />
-                </Routes>
-
-                <SongPlayer />
-              </div>
+              <AppShell />
             </Router>
           </UserProvider>
         </PlaylistProvider>

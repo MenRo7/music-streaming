@@ -31,7 +31,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     refreshUser();
+    const onAuthChanged = () => {
+      const token = localStorage.getItem('authToken');
+      if (token) refreshUser();
+      else setUser(null);
+    };
+    window.addEventListener('auth:changed', onAuthChanged);
+    return () => window.removeEventListener('auth:changed', onAuthChanged);
   }, []);
+  
 
   return (
     <UserContext.Provider value={{ user, refreshUser, setUser }}>

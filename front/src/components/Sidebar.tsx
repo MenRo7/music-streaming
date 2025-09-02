@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { usePlaylists } from '../apis/PlaylistContext';
 
@@ -12,8 +12,6 @@ import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 import '../styles/Sidebar.css';
 
 const Sidebar: React.FC = () => {
-  const location = useLocation();
-
   const { playlists, fetchPlaylists } = usePlaylists();
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
   const [showModal, setShowModal] = useState(false);
@@ -65,15 +63,6 @@ const Sidebar: React.FC = () => {
             >
               Playlists
             </button>
-          </li>
-          <li>
-            <Link to="/my-music">
-              <button
-                className={`link-button ${location.pathname === '/my-music' ? 'active' : ''}`}
-              >
-                Ma musique
-              </button>
-            </Link>
           </li>
           <li>
             <button

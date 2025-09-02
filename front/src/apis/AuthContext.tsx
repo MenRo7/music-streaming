@@ -21,15 +21,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post(
-        `${API_URL}/login`,
-        { email, password },
-        { withCredentials: true }
-      );
+      const response = await axios.post(`${API_URL}/login`, { email, password }, { withCredentials: true });
 
-      localStorage.setItem('authToken', response.data.token);
-      setToken(response.data.token);
+      const t = response.data.token;
+      localStorage.setItem('authToken', t);
+      setToken(t);
       setUser(response.data.user);
+
+      axios.defaults.headers.common['Authorization'] = `Bearer ${t}`;
+      window.dispatchEvent(new Event('auth:changed'));
     } catch (err) {
       console.error('Erreur lors de la connexion', err);
       setUser(null);
@@ -38,18 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await axios.post(
-        `${API_URL}/logout`,
-        {},
-        {
-          withCredentials: true,
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.post(`${API_URL}/logout`, {}, { withCredentials: true, headers: { Authorization: `Bearer ${token}` } });
 
       localStorage.removeItem('authToken');
       setToken(null);
       setUser(null);
+
+      delete axios.defaults.headers.common['Authorization'];
+      window.dispatchEvent(new Event('auth:changed'));
     } catch (err) {
       console.error('Erreur lors de la déconnexion', err);
     }

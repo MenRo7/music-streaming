@@ -20,6 +20,7 @@ class UserController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+                'updated_at' => $user->updated_at,
             ]);
         } else {
             return response()->json(['message' => 'Non authentifié'], 401);

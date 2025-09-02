@@ -8,27 +8,30 @@ import DropdownMenu from './DropdownMenu';
 import GlobalSearchBar from './GlobalSearchBar';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faUpload, faMusic } from '@fortawesome/free-solid-svg-icons'; // ⬅️ + faMusic
 
 import '../styles/Navbar.css';
 
 const Navbar: React.FC = () => {
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const { user: currentUser } = useUser();
+  const { user: currentUser, setUser } = useUser();
 
   const handleLogout = async () => {
     try {
       await logout();
+      setUser(null);
       navigate('/auth');
     } catch (error) {
       console.error('Erreur lors de la déconnexion', error);
     }
   };
 
-  const redirect = (type: 'music' | 'album') => {
-    navigate(`/import?type=${type}`);
-  };
+  const avatarVersion = (currentUser?.updated_at && Date.parse(currentUser.updated_at))
+    || (currentUser?.id ? `uid-${currentUser.id}` : 'guest');
+  const avatarSrc = currentUser?.profile_image
+    ? `${currentUser.profile_image}?t=${avatarVersion}`
+    : '/default-avatar.png';
 
   return (
     <div className="navbar-container">
@@ -37,15 +40,23 @@ const Navbar: React.FC = () => {
         <GlobalSearchBar />
         <ul>
           <li>
-            <Link to="/main">
+            <Link to="/main" aria-label="Accueil" title="Accueil">
               <FontAwesomeIcon icon={faHome} />
             </Link>
           </li>
+
           <li>
-            <Link to="/import">
+            <Link to="/my-music" aria-label="Ma musique" title="Ma musique">
+              <FontAwesomeIcon icon={faMusic} />
+            </Link>
+          </li>
+
+          <li>
+            <Link to="/import" aria-label="Importer" title="Importer">
               <FontAwesomeIcon icon={faUpload} />
             </Link>
           </li>
+
           <li className="navbar-profile">
             <DropdownMenu
               items={[
@@ -55,7 +66,7 @@ const Navbar: React.FC = () => {
               ]}
               trigger={
                 <img
-                  src={currentUser?.profile_image}
+                  src={avatarSrc}
                   alt="User Profile"
                   className="navbar-profile-image"
                 />
