@@ -4,6 +4,7 @@ import { faList, faTrash, faPlay, faEllipsisV } from '@fortawesome/free-solid-sv
 import DropdownMenu from '../components/DropdownMenu';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { usePlayer } from '../apis/PlayerContext';
+import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import '../styles/MusicQueue.css';
 
 type WithPlaylistIds = { playlistIds?: number[] };
@@ -20,6 +21,7 @@ const MusicQueue: React.FC = () => {
   } = usePlayer();
 
   const [queuePlaylists, setQueuePlaylists] = useState<Record<string, number[]>>({});
+  const [pending, setPending] = useState<Record<string, boolean>>({});
 
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
@@ -75,8 +77,51 @@ const MusicQueue: React.FC = () => {
       const ids = (t as WithPlaylistIds).playlistIds;
       if (Array.isArray(ids)) return ids;
     }
-
     return [];
+  };
+
+  const togglePlaylist = async (
+    qid: string,
+    trackId: number,
+    playlistId: number,
+    checked: boolean,
+    baseIds: number[]
+  ) => {
+    const key = `${qid}:${playlistId}`;
+    if (pending[key]) return;
+
+    setPending(p => ({ ...p, [key]: true }));
+
+    setQueuePlaylists(prev => {
+      const cur = prev[qid] ?? baseIds;
+      const next = checked
+        ? (cur.includes(playlistId) ? cur : [...cur, playlistId])
+        : cur.filter(id => id !== playlistId);
+      return { ...prev, [qid]: next };
+    });
+
+    try {
+      if (checked) {
+        await addMusicToPlaylist(playlistId, trackId);
+      } else {
+        await removeMusicFromPlaylist(playlistId, trackId);
+      }
+    } catch (err) {
+      console.error('Erreur maj playlist', { err, qid, trackId, playlistId, checked });
+
+      setQueuePlaylists(prev => {
+        const cur = prev[qid] ?? baseIds;
+        const rollback = checked
+          ? cur.filter(id => id !== playlistId)
+          : (cur.includes(playlistId) ? cur : [...cur, playlistId]); // on avait retiré => on réajoute
+        return { ...prev, [qid]: rollback };
+      });
+    } finally {
+      setPending(p => {
+        const { [key]: _, ...rest } = p;
+        return rest;
+      });
+    }
   };
 
   return (
@@ -209,14 +254,11 @@ const MusicQueue: React.FC = () => {
                           <PlaylistCheckboxMenu
                             existingPlaylistIds={existingIds}
                             onToggle={(playlistId, checked) => {
-                              setQueuePlaylists(prev => {
-                                const cur = prev[t.qid] ?? existingIds;
-                                const next = checked
-                                  ? (cur.includes(playlistId) ? cur : [...cur, playlistId])
-                                  : cur.filter(id => id !== playlistId);
-                                return { ...prev, [t.qid]: next };
-                              });
-                              console.log('toggle playlist from queue', { qid: t.qid, playlistId, checked });
+                              if (typeof (t as any).id !== 'number') {
+                                console.warn('Track id manquant pour ajout à une playlist', t);
+                                return;
+                              }
+                              togglePlaylist(t.qid, (t as any).id, playlistId, checked, existingIds);
                             }}
                           />
                         ),
