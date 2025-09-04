@@ -8,7 +8,7 @@ import { usePlayer } from '../apis/PlayerContext';
 
 import '../styles/SongList.css';
 
-interface Song {
+export interface UISong {
   id: number;
   name: string;
   artist: string;
@@ -25,37 +25,44 @@ interface DropdownAction {
   onClick: () => void;
   withPlaylistMenu?: boolean;
   songId?: number;
-  existingPlaylistIds?: number[];
+  existingPlaylistIds?: number[] | (number | string)[];
   onToggle?: (playlistId: number, checked: boolean) => void;
 }
 
-interface SongListProps {
-  songs: Song[];
+interface SongListProps<T extends UISong = UISong> {
+  songs: T[];
   showAlbum?: boolean;
   showArtist?: boolean;
   showDateAdded?: boolean;
   showDuration?: boolean;
-  getActions?: (song: Song) => DropdownAction[];
+  getActions?: (song: T) => DropdownAction[];
 }
 
-const SongList: React.FC<SongListProps> = ({
+const SongList = <T extends UISong>({
   songs,
   showAlbum = true,
   showArtist = true,
   showDateAdded = true,
   showDuration = false,
   getActions,
-}) => {
+}: SongListProps<T>) => {
   const { playSong, currentTrackId, isPlaying } = usePlayer();
   const [overridePlaylists, setOverridePlaylists] = useState<Record<number, number[]>>({});
 
-  const handlePlaySong = (song: Song) => {
-    if (song.audio) {
-      playSong(song.audio, song.name, song.artist, song.album_image || '', song.id);
-    }
+  const handlePlaySong = (song: T) => {
+    if (!song.audio) return;
+    // ⬇️ On passe la baseline de playlists au PlayerContext pour le SongPlayer
+    playSong(
+      song.audio,
+      song.name,
+      song.artist,
+      song.album_image || '',
+      song.id,
+      { playlistIds: song.playlistIds }
+    );
   };
 
-  const toggleLocal = (song: Song, playlistId: number, checked: boolean) => {
+  const toggleLocal = (song: T, playlistId: number, checked: boolean) => {
     setOverridePlaylists(prev => {
       const base = prev[song.id] ?? song.playlistIds ?? [];
       const next = checked
@@ -82,34 +89,43 @@ const SongList: React.FC<SongListProps> = ({
         {songs.map((song, index) => {
           const actions = getActions ? getActions(song) : [];
 
-          const sharedDropdownItems = actions.flatMap((action) =>
-            action.withPlaylistMenu
-              ? [{
-                  label: action.label || 'Ajouter à une playlist',
-                  onClick: () => {},
-                  submenuContent: (
-                    <PlaylistCheckboxMenu
-                      songId={action.songId ?? song.id}
-                      existingPlaylistIds={
-                        overridePlaylists[song.id] ?? action.existingPlaylistIds ?? song.playlistIds ?? []
-                      }
-                      onToggle={(playlistId, checked) => {
-                        toggleLocal(song, playlistId, checked);
-                        action.onToggle?.(playlistId, checked);
-                      }}
-                    />
-                  ),
-                }]
-              : [{
-                  label: action.label,
-                  onClick: action.onClick,
-                }]
-          );
+          const sharedDropdownItems = actions.flatMap((action) => {
+            if (!action.withPlaylistMenu) {
+              return [{ label: action.label, onClick: action.onClick }];
+            }
+
+            const raw =
+              (overridePlaylists[song.id] ??
+                action.existingPlaylistIds ??
+                song.playlistIds ??
+                []) as (number | string)[];
+
+            const computedExisting = Array.from(new Set(raw.map(Number)))
+              .filter((n) => Number.isFinite(n)) as number[];
+
+            const idsKey = computedExisting.slice().sort((a, b) => a - b).join('_');
+
+            return [{
+              label: action.label || 'Ajouter à une playlist',
+              onClick: () => {},
+              submenuContent: (
+                <PlaylistCheckboxMenu
+                  key={`pcm-${song.id}-${idsKey}`}
+                  songId={action.songId ?? song.id}
+                  existingPlaylistIds={computedExisting}
+                  onToggle={(playlistId, checked) => {
+                    toggleLocal(song, playlistId, checked);
+                    action.onToggle?.(playlistId, checked);
+                  }}
+                />
+              ),
+            }];
+          });
 
           return (
             <tr
               key={song.id}
-              className={`song-row ${isPlaying && currentTrackId === song.id ? 'playing' : ''}`}
+              className={`song-row ${isPlaying && Number(currentTrackId) === Number(song.id) ? 'playing' : ''}`}
             >
               <td className="track-number-cell" onClick={() => handlePlaySong(song)}>
                 <span className="track-number">{index + 1}</span>

@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { usePlaylists } from '../apis/PlaylistContext';
-
 import '../styles/PlaylistCheckboxMenu.css';
 
 interface PlaylistCheckboxMenuProps {
   songId?: number;
-  existingPlaylistIds: number[];
+  existingPlaylistIds: Array<number | string>;
   onToggle: (playlistId: number, checked: boolean) => void;
 }
+
+const toNumberArray = (arr: Array<number | string>): number[] =>
+  (Array.isArray(arr) ? arr : [])
+    .map((v) => Number(v))
+    .filter((n) => Number.isFinite(n));
 
 const PlaylistCheckboxMenu: React.FC<PlaylistCheckboxMenuProps> = ({
   songId,
@@ -15,35 +19,33 @@ const PlaylistCheckboxMenu: React.FC<PlaylistCheckboxMenuProps> = ({
   onToggle,
 }) => {
   const { playlists } = usePlaylists();
-  const [selected, setSelected] = useState<number[]>(existingPlaylistIds);
 
-  const handleChange = (playlistId: number) => {
-    const isSelected = selected.includes(playlistId);
-    const newSelection = isSelected
-      ? selected.filter((id) => id !== playlistId)
-      : [...selected, playlistId];
+  // Liste contrôlée par le parent
+  const selected = useMemo(() => toNumberArray(existingPlaylistIds), [existingPlaylistIds]);
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
 
-    setSelected(newSelection);
-    onToggle(playlistId, !isSelected);
+  const handleChange = (pid: number | string) => {
+    const n = Number(pid);
+    const willCheck = !selectedSet.has(n);
+    onToggle(n, willCheck);
   };
-
-  useEffect(() => {
-    setSelected(existingPlaylistIds);
-  }, [existingPlaylistIds]);
 
   return (
     <div className="playlist-checkbox-menu">
-      {playlists.map((playlist) => (
-        <div key={playlist.id} className="playlist-checkbox-item">
-          <input
-            id={`pl-${playlist.id}`}
-            type="checkbox"
-            checked={selected.includes(playlist.id)}
-            onChange={() => handleChange(playlist.id)}
-          />
-          <label htmlFor={`pl-${playlist.id}`}>{playlist.title}</label>
-        </div>
-      ))}
+      {playlists.map((pl) => {
+        const pid = Number(pl.id);
+        return (
+          <div key={pl.id} className="playlist-checkbox-item">
+            <input
+              id={`pl-${pl.id}`}
+              type="checkbox"
+              checked={selectedSet.has(pid)}
+              onChange={() => handleChange(pid)}
+            />
+            <label htmlFor={`pl-${pl.id}`}>{pl.title}</label>
+          </div>
+        );
+      })}
     </div>
   );
 };

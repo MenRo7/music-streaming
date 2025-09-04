@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList, faTrash, faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
@@ -7,7 +7,12 @@ import { usePlayer } from '../apis/PlayerContext';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import '../styles/MusicQueue.css';
 
-type WithPlaylistIds = { playlistIds?: number[] };
+type WithPlaylistIds = { playlistIds?: number[] | (number | string)[] };
+
+const DEFAULT_IMAGE = '/default-playlist-image.png';
+
+const toNumberArray = (arr: any[]): number[] =>
+  (Array.isArray(arr) ? arr : []).map((v) => Number(v)).filter((n) => Number.isFinite(n));
 
 const MusicQueue: React.FC = () => {
   const {
@@ -71,49 +76,50 @@ const MusicQueue: React.FC = () => {
 
   const getExistingIds = (t: unknown, qid: string): number[] => {
     const override = queuePlaylists[qid];
-    if (override) return override;
+    if (override) return toNumberArray(override);
 
     if (t && typeof t === 'object') {
       const ids = (t as WithPlaylistIds).playlistIds;
-      if (Array.isArray(ids)) return ids;
+      if (Array.isArray(ids)) return toNumberArray(ids);
     }
     return [];
   };
 
   const togglePlaylist = async (
     qid: string,
-    trackId: number,
-    playlistId: number,
+    trackIdInput: number | string,
+    playlistIdInput: number | string,
     checked: boolean,
-    baseIds: number[]
+    baseIdsInput: (number | string)[]
   ) => {
-    const key = `${qid}:${playlistId}`;
+    const trackId = Number(trackIdInput);
+    const pid = Number(playlistIdInput);
+    const baseIds = toNumberArray(baseIdsInput);
+    if (!Number.isFinite(trackId) || !Number.isFinite(pid)) return;
+
+    const key = `${qid}:${pid}`;
     if (pending[key]) return;
 
     setPending(p => ({ ...p, [key]: true }));
 
     setQueuePlaylists(prev => {
-      const cur = prev[qid] ?? baseIds;
+      const cur = toNumberArray(prev[qid] ?? baseIds);
       const next = checked
-        ? (cur.includes(playlistId) ? cur : [...cur, playlistId])
-        : cur.filter(id => id !== playlistId);
+        ? (cur.includes(pid) ? cur : [...cur, pid])
+        : cur.filter(id => id !== pid);
       return { ...prev, [qid]: next };
     });
 
     try {
-      if (checked) {
-        await addMusicToPlaylist(playlistId, trackId);
-      } else {
-        await removeMusicFromPlaylist(playlistId, trackId);
-      }
+      if (checked) await addMusicToPlaylist(pid, trackId);
+      else await removeMusicFromPlaylist(pid, trackId);
     } catch (err) {
-      console.error('Erreur maj playlist', { err, qid, trackId, playlistId, checked });
-
+      console.error('Erreur maj playlist', { err, qid, trackId, pid, checked });
       setQueuePlaylists(prev => {
-        const cur = prev[qid] ?? baseIds;
+        const cur = toNumberArray(prev[qid] ?? baseIds);
         const rollback = checked
-          ? cur.filter(id => id !== playlistId)
-          : (cur.includes(playlistId) ? cur : [...cur, playlistId]); // on avait retiré => on réajoute
+          ? cur.filter(id => id !== pid)
+          : (cur.includes(pid) ? cur : [...cur, pid]);
         return { ...prev, [qid]: rollback };
       });
     } finally {
@@ -156,7 +162,13 @@ const MusicQueue: React.FC = () => {
             <li className="mq-item mq-item--current" draggable={false}>
               <div className="mq-cover-wrap">
                 {currentItem.album_image ? (
-                  <img src={currentItem.album_image} alt="" className="mq-cover" />
+                  <img
+                    key={`current-${currentItem.qid}`}
+                    src={currentItem.album_image}
+                    alt=""
+                    className="mq-cover"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
+                  />
                 ) : (
                   <div className="mq-cover mq-cover--placeholder" aria-hidden />
                 )}
@@ -192,7 +204,10 @@ const MusicQueue: React.FC = () => {
 
           {upNext.map((t, idx) => {
             const manual = isManualIdx(idx);
-            const existingIds = getExistingIds(t, t.qid);
+            const existingIdsRaw = getExistingIds(t, t.qid);
+            const normalized = Array.from(new Set(existingIdsRaw.map(Number)))
+              .filter((n) => Number.isFinite(n)) as number[];
+            const idsKey = normalized.slice().sort((a, b) => a - b).join('_');
 
             return (
               <li
@@ -208,7 +223,13 @@ const MusicQueue: React.FC = () => {
               >
                 <div className="mq-cover-wrap">
                   {t.album_image ? (
-                    <img src={t.album_image} alt="" className="mq-cover" />
+                    <img
+                      key={`queue-${t.qid}`}
+                      src={t.album_image}
+                      alt=""
+                      className="mq-cover"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
+                    />
                   ) : (
                     <div className="mq-cover mq-cover--placeholder" aria-hidden />
                   )}
@@ -252,13 +273,12 @@ const MusicQueue: React.FC = () => {
                         onClick: () => {},
                         submenuContent: (
                           <PlaylistCheckboxMenu
-                            existingPlaylistIds={existingIds}
+                            key={`pcm-${t.qid}-${idsKey}`}
+                            existingPlaylistIds={normalized}
                             onToggle={(playlistId, checked) => {
-                              if (typeof (t as any).id !== 'number') {
-                                console.warn('Track id manquant pour ajout à une playlist', t);
-                                return;
-                              }
-                              togglePlaylist(t.qid, (t as any).id, playlistId, checked, existingIds);
+                              const tid = Number((t as any).id);
+                              if (!Number.isFinite(tid)) return;
+                              togglePlaylist(t.qid, tid, Number(playlistId), checked, normalized);
                             }}
                           />
                         ),

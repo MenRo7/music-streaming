@@ -5,41 +5,48 @@ namespace App\Http\Controllers;
 use App\Models\Music;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class MusicController extends Controller
 {
     public function index()
     {
-        $musics = \App\Models\Music::with(['user', 'album'])->get()->map(function ($m) {
-            return [
-                'id' => $m->id,
-                'name' => $m->title,
-                'artist' => optional($m->user)->name ?? $m->artist_name,
-                'album' => optional($m->album)->title ?? 'Inconnu',
-                'album_image' => $m->image ? asset('storage/' . $m->image) : null,
-                'audio' => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
-            ];
-        });
+        $musics = Music::with(['user:id,name', 'album:id,title', 'playlists:id'])
+            ->get()
+            ->map(function ($m) {
+                return [
+                    'id'           => (int) $m->id,
+                    'name'         => $m->title,
+                    'artist'       => optional($m->user)->name ?? $m->artist_name,
+                    'album'        => optional($m->album)->title ?? 'Inconnu',
+                    'album_image'  => $m->image
+                        ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
+                        : null,
+                    'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                    'playlist_ids' => $m->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
+                ];
+            });
 
         return response()->json($musics);
     }
 
     public function show($id)
     {
-        $music = \App\Models\Music::with(['user', 'album'])->find($id);
+        $music = Music::with(['user:id,name', 'album:id,title', 'playlists:id'])->find($id);
 
         if (!$music) {
             return response()->json(['message' => 'Musique non trouvée'], 404);
         }
 
         return response()->json([
-            'id' => $music->id,
-            'name' => $music->title,
-            'artist' => optional($music->user)->name ?? $music->artist_name,
-            'album' => optional($music->album)->title ?? 'Inconnu',
-            'album_image' => $music->image ? asset('storage/' . $music->image) : null,
-            'audio' => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
+            'id'           => (int) $music->id,
+            'name'         => $music->title,
+            'artist'       => optional($music->user)->name ?? $music->artist_name,
+            'album'        => optional($music->album)->title ?? 'Inconnu',
+            'album_image'  => $music->image
+                ? asset('storage/' . $music->image) . '?v=' . optional($music->updated_at)->timestamp
+                : null,
+            'audio'        => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
+            'playlist_ids' => $music->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
         ]);
     }
 
@@ -72,27 +79,37 @@ class MusicController extends Controller
 
         return response()->json([
             'message' => 'Musique ajoutée avec succès',
-            'music' => $music,
+            'music'   => $music,
         ]);
     }
 
     public function myMusic()
     {
         $user = Auth::user();
-        $musics = \App\Models\Music::where('user_id', $user->id)
-        ->with(['user', 'playlists'])
-        ->get();
 
-        $musics->transform(function ($music) {
-            $music->name   = $music->title;
-            $music->artist = optional($music->user)->name ?? $music->artist_name;
-            $music->audio = $music->audio ? route('stream.music', ['filename' => $music->audio]) : null;
-            $music->album = optional($music->album)->title ?? 'Inconnu';
-            $music->album_image = $music->image ? asset('storage/' . $music->image) : null;
-            $music->playlistIds = $music->playlists->pluck('id');
-
-            return $music;
-        });
+        $musics = Music::where('user_id', $user->id)
+            ->with(['user:id,name', 'album:id,title', 'playlists:id'])
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($m) {
+                return [
+                    'id'           => (int) $m->id,
+                    'name'         => $m->title,
+                    'artist'       => optional($m->user)->name ?? $m->artist_name,
+                    'album'        => optional($m->album)->title ?? 'Inconnu',
+                    'album_image'  => $m->image
+                        ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
+                        : null,
+                    'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                    'duration'     => $m->duration,
+                    'date_added'   => optional($m->created_at)?->toDateString(),
+                    'playlist_ids' => $m->playlists
+                        ->pluck('id')
+                        ->map(fn($id) => (int) $id)
+                        ->values()
+                        ->all(),
+                ];
+            });
 
         return response()->json($musics);
     }

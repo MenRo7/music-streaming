@@ -10,12 +10,15 @@ import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistSer
 import { usePlayer } from '../apis/PlayerContext';
 
 import PlaylistCard from '../components/PlaylistCard';
-import SongList from '../components/SongList';
+import SongList, { UISong } from '../components/SongList';
+
+const toNumberArray = (arr: any[]): number[] =>
+  (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
 
 const MyMusicPage: React.FC = () => {
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
-  const [musics, setMusics] = useState<any[]>([]);
+  const [musics, setMusics] = useState<UISong[]>([]);
   const [albums, setAlbums] = useState<any[]>([]);
 
   useEffect(() => {
@@ -26,15 +29,18 @@ const MyMusicPage: React.FC = () => {
           getUserAlbums(),
         ]);
 
-        const formattedSongs = musicData.map((music: any) => ({
-          id: music.id,
-          name: music.title,
-          artist: music.artist_name,
-          album: albumData.find((a: any) => a.id === music.album_id)?.title || 'Inconnu',
-          album_image: music.image || '',
-          audio: music.audio || '',
-          dateAdded: new Date(music.created_at).toLocaleDateString(),
-          playlistIds: music.playlist_ids || [],
+        const formattedSongs: UISong[] = (musicData as any[]).map((m: any) => ({
+          id: Number(m.id),
+          name: m.name,
+          artist: m.artist,
+          album: m.album ?? 'Inconnu',
+          album_image: m.album_image || '',
+          audio: m.audio || '',
+          dateAdded: m.date_added
+            ? new Date(m.date_added).toLocaleDateString()
+            : '',
+          duration: m.duration ?? undefined,
+          playlistIds: toNumberArray(m.playlist_ids || []),
         }));
 
         setMusics(formattedSongs);
@@ -47,15 +53,16 @@ const MyMusicPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const handleTogglePlaylist = async (playlistId: number, checked: boolean, songId: number) => {
+  const handleTogglePlaylist = async (playlistId: number | string, checked: boolean, songId: number | string) => {
+    const pid = Number(playlistId);
+    const sid = Number(songId);
+    if (!Number.isFinite(pid) || !Number.isFinite(sid)) return;
+
     try {
-      if (checked) {
-        await addMusicToPlaylist(playlistId, songId);
-      } else {
-        await removeMusicFromPlaylist(playlistId, songId);
-      }
+      if (checked) await addMusicToPlaylist(pid, sid);
+      else await removeMusicFromPlaylist(pid, sid);
     } catch (error) {
-      alert("Erreur lors de la modification de la playlist.");
+      alert('Erreur lors de la modification de la playlist.');
     }
   };
 
@@ -76,33 +83,28 @@ const MyMusicPage: React.FC = () => {
               onClick: () => {},
               withPlaylistMenu: true,
               songId: song.id,
-              existingPlaylistIds: song.playlistIds,
+              existingPlaylistIds: song.playlistIds ?? [],
               onToggle: (playlistId: number, checked: boolean) =>
                 handleTogglePlaylist(playlistId, checked, song.id),
             },
             {
               label: 'Modifier la musique',
-              onClick: () => {
-                navigate(`/edit-music/${song.id}`);
-              },
+              onClick: () => navigate(`/edit-music/${song.id}`),
             },
             {
               label: 'Supprimer',
               onClick: async () => {
-                const confirm = window.confirm('Voulez-vous vraiment supprimer cette musique ?');
-                if (!confirm) return;
+                const confirmed = window.confirm('Voulez-vous vraiment supprimer cette musique ?');
+                if (!confirmed) return;
                 try {
                   await deleteMusic(song.id);
                   setMusics((prev) => prev.filter((m) => m.id !== song.id));
-                } catch (err) {
+                } catch {
                   alert('Erreur lors de la suppression');
                 }
               },
             },
-            { 
-              label: 'Ajouter à la file d’attente', 
-              onClick: () => addToQueue(song)
-            },
+            { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
           ]}
         />
 

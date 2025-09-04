@@ -2,25 +2,32 @@ import React, { useEffect, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faRandom, faEllipsisH, faBars } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
-import SongList from '../components/SongList';
+import SongList, { UISong } from '../components/SongList';
 import { usePlayer, Track } from '../apis/PlayerContext';
+import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import '../styles/MediaPage.css';
 
-interface Song extends Track { dateAdded?: string; }
+interface MediaSong extends Track {
+  dateAdded?: string;
+  playlistIds?: number[];
+}
 
 interface MediaPageProps {
   title: string;
   artist?: string;
   image: string;
-  songs: Song[];
+  songs: MediaSong[];
   isPlaylist?: boolean;
   collectionType?: 'playlist' | 'album';
-  collectionId?: number;
+  collectionId?: number | string;
   onEdit?: () => void;
   onDelete?: () => void;
   renderModal?: React.ReactNode;
-  getActions?: (song: Song) => { label: string; onClick: () => void }[];
+  getActions?: (song: MediaSong) => { label: string; onClick: () => void }[];
 }
+
+const toNumberArray = (arr: any[]): number[] =>
+  (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
 
 const MediaPage: React.FC<MediaPageProps> = ({
   title, artist, image, songs, isPlaylist = false,
@@ -28,32 +35,48 @@ const MediaPage: React.FC<MediaPageProps> = ({
 }) => {
   const { setCollectionContext, toggleShuffle, playSong, addToQueue } = usePlayer();
 
-  const src = useMemo(
-    () => (collectionType && typeof collectionId === 'number'
-      ? { type: collectionType, id: collectionId } as const
-      : null),
-    [collectionType, collectionId]
-  );
+  const pagePlaylistId = collectionType === 'playlist' ? Number(collectionId) : undefined;
 
   const tracks = useMemo<Track[]>(
     () => songs.map(s => ({
-      id: s.id,
+      id: Number(s.id),
       name: s.name,
       artist: s.artist,
       album: s.album,
       album_image: s.album_image,
       audio: s.audio,
       duration: s.duration,
+      playlistIds: Array.from(new Set([
+        ...(s.playlistIds ?? []),
+        ...(pagePlaylistId ? [pagePlaylistId] : []),
+      ])).map(Number).filter(Number.isFinite),
+    })),
+    [songs, pagePlaylistId]
+  );
+
+  const normalizedSongs: UISong[] = useMemo(
+    () => songs.map(s => ({
+      id: Number(s.id),
+      name: s.name,
+      artist: s.artist,
+      album: s.album,
+      album_image: s.album_image,
+      audio: s.audio,
+      dateAdded: s.dateAdded,
+      duration: s.duration,
+      playlistIds: toNumberArray(s.playlistIds ?? []),
     })),
     [songs]
   );
 
   useEffect(() => {
-    if (src) setCollectionContext(src, tracks);
-  }, [src, tracks]);
+    if (collectionType && collectionId !== undefined && collectionId !== null) {
+      setCollectionContext({ type: collectionType, id: Number(collectionId) }, tracks);
+    }
+  }, [collectionType, collectionId, tracks, setCollectionContext]);
 
   const onPlayAll = () => {
-    const first = songs[0];
+    const first = normalizedSongs[0];
     if (first) playSong(first.audio, first.name, first.artist, first.album_image || '', first.id);
   };
 
@@ -89,15 +112,38 @@ const MediaPage: React.FC<MediaPageProps> = ({
         </div>
 
         <SongList
-          songs={songs}
+          songs={normalizedSongs}
           showAlbum
           showArtist
           showDateAdded
           showDuration={false}
-          getActions={(song) => [
-            { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
-            ...(isPlaylist && getActions ? getActions(song) : []),
-          ]}
+          getActions={(song) => {
+            const baseline = Array.from(
+              new Set([...(song.playlistIds ?? []), ...(pagePlaylistId ? [pagePlaylistId] : [])])
+            ) as number[];
+
+            const defaultActions = [
+              {
+                label: 'Ajouter à une playlist',
+                onClick: () => {},
+                withPlaylistMenu: true,
+                songId: song.id,
+                existingPlaylistIds: baseline,
+                onToggle: async (playlistId: number, checked: boolean) => {
+                  try {
+                    if (checked) await addMusicToPlaylist(playlistId, song.id);
+                    else await removeMusicFromPlaylist(playlistId, song.id);
+                  } catch (e) {
+                    console.error('Maj playlist échouée', e);
+                  }
+                },
+              },
+              { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+            ];
+
+            const extra = isPlaylist && getActions ? getActions(song as any) : [];
+            return [...defaultActions, ...extra];
+          }}
         />
       </div>
       {renderModal}

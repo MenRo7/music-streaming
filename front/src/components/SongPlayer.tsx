@@ -12,10 +12,16 @@ import {
   faShuffle,
 } from '@fortawesome/free-solid-svg-icons';
 
+import DropdownMenu from '../components/DropdownMenu';
+import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
+import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
+
 import { usePlayer } from '../apis/PlayerContext';
 import '../styles/SongPlayer.css';
 
 type CSSVars = React.CSSProperties & Record<string, string>;
+
+const DEFAULT_IMAGE = '/default-playlist-image.png';
 
 const SongPlayer: React.FC = () => {
   const {
@@ -30,6 +36,10 @@ const SongPlayer: React.FC = () => {
     toggleShuffle,
     cycleRepeat,
     repeat,
+
+    currentItem,
+    addToQueue,
+    currentTrackId,
   } = usePlayer();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -47,6 +57,24 @@ const SongPlayer: React.FC = () => {
     _setIsSeeking(v);
   };
 
+  // --- état local pour le sous-menu "Ajouter à une playlist" de la piste en cours ---
+  const [selectedPlaylists, setSelectedPlaylists] = useState<number[]>([]);
+  const [pending, setPending] = useState<Record<number, boolean>>({}); // playlistId -> saving
+
+  // helper: baseline (ids déjà affichés pour la piste courante) en NOMBRES
+  const getExistingIds = (): number[] => {
+    if (!currentItem) return [];
+    const anyItem = currentItem as any;
+    const raw = Array.isArray(anyItem.playlistIds) ? anyItem.playlistIds : [];
+    return raw.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
+  };
+
+  // quand la piste courante change, on réinitialise la sélection locale
+  useEffect(() => {
+    setSelectedPlaylists(getExistingIds());
+    setPending({});
+  }, [currentItem?.qid]); // qid change à chaque nouvelle piste
+
   if (!audioRef.current) {
     const a = new Audio();
     a.preload = 'metadata';
@@ -60,7 +88,6 @@ const SongPlayer: React.FC = () => {
   useEffect(() => { repeatRef.current = repeat; }, [repeat]);
 
   const lastUrlRef = useRef<string | null>(null);
-  const DEFAULT_IMAGE = '/default-playlist-image.png';
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume / 100;
@@ -204,19 +231,101 @@ const SongPlayer: React.FC = () => {
     }
   };
 
+  // ----- Actions du menu “+” -----
+  const handleAddToQueue = () => {
+    if (!currentItem) return;
+    addToQueue({
+      id: currentItem.id,
+      name: currentItem.name,
+      artist: currentItem.artist,
+      album: currentItem.album,
+      album_image: currentItem.album_image || '',
+      audio: currentItem.audio,
+      duration: (currentItem as any).duration,
+      playlistIds: (currentItem as any).playlistIds || [],
+    });
+  };
+
+  const handleTogglePlaylist = async (playlistId: number, checked: boolean) => {
+    if (!currentItem) return;
+
+    const trackId = Number((currentItem as any).id);
+    const pid = Number(playlistId);
+    if (!Number.isFinite(trackId) || !Number.isFinite(pid)) return;
+
+    const base = selectedPlaylists.length ? selectedPlaylists : getExistingIds();
+
+    // optimistic
+    setSelectedPlaylists(prev => {
+      const cur = prev.length ? prev : base;
+      return checked
+        ? (cur.includes(pid) ? cur : [...cur, pid])
+        : cur.filter(id => id !== pid);
+    });
+    setPending(p => ({ ...p, [pid]: true }));
+
+    try {
+      if (checked) await addMusicToPlaylist(pid, trackId);
+      else await removeMusicFromPlaylist(pid, trackId);
+    } catch {
+      // rollback
+      setSelectedPlaylists(prev => {
+        const cur = prev.length ? prev : base;
+        return checked
+          ? cur.filter(id => id !== pid)
+          : (cur.includes(pid) ? cur : [...cur, pid]);
+      });
+    } finally {
+      setPending(p => {
+        const { [pid]: _, ...rest } = p;
+        return rest;
+      });
+    }
+  };
+
+  const baselineIds = (selectedPlaylists.length ? selectedPlaylists : getExistingIds()).map(Number);
+  const idsKey = baselineIds.slice().sort((a,b)=>a-b).join('_');
+
+  const plusMenuItems = [
+    {
+      label: 'Ajouter à une playlist',
+      onClick: () => {},
+      submenuContent: (
+        <PlaylistCheckboxMenu
+          key={`pcm-${currentItem?.qid ?? currentTrackId ?? 'none'}-${idsKey}`} // remount fiable
+          existingPlaylistIds={baselineIds}
+          onToggle={(playlistId, checked) => handleTogglePlaylist(playlistId, checked)}
+        />
+      ),
+    },
+    { label: 'Voir l’album', onClick: () => { /* à brancher plus tard */ } },
+    { label: 'Voir l’artiste', onClick: () => { /* à brancher plus tard */ } },
+    { label: 'Ajouter à la file d’attente', onClick: handleAddToQueue },
+  ];
+
   return (
     <div className="song-player">
       <div className="player-left">
         <img
+          key={currentItem?.qid ?? currentTrackId ?? albumImage ?? 'noimg'}
           src={albumImage ? albumImage : DEFAULT_IMAGE}
           alt="Album"
           className="player-album-image"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
         />
         <div className="song-info">
           <p className="song-title">{title || 'Aucun titre'}</p>
           <p className="song-artist">{artist || 'Artiste inconnu'}</p>
         </div>
-        <FontAwesomeIcon icon={faPlus} className="player-icon" />
+
+        <DropdownMenu
+          trigger={<FontAwesomeIcon icon={faPlus} className="player-icon" title="Plus d'actions" />}
+          items={plusMenuItems}
+          wrapperClassName="player-plus-wrapper"
+          menuClassName="player-plus-menu"
+          preferDirection="up"
+          autoFlip
+        />
       </div>
 
       <div className="player-center">

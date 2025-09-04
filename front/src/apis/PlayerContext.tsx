@@ -17,6 +17,7 @@ export type Track = {
   album_image?: string;
   audio: string;
   duration?: string;
+  playlistIds?: number[];
 };
 
 type SourceRef =
@@ -32,6 +33,10 @@ type QueueItem = Track & {
 
 type RepeatMode = 'off' | 'all' | 'one';
 
+type PlaySongOpts = {
+  playlistIds?: Array<number | string>;
+};
+
 export interface PlayerContextType {
   audioUrl: string;
   title: string;
@@ -39,7 +44,15 @@ export interface PlayerContextType {
   albumImage: string;
   currentTrackId: number | null;
   isPlaying: boolean;
-  playSong: (url: string, title: string, artist: string, albumImage: string, trackId?: number) => void;
+  // ⬇️ signature étendue : options avec playlistIds
+  playSong: (
+    url: string,
+    title: string,
+    artist: string,
+    albumImage: string,
+    trackId?: number,
+    opts?: PlaySongOpts
+  ) => void;
   setIsPlaying: (playing: boolean) => void;
 
   currentItem: QueueItem | null;
@@ -80,6 +93,9 @@ const sameSource = (a: SourceRef, b: SourceRef) =>
 
 const sameTracks = (a: Track[], b: Track[]) =>
   a.length === b.length && a.every((t, i) => t.id === b[i]?.id);
+
+const toNumArr = (arr?: Array<number | string>) =>
+  (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite) as number[];
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [audioUrl, setAudioUrl] = useState('');
@@ -145,7 +161,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCollection(t);
   }, []);
 
-  const playSong = useCallback<PlayerContextType['playSong']>((url, name, art, img, trackId) => {
+  // ⬇️ Ajout des options (playlistIds). On les met sur currentItem en lecture manuelle.
+  const playSong = useCallback<PlayerContextType['playSong']>((url, name, art, img, trackId, opts) => {
     if (trackId != null) {
       const idx = collectionRef.current.findIndex(t => t.id === trackId);
       if (idx >= 0 && sourceRef.current.type !== 'none') {
@@ -159,6 +176,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       artist: art,
       album_image: img,
       audio: url,
+      playlistIds: toNumArr(opts?.playlistIds), // <<— IMPORTANT pour le SongPlayer
     };
     setCurrentItem({ ...t, qid: uid(), origin: 'manual', from: sourceRef.current });
     setIsPlaying(true);
@@ -259,7 +277,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return cur;
       }
 
-      // Sinon: stop
       setIsPlaying(false);
       return cur;
     });

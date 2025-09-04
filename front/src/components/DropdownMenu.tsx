@@ -14,6 +14,8 @@ interface DropdownMenuProps {
   trigger: ReactNode;
   menuClassName?: string;
   wrapperClassName?: string;
+  preferDirection?: 'down' | 'up';
+  autoFlip?: boolean;
 }
 
 type Pos = { top: number; left: number; minWidth?: number };
@@ -26,7 +28,9 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   items,
   trigger,
   menuClassName = '',
-  wrapperClassName = ''
+  wrapperClassName = '',
+  preferDirection = 'down',
+  autoFlip = true,
 }) => {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<Pos | null>(null);
@@ -39,19 +43,36 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   const itemRefs = useRef<Array<HTMLLIElement | null>>([]);
 
   const computeMenuPos = () => {
-    const el = triggerRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
+    const t = triggerRef.current;
+    if (!t) return;
+
+    const r = t.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    let top = Math.min(r.bottom + GUTTER, vh - GUTTER);
-    let left = Math.min(
-      Math.max(GUTTER, r.right - MENU_MIN_WIDTH),
-      vw - MENU_MIN_WIDTH - GUTTER
+    const menuEl = menuRef.current;
+    const menuH = menuEl?.offsetHeight ?? 0;
+    const menuW = Math.max(MENU_MIN_WIDTH, r.width);
+
+    const spaceBelow = vh - (r.bottom + GUTTER);
+    const spaceAbove = r.top - GUTTER;
+
+    let openDown = preferDirection === 'down';
+    if (autoFlip && menuH > 0) {
+      if (openDown && spaceBelow < menuH && spaceAbove > spaceBelow) openDown = false;
+      if (!openDown && spaceAbove < menuH && spaceBelow > spaceAbove) openDown = true;
+    }
+
+    const top = openDown
+      ? Math.min(r.bottom + GUTTER, vh - GUTTER)
+      : Math.max(GUTTER, r.top - menuH - GUTTER);
+
+    const left = Math.min(
+      Math.max(GUTTER, r.right - menuW),
+      vw - menuW - GUTTER
     );
 
-    setPos({ top, left, minWidth: Math.max(MENU_MIN_WIDTH, r.width) });
+    setPos({ top, left, minWidth: menuW });
   };
 
   const computeSubmenuPos = (index: number, width = SUBMENU_MIN_WIDTH) => {
@@ -71,18 +92,18 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   useEffect(() => {
     if (!open) return;
     computeMenuPos();
-    const onScroll = () => {
+
+    const onScrollOrResize = () => {
       computeMenuPos();
       if (openSubIndex !== null) computeSubmenuPos(openSubIndex);
     };
-    const onResize = onScroll;
-    window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
     return () => {
-      window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
     };
-  }, [open, openSubIndex]);
+  }, [open, openSubIndex, preferDirection, autoFlip]);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
