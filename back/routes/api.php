@@ -9,6 +9,7 @@ use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\MusicController;
 use App\Http\Controllers\AlbumController;
+use App\Http\Controllers\FavoriteController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -41,6 +42,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/playlists/{playlist}/remove-music', [PlaylistController::class, 'removeMusic']);
     Route::put('/playlists/{id}', [PlaylistController::class, 'update']);
     Route::delete('/playlists/{id}', [PlaylistController::class, 'destroy']);
+
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/favorites/{music}', [FavoriteController::class, 'store']);
+    Route::delete('/favorites/{music}', [FavoriteController::class, 'destroy']);
 
     Route::get('/search', [GlobalSearchController::class, 'search']);
 });

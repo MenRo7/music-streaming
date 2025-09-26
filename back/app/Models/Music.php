@@ -31,6 +31,12 @@ class Music extends Model
     {
         return optional($this->user)->name ?? $this->artist_name;
     }
+
+    public function favoredBy()
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'favorites')
+            ->withTimestamps();
+    }
 }
 
 

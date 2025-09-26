@@ -54,4 +54,10 @@ class User extends Authenticatable
         return $this->hasMany(Playlist::class);
     }
 
+        public function favorites()
+    {
+        return $this->belongsToMany(\App\Models\Music::class, 'favorites')
+            ->withTimestamps();
+    }
+
 }
