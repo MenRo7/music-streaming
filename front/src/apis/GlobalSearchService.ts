@@ -14,7 +14,7 @@ export interface Playlist {
 }
 
 export interface Music {
-  id: string;
+  id: number;                 // ← uniformisé en number
   title: string;
   artist_name: string;
   audio: string;
@@ -28,23 +28,67 @@ export interface Album {
 }
 
 export interface SearchResults {
-  users?: {
-    data: User[];
-  };
-  playlists?: {
-    data: Playlist[];
-  };
-  musics?: {
-    data: Music[];
-  };
-  albums?: {
-    data: Album[];
-  };
+  users?: { data: User[] };
+  playlists?: { data: Playlist[] };
+  musics?: { data: Music[] };
+  albums?: { data: Album[] };
 }
+
+type Category = 'user' | 'playlist' | 'music' | 'album';
+
+const toNum = (v: unknown): number => {
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const normalize = (raw: any, requested: Category[]): SearchResults => {
+  const want = (c: Category) => requested.length === 0 || requested.includes(c);
+
+  const users: User[] = want('user')
+    ? (raw?.users?.data ?? []).map((u: any) => ({
+        id: toNum(u.id),
+        name: u.name,
+        profile_image: u.profile_image ?? null,
+      }))
+    : [];
+
+  const playlists: Playlist[] = want('playlist')
+    ? (raw?.playlists?.data ?? []).map((p: any) => ({
+        id: toNum(p.id),
+        title: p.title,
+        image: p.image ?? null,
+      }))
+    : [];
+
+  const musics: Music[] = want('music')
+    ? (raw?.musics?.data ?? []).map((m: any) => ({
+        id: toNum(m.id),                         // ← coercition ici
+        title: m.title,
+        artist_name: m.artist_name,
+        audio: m.audio,
+        image: m.image ?? null,
+      }))
+    : [];
+
+  const albums: Album[] = want('album')
+    ? (raw?.albums?.data ?? []).map((a: any) => ({
+        id: toNum(a.id),
+        title: a.title,
+        image: a.image ?? null,
+      }))
+    : [];
+
+  const out: SearchResults = {};
+  if (want('user')) out.users = { data: users };
+  if (want('playlist')) out.playlists = { data: playlists };
+  if (want('music')) out.musics = { data: musics };
+  if (want('album')) out.albums = { data: albums };
+  return out;
+};
 
 export const search = async (
   query: string,
-  categories: ('user' | 'playlist' | 'music' | 'album')[],
+  categories: Category[],
   usersPage = 1,
   playlistsPage = 1,
   musicsPage = 1,
@@ -67,7 +111,7 @@ export const search = async (
       },
     });
 
-    return response.data;
+    return normalize(response.data, categories);
   } catch (error) {
     console.error('Error while searching:', error);
     throw error;

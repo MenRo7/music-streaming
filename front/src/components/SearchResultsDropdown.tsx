@@ -16,81 +16,94 @@ interface Playlist {
 }
 
 interface Music {
-  id: string;
+  id: number;
   title: string;
-  artist_name: string;
-  audio: string;
-  image: string | null;
+  artist_name?: string | null;
+  image?: string | null;
+  audio?: string | null;
 }
 
 interface Album {
   id: number;
   title: string;
   image: string | null;
+  artist_name?: string | null;
 }
 
 interface SearchResultsDropdownProps {
-  users?: User[];
-  playlists?: Playlist[];
-  musics?: Music[];
-  albums?: Album[];
+  users: User[];
+  playlists: Playlist[];
+  musics: Music[];
+  albums: Album[];
   visible: boolean;
   onClose: () => void;
   onLoadMore: () => void;
-  loadingMore: boolean;
+  loadingMore?: boolean;
+
+  /** Navigation callbacks (optionnels) */
+  onAlbumClick?: (id: number) => void;
+  onPlaylistClick?: (id: number) => void;
+  onUserClick?: (id: number) => void;
+
+  /** Pour overrider la lecture d’un titre (optionnel) */
+  onTrackClick?: (track: Music) => void;
 }
 
 const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
-  users = [],
-  playlists = [],
-  musics = [],
-  albums = [],
+  users,
+  playlists,
+  musics,
+  albums,
   visible,
   onClose,
   onLoadMore,
-  loadingMore
+  loadingMore,
+  onAlbumClick,
+  onPlaylistClick,
+  onUserClick,
+  onTrackClick,
 }) => {
-  const { playSong } = usePlayer();
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const handleMusicClick = (music: Music) => {
-    playSong(music.audio, music.title, music.artist_name, music.image ?? "");
-  };
+  const { playSong } = usePlayer();
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onClose();
-      }
+    const onClickOutside = (e: MouseEvent) => {
+      if (!dropdownRef.current) return;
+      if (!dropdownRef.current.contains(e.target as Node)) onClose();
     };
-
-    if (visible) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (visible) document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
   }, [visible, onClose]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollHeight, scrollTop, clientHeight } = e.currentTarget;
-    const bottomReached = scrollHeight - scrollTop <= clientHeight + 10;
-
-    if (bottomReached && !loadingMore) {
+    const el = e.currentTarget;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20 && !loadingMore) {
       onLoadMore();
     }
   };
 
-    if (!visible || (users.length === 0 && playlists.length === 0 && musics.length === 0)) return null;
+  const handleMusicClick = (track: Music) => {
+    if (onTrackClick) return onTrackClick(track);
+    if (!track.audio) return;
+    playSong(track.audio, track.title, track.artist_name || 'Inconnu', track.image || '', track.id);
+  };
+
+  const handleAlbumClick = (id: number) => {
+    if (onAlbumClick) onAlbumClick(id);
+  };
+
+  const handlePlaylistClick = (id: number) => {
+    if (onPlaylistClick) onPlaylistClick(id);
+  };
+
+  const handleUserClick = (id: number) => {
+    if (onUserClick) onUserClick(id);
+  };
+
+  if (!visible) return null;
 
   return (
-    <div
-      className="search-results-dropdown"
-      ref={dropdownRef}
-      style={{ maxHeight: '400px', overflowY: 'auto' }}
-      onScroll={handleScroll}
-    >
+    <div className="search-results-dropdown" ref={dropdownRef} onScroll={handleScroll}>
       {users.length > 0 && (
         <div className="search-section">
           <h4>Utilisateurs</h4>
@@ -101,40 +114,45 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
                 image={user.profile_image}
                 label={user.name}
                 isRounded
+                onClick={() => handleUserClick(user.id)}
               />
             ))}
           </ul>
         </div>
       )}
+
       {playlists.length > 0 && (
         <div className="search-section">
           <h4>Playlists</h4>
           <ul className="search-result-list">
-            {playlists.map(playlist => (
+            {playlists.map(pl => (
               <SearchResultItem
-                key={playlist.id}
-                image={playlist.image}
-                label={playlist.title}
+                key={pl.id}
+                image={pl.image}
+                label={pl.title}
+                onClick={() => handlePlaylistClick(pl.id)}
               />
             ))}
           </ul>
         </div>
       )}
+
       {musics.length > 0 && (
         <div className="search-section">
-          <h4>Musiques</h4>
+          <h4>Titres</h4>
           <ul className="search-result-list">
             {musics.map(track => (
               <SearchResultItem
                 key={track.id}
-                image={track.image}
-                label={`${track.title} - ${track.artist_name}`}
+                image={track.image || null}
+                label={`${track.title}${track.artist_name ? ` - ${track.artist_name}` : ''}`}
                 onClick={() => handleMusicClick(track)}
               />
             ))}
           </ul>
         </div>
       )}
+
       {albums.length > 0 && (
         <div className="search-section">
           <h4>Albums</h4>
@@ -144,11 +162,13 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
                 key={album.id}
                 image={album.image}
                 label={album.title}
+                onClick={() => handleAlbumClick(album.id)}
               />
             ))}
           </ul>
         </div>
       )}
+
       {loadingMore && (
         <div style={{ textAlign: 'center', padding: '10px' }}>
           Chargement...

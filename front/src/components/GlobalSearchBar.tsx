@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { search, SearchResults } from '../apis/GlobalSearchService';
-import { usePlayer } from '../apis/PlayerContext';
-
 import DropdownMenu from './DropdownMenu';
 import SearchResultsDropdown from './SearchResultsDropdown';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFilter } from '@fortawesome/free-solid-svg-icons';
 
-import '../styles/GlobalSearchBar.css'; 
+import '../styles/GlobalSearchBar.css';
+
+const emptyResults: SearchResults = {
+  users: { data: [] },
+  playlists: { data: [] },
+  musics: { data: [] },
+  albums: { data: [] },
+};
 
 const GlobalSearchBar: React.FC = () => {
+  const navigate = useNavigate();
+
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResults>({ users: { data: [] }, playlists: { data: [] }, musics: { data: [] }, albums: { data: [] } });
+  const [results, setResults] = useState<SearchResults>(emptyResults);
   const [filters, setFilters] = useState({ user: false, playlist: false, music: false, album: false });
   const [showResults, setShowResults] = useState(false);
 
@@ -25,16 +33,9 @@ const GlobalSearchBar: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const perPage = 10;
 
-  const { playSong } = usePlayer();
-
   useEffect(() => {
     if (!query.trim()) {
-      setResults({
-        users: { data: [] },
-        playlists: { data: [] },
-        musics: { data: [] },
-        albums: { data: [] },
-      });
+      setResults(emptyResults);
       setShowResults(false);
       return;
     }
@@ -45,33 +46,27 @@ const GlobalSearchBar: React.FC = () => {
         .map(([key]) => key as 'user' | 'playlist' | 'music' | 'album');
 
       const categoriesToSend: ('user' | 'playlist' | 'music' | 'album')[] =
-        rawCategories.length === 0
-          ? ['user', 'playlist', 'music', 'album']
-          : rawCategories;
+        rawCategories.length === 0 ? ['user', 'playlist', 'music', 'album'] : rawCategories;
 
       setLoadingMore(true);
-      const newResults = await search(query, categoriesToSend, usersPage, playlistsPage, musicsPage, albumsPage, perPage);
+      const newResults = await search(
+        query,
+        categoriesToSend,
+        usersPage,
+        playlistsPage,
+        musicsPage,
+        albumsPage,
+        perPage
+      );
       setLoadingMore(false);
 
-      setResults((prev: any) => {
-        const merged = { ...prev };
-
-        if (newResults.users) {
-          merged.users = { data: usersPage === 1 ? newResults.users.data : [...(prev.users?.data || []), ...newResults.users.data] };
-        }
-
-        if (newResults.playlists) {
-          merged.playlists = { data: playlistsPage === 1 ? newResults.playlists.data : [...(prev.playlists?.data || []), ...newResults.playlists.data] };
-        }
-
-        if (newResults.musics) {
-          merged.musics = { data: musicsPage === 1 ? newResults.musics.data : [...(prev.musics?.data || []), ...newResults.musics.data] };
-        }
-
-        if (newResults.albums) {
-          merged.albums = { data: albumsPage === 1 ? newResults.albums.data : [...(prev.albums?.data || []), ...newResults.albums.data] };
-        }
-
+      setResults((prev) => {
+        const merged: SearchResults = {
+          users: { data: usersPage === 1 ? (newResults.users?.data ?? []) : [...(prev.users?.data ?? []), ...(newResults.users?.data ?? [])] },
+          playlists: { data: playlistsPage === 1 ? (newResults.playlists?.data ?? []) : [...(prev.playlists?.data ?? []), ...(newResults.playlists?.data ?? [])] },
+          musics: { data: musicsPage === 1 ? (newResults.musics?.data ?? []) : [...(prev.musics?.data ?? []), ...(newResults.musics?.data ?? [])] },
+          albums: { data: albumsPage === 1 ? (newResults.albums?.data ?? []) : [...(prev.albums?.data ?? []), ...(newResults.albums?.data ?? [])] },
+        };
         return merged;
       });
 
@@ -86,33 +81,22 @@ const GlobalSearchBar: React.FC = () => {
     setPlaylistsPage(1);
     setMusicsPage(1);
     setAlbumsPage(1);
-    setResults({ users: { data: [] }, playlists: { data: [] }, musics: { data: [] }, albums: { data: [] } });
+    setResults(emptyResults);
   }, [query, filters]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const bottomReached = e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight;
-    if (bottomReached && !loadingMore) {
-      handleLoadMore();
-    }
+    if (bottomReached && !loadingMore) handleLoadMore();
   };
 
   const handleLoadMore = () => {
     if (loadingMore) return;
-
     const anyFilter = filters.user || filters.playlist || filters.music || filters.album;
 
-    if (filters.user || !anyFilter) {
-      setUsersPage(prev => prev + 1);
-    }
-    if (filters.playlist || !anyFilter) {
-      setPlaylistsPage(prev => prev + 1);
-    }
-    if (filters.music || !anyFilter) {
-      setMusicsPage(prev => prev + 1);
-    }
-    if (filters.album || !anyFilter) {
-      setAlbumsPage(prev => prev + 1);
-    }
+    if (filters.user || !anyFilter) setUsersPage((p) => p + 1);
+    if (filters.playlist || !anyFilter) setPlaylistsPage((p) => p + 1);
+    if (filters.music || !anyFilter) setMusicsPage((p) => p + 1);
+    if (filters.album || !anyFilter) setAlbumsPage((p) => p + 1);
   };
 
   return (
@@ -123,13 +107,14 @@ const GlobalSearchBar: React.FC = () => {
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Rechercher une chanson, un artiste..."
+            placeholder="Rechercher une chanson, un artiste, un album…"
             className="global-search-input"
+            onFocus={() => setShowResults(!!query.trim())}
           />
           <FontAwesomeIcon
             icon={faSearch}
             className="global-search-icon"
-            onClick={() => setQuery(query.trim())}
+            onClick={() => setShowResults(!!query.trim())}
           />
           <DropdownMenu
             trigger={<FontAwesomeIcon icon={faFilter} className="global-search-filter-icon" />}
@@ -149,14 +134,17 @@ const GlobalSearchBar: React.FC = () => {
           onScroll={handleScroll}
         >
           <SearchResultsDropdown
-            users={results?.users?.data}
-            playlists={results?.playlists?.data}
-            musics={results?.musics?.data}
-            albums={results?.albums?.data}
+            users={results?.users?.data ?? []}
+            playlists={results?.playlists?.data ?? []}
+            musics={results?.musics?.data ?? []}
+            albums={results?.albums?.data ?? []}
             visible={showResults}
             onClose={() => setShowResults(false)}
             onLoadMore={handleLoadMore}
             loadingMore={loadingMore}
+            onAlbumClick={(id) => { setShowResults(false); navigate(`/album/${id}`); }}
+            onPlaylistClick={(id) => { setShowResults(false); navigate(`/playlist/${id}`); }}
+            onUserClick={(id) => { setShowResults(false); navigate(`/profile/${id}`); }}
           />
           {loadingMore && <div>Chargement...</div>}
         </div>
