@@ -29,20 +29,41 @@ class AlbumController extends Controller
 
     public function show($id)
     {
-        $album = Album::find($id);
+        $album = Album::with([
+            'user:id,name',
+            'tracks' => function ($q) {
+                $q->with(['user:id,name', 'playlists:id']);
+            },
+        ])->find($id);
 
         if (!$album) {
             return response()->json(['message' => 'Album non trouvé'], 404);
         }
 
+        $musics = $album->tracks->map(function ($m) {
+            return [
+                'id'           => (int) $m->id,
+                'title'        => $m->title,
+                'artist_name'  => optional($m->user)->name ?? $m->artist_name,
+                'duration'     => $m->duration,
+                'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                'playlist_ids' => $m->playlists
+                    ->pluck('id')
+                    ->map(fn($id) => (int) $id)
+                    ->values()
+                    ->all(),
+            ];
+        });
+
         return response()->json([
-            'id' => $album->id,
-            'title' => $album->title,
-            'type' => $album->type,
-            'image' => $album->image ? asset('storage/' . $album->image) : null,
-            'user_id' => $album->user_id,
-            'artist_name' => $album->artist_name,
-            'created_at' => $album->created_at,
+            'id'          => (int) $album->id,
+            'title'       => $album->title,
+            'type'        => $album->type,
+            'image'       => $album->image ? asset('storage/' . $album->image) : null,
+            'user_id'     => (int) $album->user_id,
+            'artist_name' => optional($album->user)->name ?? $album->artist_name,
+            'created_at'  => optional($album->created_at)?->toDateString(),
+            'musics'      => $musics,
         ]);
     }
 

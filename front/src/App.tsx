@@ -15,7 +15,7 @@ import PlaylistPage from './pages/PlaylistPage';
 import ProfilePage from './pages/ProfilePage';
 import MainPage from './pages/MainPage';
 import AuthPage from './pages/AuthPage';
-// import AlbumPage from './pages/AlbumPage';
+import AlbumPage from './pages/AlbumPage';
 import ImportPage from './pages/ImportPage';
 import MyMusicPage from './pages/MyMusicPage';
 
@@ -75,8 +75,8 @@ const AppShell: React.FC = () => {
           }
         />
 
-        {/* <Route
-          path="/albums/:id"
+        <Route
+          path="/album/:id"
           element={
             <PrivateRoute
               element={
@@ -89,7 +89,7 @@ const AppShell: React.FC = () => {
               }
             />
           }
-        /> */}
+        />
 
         <Route
           path="/profile"

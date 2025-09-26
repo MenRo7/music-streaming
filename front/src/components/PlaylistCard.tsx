@@ -4,11 +4,18 @@ import '../styles/PlaylistCard.css';
 interface PlaylistCardProps {
   title: string;
   image?: string;
+  onClick?: () => void;
 }
 
-const PlaylistCard: React.FC<PlaylistCardProps> = ({ title, image }) => {
+const PlaylistCard: React.FC<PlaylistCardProps> = ({ title, image, onClick }) => {
   return (
-    <div className="playlist-card">
+    <div
+      className="playlist-card"
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : -1}
+      style={onClick ? { cursor: 'pointer' } : undefined}
+    >
       {image ? (
         <img src={image} alt={title} className="playlist-image" />
       ) : (
@@ -20,4 +27,3 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({ title, image }) => {
 };
 
 export default PlaylistCard;
-

@@ -111,7 +111,12 @@ const MyMusicPage: React.FC = () => {
         <h2 style={{ marginTop: '40px' }}>Mes Albums</h2>
         <div className="album-row">
           {albums.map((album: any) => (
-            <PlaylistCard key={album.id} title={album.title} image={album.image} />
+            <PlaylistCard
+              key={album.id}
+              title={album.title}
+              image={album.image}
+              onClick={() => navigate(`/album/${album.id}`)}
+            />
           ))}
         </div>
       </div>
