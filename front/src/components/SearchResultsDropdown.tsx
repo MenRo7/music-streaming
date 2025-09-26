@@ -39,13 +39,9 @@ interface SearchResultsDropdownProps {
   onClose: () => void;
   onLoadMore: () => void;
   loadingMore?: boolean;
-
-  /** Navigation callbacks (optionnels) */
   onAlbumClick?: (id: number) => void;
   onPlaylistClick?: (id: number) => void;
   onUserClick?: (id: number) => void;
-
-  /** Pour overrider la lecture d’un titre (optionnel) */
   onTrackClick?: (track: Music) => void;
 }
 

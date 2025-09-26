@@ -20,11 +20,8 @@ const Sidebar: React.FC = () => {
   const handleFilterClick = (filter: string) => {
     setActiveFilters((prevFilters) => {
       const newFilters = new Set(prevFilters);
-      if (newFilters.has(filter)) {
-        newFilters.delete(filter);
-      } else {
-        newFilters.add(filter);
-      }
+      if (newFilters.has(filter)) newFilters.delete(filter);
+      else newFilters.add(filter);
       return newFilters;
     });
   };
@@ -79,6 +76,10 @@ const Sidebar: React.FC = () => {
       </nav>
 
       <div className="playlist-grid">
+        <Link to="/favorites" key="favorites">
+          <PlaylistCard title="Titres favoris" image="/favorites-cover.svg" />
+        </Link>
+
         {playlists.map((playlist: any) => (
           <Link key={playlist.id} to={`/playlist/${playlist.id}`}>
             <PlaylistCard title={playlist.title} image={playlist.image} />

@@ -14,7 +14,7 @@ export interface Playlist {
 }
 
 export interface Music {
-  id: number;                 // ← uniformisé en number
+  id: number;
   title: string;
   artist_name: string;
   audio: string;
@@ -62,7 +62,7 @@ const normalize = (raw: any, requested: Category[]): SearchResults => {
 
   const musics: Music[] = want('music')
     ? (raw?.musics?.data ?? []).map((m: any) => ({
-        id: toNum(m.id),                         // ← coercition ici
+        id: toNum(m.id),
         title: m.title,
         artist_name: m.artist_name,
         audio: m.audio,

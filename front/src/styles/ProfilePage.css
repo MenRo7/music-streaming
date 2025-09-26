@@ -3,7 +3,7 @@
   top: 90px;
   bottom: 75px;
   left: 415px;
-  width: calc(100% - 830px); /* 415 (gauche) + 415 (droite) */
+  width: calc(100% - 830px);
   max-width: 1500px;
   background-color: #252525;
   color: #f3f0ff;
