@@ -47,6 +47,8 @@ const FavoritesPage: React.FC = () => {
       title="Titres favoris"
       image="/favorites-cover.svg"
       songs={mediaSongs}
+      collectionType="playlist"
+      collectionId={0}
       getActions={(song) => [
         {
           label: 'Ajouter à une playlist',
