@@ -7,13 +7,17 @@ import {
   deletePlaylist,
   removeMusicFromPlaylist,
 } from '../apis/PlaylistService';
+import { addMusicToPlaylist } from '../apis/PlaylistService';
 import { usePlaylists } from '../apis/PlaylistContext';
+import { addFavorite } from '../apis/FavoritesService';
+import { usePlayer } from '../apis/PlayerContext';
 import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
 
 const PlaylistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { fetchPlaylists } = usePlaylists();
+  const { addToQueue } = usePlayer();
 
   const [playlist, setPlaylist] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,7 +40,7 @@ const PlaylistPage: React.FC = () => {
         ...prev,
         songs: prev.songs.filter((song: any) => song.id !== songId),
       }));
-    } catch (error) {
+    } catch {
       alert("Erreur lors de la suppression de la musique de la playlist.");
     }
   };
@@ -84,12 +88,40 @@ const PlaylistPage: React.FC = () => {
           mode="edit"
         />
       }
-      getActions={(song) => [
-        {
-          label: 'Supprimer de cette playlist',
-          onClick: () => handleRemoveMusicFromPlaylist(song.id),
-        },
-      ]}
+      getActions={(song) => {
+        const baseline = Array.from(
+          new Set([...(song.playlistIds ?? []), ...(playlist?.id ? [Number(playlist.id)] : [])])
+        ) as number[];
+
+        return [
+          {
+            label: 'Ajouter aux favoris',
+            onClick: () => {
+              addFavorite(song.id).catch((e) => console.error('Ajout aux favoris échoué', e));
+            },
+          },
+          {
+            label: 'Ajouter à une autre playlist',
+            onClick: () => {},
+            withPlaylistMenu: true,
+            songId: song.id,
+            existingPlaylistIds: baseline,
+            onToggle: async (playlistId: number, checked: boolean) => {
+              try {
+                if (checked) await addMusicToPlaylist(playlistId, song.id);
+                else await removeMusicFromPlaylist(playlistId, song.id);
+              } catch (e) {
+                console.error('Maj playlist échouée', e);
+              }
+            },
+          },
+          { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+          {
+            label: 'Supprimer de cette playlist',
+            onClick: () => handleRemoveMusicFromPlaylist(song.id),
+          },
+        ];
+      }}
     />
   );
 };

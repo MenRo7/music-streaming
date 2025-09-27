@@ -26,6 +26,8 @@ class FavoriteController extends Controller
                     'image'        => $m->image ? asset('storage/' . $m->image) : null,
                     'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
                     'playlist_ids' => $m->playlists->pluck('id')->map(fn($id) => (int) $id)->values(),
+                    'date_added'   => optional($m->pivot?->created_at)?->toDateString(),
+
                 ];
             });
 

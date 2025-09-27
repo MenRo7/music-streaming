@@ -9,6 +9,7 @@ export interface FavoriteSong {
   image?: string | null;
   audio: string;
   playlist_ids?: number[];
+  date_added?: string;
 }
 
 export const getFavorites = async (): Promise<FavoriteSong[]> => {

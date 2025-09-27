@@ -4,7 +4,6 @@ import { faPlay, faRandom, faEllipsisH, faBars } from '@fortawesome/free-solid-s
 import DropdownMenu from '../components/DropdownMenu';
 import SongList, { UISong } from '../components/SongList';
 import { usePlayer, Track } from '../apis/PlayerContext';
-import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import '../styles/MediaPage.css';
 
 interface MediaSong extends Track {
@@ -30,12 +29,10 @@ const toNumberArray = (arr: any[]): number[] =>
   (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
 
 const MediaPage: React.FC<MediaPageProps> = ({
-  title, artist, image, songs, isPlaylist = false,
+  title, artist, image, songs,
   collectionType, collectionId, onEdit, onDelete, renderModal, getActions,
 }) => {
-  const { setCollectionContext, toggleShuffle, playSong, addToQueue } = usePlayer();
-
-  const pagePlaylistId = collectionType === 'playlist' ? Number(collectionId) : undefined;
+  const { setCollectionContext, toggleShuffle, playSong } = usePlayer();
 
   const tracks = useMemo<Track[]>(
     () => songs.map(s => ({
@@ -46,12 +43,9 @@ const MediaPage: React.FC<MediaPageProps> = ({
       album_image: s.album_image,
       audio: s.audio,
       duration: s.duration,
-      playlistIds: Array.from(new Set([
-        ...(s.playlistIds ?? []),
-        ...(pagePlaylistId ? [pagePlaylistId] : []),
-      ])).map(Number).filter(Number.isFinite),
+      playlistIds: toNumberArray(s.playlistIds ?? []),
     })),
-    [songs, pagePlaylistId]
+    [songs]
   );
 
   const normalizedSongs: UISong[] = useMemo(
@@ -70,7 +64,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
   );
 
   useEffect(() => {
-    if (collectionType && collectionId !== undefined && collectionId !== null) {
+    if (collectionType && collectionId != null) {
       setCollectionContext({ type: collectionType, id: Number(collectionId) }, tracks);
     }
   }, [collectionType, collectionId, tracks, setCollectionContext]);
@@ -117,33 +111,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
           showArtist
           showDateAdded
           showDuration={false}
-          getActions={(song) => {
-            const baseline = Array.from(
-              new Set([...(song.playlistIds ?? []), ...(pagePlaylistId ? [pagePlaylistId] : [])])
-            ) as number[];
-
-            const defaultActions = [
-              {
-                label: 'Ajouter à une playlist',
-                onClick: () => {},
-                withPlaylistMenu: true,
-                songId: song.id,
-                existingPlaylistIds: baseline,
-                onToggle: async (playlistId: number, checked: boolean) => {
-                  try {
-                    if (checked) await addMusicToPlaylist(playlistId, song.id);
-                    else await removeMusicFromPlaylist(playlistId, song.id);
-                  } catch (e) {
-                    console.error('Maj playlist échouée', e);
-                  }
-                },
-              },
-              { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
-            ];
-
-            const extra = isPlaylist && getActions ? getActions(song as any) : [];
-            return [...defaultActions, ...extra];
-          }}
+          getActions={getActions as any}
         />
       </div>
       {renderModal}

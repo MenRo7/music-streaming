@@ -7,6 +7,7 @@ import {
   deleteMusic,
 } from '../apis/MyMusicService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
+import { addFavorite } from '../apis/FavoritesService';
 import { usePlayer } from '../apis/PlayerContext';
 
 import PlaylistCard from '../components/PlaylistCard';
@@ -36,9 +37,7 @@ const MyMusicPage: React.FC = () => {
           album: m.album ?? 'Inconnu',
           album_image: m.album_image || '',
           audio: m.audio || '',
-          dateAdded: m.date_added
-            ? new Date(m.date_added).toLocaleDateString()
-            : '',
+          dateAdded: m.date_added ? new Date(m.date_added).toLocaleDateString() : '',
           duration: m.duration ?? undefined,
           playlistIds: toNumberArray(m.playlist_ids || []),
         }));
@@ -61,7 +60,7 @@ const MyMusicPage: React.FC = () => {
     try {
       if (checked) await addMusicToPlaylist(pid, sid);
       else await removeMusicFromPlaylist(pid, sid);
-    } catch (error) {
+    } catch {
       alert('Erreur lors de la modification de la playlist.');
     }
   };
@@ -79,6 +78,12 @@ const MyMusicPage: React.FC = () => {
           showDuration={false}
           getActions={(song) => [
             {
+              label: 'Ajouter aux favoris',
+              onClick: () => {
+                addFavorite(song.id).catch((e) => console.error('Ajout aux favoris échoué', e));
+              },
+            },
+            {
               label: 'Ajouter à une playlist',
               onClick: () => {},
               withPlaylistMenu: true,
@@ -87,6 +92,7 @@ const MyMusicPage: React.FC = () => {
               onToggle: (playlistId: number, checked: boolean) =>
                 handleTogglePlaylist(playlistId, checked, song.id),
             },
+            { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
             {
               label: 'Modifier la musique',
               onClick: () => navigate(`/edit-music/${song.id}`),
@@ -104,7 +110,6 @@ const MyMusicPage: React.FC = () => {
                 }
               },
             },
-            { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
           ]}
         />
 

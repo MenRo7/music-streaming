@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import MediaPage from './MediaPage';
 import { Track } from '../apis/PlayerContext';
 import { getFavorites, removeFavorite, FavoriteSong } from '../apis/FavoritesService';
+import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
+import { usePlayer } from '../apis/PlayerContext';
 
 const toTrack = (s: FavoriteSong): Track => ({
   id: s.id,
@@ -12,11 +14,13 @@ const toTrack = (s: FavoriteSong): Track => ({
   audio: s.audio,
   duration: s.duration,
   playlistIds: (s.playlist_ids ?? []) as number[],
+  dateAdded: s.date_added ? new Date(s.date_added).toLocaleDateString() : '',
 });
 
 const FavoritesPage: React.FC = () => {
   const [songs, setSongs] = useState<FavoriteSong[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addToQueue } = usePlayer();
 
   const fetchAll = async () => {
     setLoading(true);
@@ -45,10 +49,27 @@ const FavoritesPage: React.FC = () => {
       songs={mediaSongs}
       getActions={(song) => [
         {
+          label: 'Ajouter à une playlist',
+          onClick: () => {},
+          withPlaylistMenu: true,
+          songId: song.id,
+          existingPlaylistIds: song.playlistIds ?? [],
+          onToggle: async (playlistId: number, checked: boolean) => {
+            try {
+              if (checked) await addMusicToPlaylist(playlistId, song.id);
+              else await removeMusicFromPlaylist(playlistId, song.id);
+            } catch (e) {
+              console.error('Maj playlist échouée', e);
+            }
+          },
+        },
+        { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+        {
           label: 'Retirer des favoris',
-          onClick: async () => {
-            await removeFavorite(song.id);
-            setSongs(prev => prev.filter(s => s.id !== song.id));
+          onClick: () => {
+            removeFavorite(song.id)
+              .then(() => setSongs(prev => prev.filter(s => s.id !== song.id)))
+              .catch((e) => console.error('Suppression des favoris échouée', e));
           },
         },
       ]}

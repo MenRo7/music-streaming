@@ -18,6 +18,7 @@ export type Track = {
   audio: string;
   duration?: string;
   playlistIds?: number[];
+  dateAdded?: string;
 };
 
 type SourceRef =
