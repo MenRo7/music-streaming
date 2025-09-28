@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPlay,
-  faPause,
-  faStepBackward,
-  faStepForward,
-  faRedo,
-  faListUl,
-  faVolumeUp,
-  faPlus,
-  faShuffle,
+  faPlay, faPause, faStepBackward, faStepForward, faRedo, faListUl,
+  faVolumeUp, faPlus, faShuffle,
 } from '@fortawesome/free-solid-svg-icons';
 
 import DropdownMenu from '../components/DropdownMenu';
@@ -20,26 +13,13 @@ import { usePlayer } from '../apis/PlayerContext';
 import '../styles/SongPlayer.css';
 
 type CSSVars = React.CSSProperties & Record<string, string>;
-
 const DEFAULT_IMAGE = '/default-playlist-image.png';
 
 const SongPlayer: React.FC = () => {
   const {
-    audioUrl,
-    title,
-    artist,
-    albumImage,
-    isPlaying,
-    setIsPlaying,
-    next,
-    prev,
-    toggleShuffle,
-    cycleRepeat,
-    repeat,
-
-    currentItem,
-    addToQueue,
-    currentTrackId,
+    audioUrl, title, artist, albumImage, isPlaying, setIsPlaying,
+    next, prev, toggleShuffle, cycleRepeat, repeat,
+    currentItem, addToQueue, currentTrackId,
   } = usePlayer();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -52,28 +32,21 @@ const SongPlayer: React.FC = () => {
 
   const [isSeeking, _setIsSeeking] = useState(false);
   const seekingRef = useRef(false);
-  const setIsSeeking = (v: boolean) => {
-    seekingRef.current = v;
-    _setIsSeeking(v);
-  };
+  const setIsSeeking = (v: boolean) => { seekingRef.current = v; _setIsSeeking(v); };
 
-  // --- état local pour le sous-menu "Ajouter à une playlist" de la piste en cours ---
   const [selectedPlaylists, setSelectedPlaylists] = useState<number[]>([]);
-  const [pending, setPending] = useState<Record<number, boolean>>({}); // playlistId -> saving
+  const [pending, setPending] = useState<Record<number, boolean>>({});
 
-  // helper: baseline (ids déjà affichés pour la piste courante) en NOMBRES
   const getExistingIds = (): number[] => {
     if (!currentItem) return [];
     const anyItem = currentItem as any;
     const raw = Array.isArray(anyItem.playlistIds) ? anyItem.playlistIds : [];
     return raw.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
   };
-
-  // quand la piste courante change, on réinitialise la sélection locale
   useEffect(() => {
     setSelectedPlaylists(getExistingIds());
     setPending({});
-  }, [currentItem?.qid]); // qid change à chaque nouvelle piste
+  }, [currentItem?.qid]);
 
   if (!audioRef.current) {
     const a = new Audio();
@@ -81,7 +54,6 @@ const SongPlayer: React.FC = () => {
     a.crossOrigin = 'anonymous';
     audioRef.current = a;
   }
-
   const nextRef = useRef(next);
   const repeatRef = useRef(repeat);
   useEffect(() => { nextRef.current = next; }, [next]);
@@ -160,13 +132,11 @@ const SongPlayer: React.FC = () => {
 
   const togglePlay = () => {
     const audio = audioRef.current!;
-    if (isPlaying) audio.pause();
-    else audio.play().catch(() => {});
+    if (isPlaying) audio.pause(); else audio.play().catch(() => {});
     setIsPlaying(!isPlaying);
   };
 
   const onSeekStart = () => setIsSeeking(true);
-
   const onSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const pct = Number(e.target.value);
     setSliderPct(pct);
@@ -178,12 +148,10 @@ const SongPlayer: React.FC = () => {
       setProgressSec(target);
     }
   };
-
-  const onSeekEnd = (
-    e:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.MouseEvent<HTMLInputElement>
-      | React.TouchEvent<HTMLInputElement>
+  const onSeekEnd = (e:
+    | React.ChangeEvent<HTMLInputElement>
+    | React.MouseEvent<HTMLInputElement>
+    | React.TouchEvent<HTMLInputElement>
   ) => {
     const pct = Number((e.currentTarget as HTMLInputElement).value);
     setSliderPct(pct);
@@ -203,7 +171,6 @@ const SongPlayer: React.FC = () => {
     audio.volume = vol / 100;
     setVolume(vol);
   };
-
   const handleVolumeMouseMove = (e: React.MouseEvent<HTMLInputElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
@@ -231,7 +198,6 @@ const SongPlayer: React.FC = () => {
     }
   };
 
-  // ----- Actions du menu “+” -----
   const handleAddToQueue = () => {
     if (!currentItem) return;
     addToQueue({
@@ -248,14 +214,12 @@ const SongPlayer: React.FC = () => {
 
   const handleTogglePlaylist = async (playlistId: number, checked: boolean) => {
     if (!currentItem) return;
-
     const trackId = Number((currentItem as any).id);
     const pid = Number(playlistId);
     if (!Number.isFinite(trackId) || !Number.isFinite(pid)) return;
 
     const base = selectedPlaylists.length ? selectedPlaylists : getExistingIds();
 
-    // optimistic
     setSelectedPlaylists(prev => {
       const cur = prev.length ? prev : base;
       return checked
@@ -268,7 +232,6 @@ const SongPlayer: React.FC = () => {
       if (checked) await addMusicToPlaylist(pid, trackId);
       else await removeMusicFromPlaylist(pid, trackId);
     } catch {
-      // rollback
       setSelectedPlaylists(prev => {
         const cur = prev.length ? prev : base;
         return checked
@@ -292,14 +255,14 @@ const SongPlayer: React.FC = () => {
       onClick: () => {},
       submenuContent: (
         <PlaylistCheckboxMenu
-          key={`pcm-${currentItem?.qid ?? currentTrackId ?? 'none'}-${idsKey}`} // remount fiable
+          key={`pcm-${currentItem?.qid ?? currentTrackId ?? 'none'}-${idsKey}`}
           existingPlaylistIds={baselineIds}
           onToggle={(playlistId, checked) => handleTogglePlaylist(playlistId, checked)}
         />
       ),
     },
-    { label: 'Voir l’album', onClick: () => { /* à brancher plus tard */ } },
-    { label: 'Voir l’artiste', onClick: () => { /* à brancher plus tard */ } },
+    { label: "Voir l’album", onClick: () => {} },
+    { label: "Voir l’artiste", onClick: () => {} },
     { label: 'Ajouter à la file d’attente', onClick: handleAddToQueue },
   ];
 
@@ -330,36 +293,11 @@ const SongPlayer: React.FC = () => {
 
       <div className="player-center">
         <div className="controls-icons">
-          <FontAwesomeIcon
-            icon={faShuffle}
-            className="player-icon"
-            title="Lecture aléatoire"
-            onClick={toggleShuffle}
-          />
-          <FontAwesomeIcon
-            icon={faStepBackward}
-            className="player-icon"
-            title="Piste précédente"
-            onClick={onPrevClick}
-          />
-          <FontAwesomeIcon
-            icon={isPlaying ? faPause : faPlay}
-            className="player-icon main-control"
-            onClick={togglePlay}
-            title={isPlaying ? 'Pause' : 'Lecture'}
-          />
-          <FontAwesomeIcon
-            icon={faStepForward}
-            className="player-icon"
-            title="Piste suivante"
-            onClick={next}
-          />
-          <FontAwesomeIcon
-            icon={faRedo}
-            className="player-icon"
-            title="Répéter (off → all → one)"
-            onClick={cycleRepeat}
-          />
+          <FontAwesomeIcon icon={faShuffle} className="player-icon" title="Lecture aléatoire" onClick={toggleShuffle} />
+          <FontAwesomeIcon icon={faStepBackward} className="player-icon" title="Piste précédente" onClick={onPrevClick} />
+          <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} className="player-icon main-control" onClick={togglePlay} title={isPlaying ? 'Pause' : 'Lecture'} />
+          <FontAwesomeIcon icon={faStepForward} className="player-icon" title="Piste suivante" onClick={next} />
+          <FontAwesomeIcon icon={faRedo} className="player-icon" title="Répéter (off → all → one)" onClick={cycleRepeat} />
         </div>
 
         <div className="progress-container">
@@ -390,9 +328,7 @@ const SongPlayer: React.FC = () => {
           className="volume-wrapper"
           style={{ ['--tooltip-left' as any]: `${volumeTooltipX}px` } as CSSVars}
         >
-          {showVolumeTooltip && (
-            <div className="volume-tooltip">{volume}%</div>
-          )}
+          {showVolumeTooltip && <div className="volume-tooltip">{volume}%</div>}
 
           <input
             type="range"

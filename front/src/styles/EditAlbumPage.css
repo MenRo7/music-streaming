@@ -99,7 +99,6 @@
   border: 1px solid #333;
 }
 
-/* Lignes titres (existing / new) */
 .song-item {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 140px;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; 
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList, faTrash, faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
@@ -8,7 +8,6 @@ import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistSer
 import '../styles/MusicQueue.css';
 
 type WithPlaylistIds = { playlistIds?: number[] | (number | string)[] };
-
 const DEFAULT_IMAGE = '/default-playlist-image.png';
 
 const toNumberArray = (arr: any[]): number[] =>
@@ -19,6 +18,7 @@ const MusicQueue: React.FC = () => {
     currentItem,
     upNext,
     queueManual,
+    queueAuto,
     clearQueue,
     removeFromQueue,
     playNowFromQueue,
@@ -31,48 +31,8 @@ const MusicQueue: React.FC = () => {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
-  const manualCount = queueManual.length;
-  const isManualIdx = (i: number) => i < manualCount;
-
-  const isInteractive = (el: HTMLElement | null): boolean => {
-    if (!el) return false;
-    return !!el.closest('button, [role="button"], a, input, textarea, select, .mq-cover-play, .dropdown-wrapper');
-  };
-
-  const handleDragStart = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
-    if (!isManualIdx(idx)) { e.preventDefault(); return; }
-    if (isInteractive(e.target as HTMLElement)) { e.preventDefault(); return; }
-    setDragIndex(idx);
-    (e.currentTarget as HTMLElement).classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', String(idx));
-  };
-
-  const handleDragEnter = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
-    if (!isManualIdx(idx)) return;
-    e.preventDefault();
-    setOverIndex(idx);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
-    if (!isManualIdx(idx)) return;
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
-    e.preventDefault();
-    if (dragIndex !== null && isManualIdx(dragIndex) && isManualIdx(idx) && dragIndex !== idx) {
-      moveManual(dragIndex, idx);
-    }
-    setDragIndex(null);
-    setOverIndex(null);
-  };
-
-  const handleDragEnd = (e: React.DragEvent<HTMLLIElement>) => {
-    (e.currentTarget as HTMLElement).classList.remove('dragging');
-    setDragIndex(null);
-    setOverIndex(null);
-  };
+  const isInteractive = (el: HTMLElement | null): boolean =>
+    !!el?.closest('button, [role="button"], a, input, textarea, select, .mq-cover-play, .dropdown-wrapper');
 
   const getExistingIds = (t: unknown, qid: string): number[] => {
     const override = queuePlaylists[qid];
@@ -130,6 +90,34 @@ const MusicQueue: React.FC = () => {
     }
   };
 
+  const handleDragStart = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
+    if (isInteractive(e.target as HTMLElement)) { e.preventDefault(); return; }
+    setDragIndex(idx);
+    (e.currentTarget as HTMLElement).classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(idx));
+  };
+
+  const handleDragEnter = (_e: React.DragEvent<HTMLLIElement>, idx: number) => {
+    setOverIndex(idx);
+  };
+  const handleDragOver = (e: React.DragEvent<HTMLLIElement>) => {
+    e.preventDefault();
+  };
+  const handleDrop = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
+    e.preventDefault();
+    if (dragIndex !== null && dragIndex !== idx) {
+      moveManual(dragIndex, idx);
+    }
+    setDragIndex(null);
+    setOverIndex(null);
+  };
+  const handleDragEnd = (e: React.DragEvent<HTMLLIElement>) => {
+    (e.currentTarget as HTMLElement).classList.remove('dragging');
+    setDragIndex(null);
+    setOverIndex(null);
+  };
+
   return (
     <aside className="music-queue" aria-label="File d'attente">
       <div className="mq-header">
@@ -143,7 +131,7 @@ const MusicQueue: React.FC = () => {
             className="mq-btn mq-btn--icon mq-btn--danger"
             aria-label="Vider la file (sauf la piste en cours)"
             title="Vider la file (sauf la piste en cours)"
-            disabled={upNext.length === 0}
+            disabled={queueManual.length + queueAuto.length === 0}
             onClick={() => clearQueue(true)}
           >
             <FontAwesomeIcon icon={faTrash} />
@@ -151,81 +139,21 @@ const MusicQueue: React.FC = () => {
         </div>
       </div>
 
-      {!currentItem && upNext.length === 0 ? (
+      {!currentItem && queueManual.length === 0 && queueAuto.length === 0 ? (
         <div className="mq-empty">
           <p>Aucune piste dans la file.</p>
           <small>Ajoutez des chansons via “Ajouter à la file d’attente”.</small>
         </div>
       ) : (
-        <ul className="mq-list" role="list">
+        <div className="mq-sections" role="list">
           {currentItem && (
-            <li className="mq-item mq-item--current" draggable={false}>
-              <div className="mq-cover-wrap">
-                {currentItem.album_image ? (
-                  <img
-                    key={`current-${currentItem.qid}`}
-                    src={currentItem.album_image}
-                    alt=""
-                    className="mq-cover"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
-                  />
-                ) : (
-                  <div className="mq-cover mq-cover--placeholder" aria-hidden />
-                )}
-                <button
-                  className="mq-cover-play"
-                  aria-label="Relire"
-                  title="Relire"
-                  onClick={() => playNowFromQueue(currentItem.qid)}
-                >
-                  <FontAwesomeIcon icon={faPlay} />
-                </button>
-              </div>
-
-              <div className="mq-meta">
-                <div className="mq-title-row">
-                  <span className="mq-track" title={currentItem.name}>
-                    {currentItem.name}
-                  </span>
-                  {currentItem.duration && (
-                    <span className="mq-duration">{currentItem.duration}</span>
-                  )}
-                </div>
-                <span className="mq-artist" title={currentItem.artist}>
-                  {currentItem.artist}
-                </span>
-              </div>
-
-              <span className="mq-badge" aria-label="Piste en cours">
-                En cours
-              </span>
-            </li>
-          )}
-
-          {upNext.map((t, idx) => {
-            const manual = isManualIdx(idx);
-            const existingIdsRaw = getExistingIds(t, t.qid);
-            const normalized = Array.from(new Set(existingIdsRaw.map(Number)))
-              .filter((n) => Number.isFinite(n)) as number[];
-            const idsKey = normalized.slice().sort((a, b) => a - b).join('_');
-
-            return (
-              <li
-                key={t.qid}
-                className={`mq-item ${manual ? 'draggable' : ''} ${overIndex === idx ? 'drag-over' : ''}`}
-                draggable={manual}
-                onDragStart={(e) => handleDragStart(e, idx)}
-                onDragEnter={(e) => handleDragEnter(e, idx)}
-                onDragOver={(e) => handleDragOver(e, idx)}
-                onDrop={(e) => handleDrop(e, idx)}
-                onDragEnd={handleDragEnd}
-                title={t.origin === 'manual' ? 'Ajouté manuellement' : 'Automatique'}
-              >
+            <ul className="mq-list">
+              <li className="mq-item mq-item--current" draggable={false}>
                 <div className="mq-cover-wrap">
-                  {t.album_image ? (
+                  {currentItem.album_image ? (
                     <img
-                      key={`queue-${t.qid}`}
-                      src={t.album_image}
+                      key={`current-${currentItem.qid}`}
+                      src={currentItem.album_image}
                       alt=""
                       className="mq-cover"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
@@ -233,12 +161,11 @@ const MusicQueue: React.FC = () => {
                   ) : (
                     <div className="mq-cover mq-cover--placeholder" aria-hidden />
                   )}
-
                   <button
                     className="mq-cover-play"
-                    aria-label="Lire maintenant"
-                    title="Lire maintenant"
-                    onClick={() => playNowFromQueue(t.qid)}
+                    aria-label="Relire"
+                    title="Relire"
+                    onClick={() => playNowFromQueue(currentItem.qid)}
                   >
                     <FontAwesomeIcon icon={faPlay} />
                   </button>
@@ -246,53 +173,218 @@ const MusicQueue: React.FC = () => {
 
                 <div className="mq-meta">
                   <div className="mq-title-row">
-                    <span className="mq-track" title={t.name}>
-                      {t.name}
+                    <span className="mq-track" title={currentItem.name}>
+                      {currentItem.name}
                     </span>
-                    {t.duration && <span className="mq-duration">{t.duration}</span>}
+                    {currentItem.duration && (
+                      <span className="mq-duration">{currentItem.duration}</span>
+                    )}
                   </div>
-                  <span className="mq-artist" title={t.artist}>
-                    {t.artist}
+                  <span className="mq-artist" title={currentItem.artist}>
+                    {currentItem.artist}
                   </span>
                 </div>
 
-                <div className="mq-row-actions" role="group" aria-label="Actions piste">
-                  <DropdownMenu
-                    wrapperClassName="mq-ellipsis"
-                    trigger={
-                      <FontAwesomeIcon
-                        icon={faEllipsisV}
-                        className="mq-ellipsis-icon"
-                        title="Plus d’actions"
-                        aria-label="Plus d’actions"
-                      />
-                    }
-                    items={[
-                      {
-                        label: 'Ajouter à une playlist',
-                        onClick: () => {},
-                        submenuContent: (
-                          <PlaylistCheckboxMenu
-                            key={`pcm-${t.qid}-${idsKey}`}
-                            existingPlaylistIds={normalized}
-                            onToggle={(playlistId, checked) => {
-                              const tid = Number((t as any).id);
-                              if (!Number.isFinite(tid)) return;
-                              togglePlaylist(t.qid, tid, Number(playlistId), checked, normalized);
-                            }}
-                          />
-                        ),
-                      },
-                      { label: 'Supprimer de la file d’attente', onClick: () => removeFromQueue(t.qid) },
-                      { label: 'Aller à l’album', onClick: () => console.log('Aller à l’album', t) },
-                      { label: 'Voir l’artiste', onClick: () => console.log('Voir l’artiste', t) },
-                    ]}
-                  />
-                </div>
+                <span className="mq-badge" aria-label="Piste en cours">
+                  En cours
+                </span>
               </li>
-            );
-          })}
-        </ul>
+            </ul>
+          )}
+
+          <div className="mq-section">
+            <div className="mq-section-head">
+              <span>Ajoutés à la file d'attente</span>
+              <small>{queueManual.length}</small>
+            </div>
+            <ul className="mq-list">
+              {queueManual.map((t, idx) => {
+                const existingIdsRaw = getExistingIds(t, t.qid);
+                const normalized = Array.from(new Set(existingIdsRaw.map(Number)))
+                  .filter((n) => Number.isFinite(n)) as number[];
+                const idsKey = normalized.slice().sort((a, b) => a - b).join('_');
+
+                return (
+                  <li
+                    key={t.qid}
+                    className={`mq-item draggable ${overIndex === idx ? 'drag-over' : ''}`}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, idx)}
+                    onDragEnter={(e) => handleDragEnter(e, idx)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, idx)}
+                    onDragEnd={handleDragEnd}
+                    title="Ajouté manuellement"
+                  >
+                    <div className="mq-cover-wrap">
+                      {t.album_image ? (
+                        <img
+                          key={`queue-${t.qid}`}
+                          src={t.album_image}
+                          alt=""
+                          className="mq-cover"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
+                        />
+                      ) : (
+                        <div className="mq-cover mq-cover--placeholder" aria-hidden />
+                      )}
+
+                      <button
+                        className="mq-cover-play"
+                        aria-label="Lire maintenant"
+                        title="Lire maintenant"
+                        onClick={() => playNowFromQueue(t.qid)}
+                      >
+                        <FontAwesomeIcon icon={faPlay} />
+                      </button>
+                    </div>
+
+                    <div className="mq-meta">
+                      <div className="mq-title-row">
+                        <span className="mq-track" title={t.name}>
+                          {t.name}
+                        </span>
+                        {t.duration && <span className="mq-duration">{t.duration}</span>}
+                      </div>
+                      <span className="mq-artist" title={t.artist}>
+                        {t.artist}
+                      </span>
+                    </div>
+
+                    <div className="mq-row-actions" role="group" aria-label="Actions piste">
+                      <DropdownMenu
+                        wrapperClassName="mq-ellipsis"
+                        trigger={
+                          <FontAwesomeIcon
+                            icon={faEllipsisV}
+                            className="mq-ellipsis-icon"
+                            title="Plus d’actions"
+                            aria-label="Plus d’actions"
+                          />
+                        }
+                        items={[
+                          {
+                            label: 'Ajouter à une playlist',
+                            onClick: () => {},
+                            submenuContent: (
+                              <PlaylistCheckboxMenu
+                                key={`pcm-${t.qid}-${idsKey}`}
+                                existingPlaylistIds={normalized}
+                                onToggle={(playlistId, checked) => {
+                                  const tid = Number((t as any).id);
+                                  if (!Number.isFinite(tid)) return;
+                                  togglePlaylist(t.qid, tid, Number(playlistId), checked, normalized);
+                                }}
+                              />
+                            ),
+                          },
+                          { label: 'Supprimer de la file d’attente', onClick: () => removeFromQueue(t.qid) },
+                        ]}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+              {queueManual.length === 0 && (
+                <li className="mq-empty-row">Aucun titre ajouté manuellement.</li>
+              )}
+            </ul>
+          </div>
+
+          <div className="mq-section">
+            <div className="mq-section-head">
+              <span>À lire à la suite</span>
+              <small>{queueAuto.length}</small>
+            </div>
+            <ul className="mq-list">
+              {queueAuto.map((t) => {
+                const existingIdsRaw = getExistingIds(t, t.qid);
+                const normalized = Array.from(new Set(existingIdsRaw.map(Number)))
+                  .filter((n) => Number.isFinite(n)) as number[];
+                const idsKey = normalized.slice().sort((a, b) => a - b).join('_');
+
+                return (
+                  <li
+                    key={t.qid}
+                    className="mq-item"
+                    draggable={false}
+                    title="Ajouté automatiquement"
+                  >
+                    <div className="mq-cover-wrap">
+                      {t.album_image ? (
+                        <img
+                          key={`queue-${t.qid}`}
+                          src={t.album_image}
+                          alt=""
+                          className="mq-cover"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
+                        />
+                      ) : (
+                        <div className="mq-cover mq-cover--placeholder" aria-hidden />
+                      )}
+
+                      <button
+                        className="mq-cover-play"
+                        aria-label="Lire maintenant"
+                        title="Lire maintenant"
+                        onClick={() => playNowFromQueue(t.qid)}
+                      >
+                        <FontAwesomeIcon icon={faPlay} />
+                      </button>
+                    </div>
+
+                    <div className="mq-meta">
+                      <div className="mq-title-row">
+                        <span className="mq-track" title={t.name}>
+                          {t.name}
+                        </span>
+                        {t.duration && <span className="mq-duration">{t.duration}</span>}
+                      </div>
+                      <span className="mq-artist" title={t.artist}>
+                        {t.artist}
+                      </span>
+                    </div>
+
+                    <div className="mq-row-actions" role="group" aria-label="Actions piste">
+                      <DropdownMenu
+                        wrapperClassName="mq-ellipsis"
+                        trigger={
+                          <FontAwesomeIcon
+                            icon={faEllipsisV}
+                            className="mq-ellipsis-icon"
+                            title="Plus d’actions"
+                            aria-label="Plus d’actions"
+                          />
+                        }
+                        items={[
+                          {
+                            label: 'Ajouter à une playlist',
+                            onClick: () => {},
+                            submenuContent: (
+                              <PlaylistCheckboxMenu
+                                key={`pcm-${t.qid}-${idsKey}`}
+                                existingPlaylistIds={normalized}
+                                onToggle={(playlistId, checked) => {
+                                  const tid = Number((t as any).id);
+                                  if (!Number.isFinite(tid)) return;
+                                  togglePlaylist(t.qid, tid, Number(playlistId), checked, normalized);
+                                }}
+                              />
+                            ),
+                          },
+                          { label: 'Supprimer de la file d’attente', onClick: () => removeFromQueue(t.qid) },
+                        ]}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+              {queueAuto.length === 0 && (
+                <li className="mq-empty-row">Aucun titre ajouté automatiquement.</li>
+              )}
+            </ul>
+          </div>
+        </div>
       )}
     </aside>
   );

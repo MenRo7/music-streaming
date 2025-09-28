@@ -11,31 +11,34 @@
   display: flex;
   flex-direction: column;
   border-radius: 5px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   max-height: calc(100vh - 75px);
 }
 
-.music-queue::-webkit-scrollbar {
+.mq-sections {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #1e1e1e #252525;
+}
+.mq-sections::-webkit-scrollbar {
   width: 10px;
 }
-
-.music-queue::-webkit-scrollbar-thumb {
+.mq-sections::-webkit-scrollbar-thumb {
   background-color: #1e1e1e;
   border-radius: 10px;
   transition: background-color 0.3s ease;
 }
-
-.music-queue::-webkit-scrollbar-thumb:hover {
+.mq-sections::-webkit-scrollbar-thumb:hover {
   background-color: #d1b3ff;
 }
-
-.music-queue::-webkit-scrollbar-track {
+.mq-sections::-webkit-scrollbar-track {
   background-color: #252525;
   border-radius: 10px;
 }
-
-.music-queue::-webkit-scrollbar-corner {
+.mq-sections::-webkit-scrollbar-corner {
   background-color: transparent;
 }
 
@@ -50,23 +53,19 @@
   z-index: 1;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-
 .mq-title {
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 600;
 }
-
 .mq-title-icon {
   font-size: 1.1rem;
 }
-
 .mq-actions {
   display: flex;
   gap: 8px;
 }
-
 .mq-btn {
   background-color: #4f4c52;
   color: #ffffff;
@@ -76,17 +75,14 @@
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
 }
-
 .mq-btn:hover {
   background-color: #d1b3ff;
   color: #5e2d91;
 }
-
 .mq-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .mq-btn--icon {
   width: 36px;
   height: 36px;
@@ -95,7 +91,6 @@
   place-items: center;
   border-radius: 10px;
 }
-
 .mq-btn--danger {
   background: #4f4c52;
 }
@@ -110,10 +105,32 @@
   color: #cfcfcf;
 }
 
+.mq-section {
+  margin-top: 10px;
+}
+.mq-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 6px;
+  color: #d7c9f4;
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 6px;
+}
+.mq-section-head small {
+  opacity: 0.85;
+  background: #3a2f57;
+  color: #f3f0ff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
 .mq-list {
   list-style: none;
   margin: 0;
-  padding: 8px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -127,13 +144,11 @@
   padding: 8px;
   border-radius: 8px;
   background: #2c2a30;
-  transition: background 0.2s ease, outline-color 0.2s ease, opacity 0.2s ease;
+  transition: background 0.2s ease, outline-color 0.2s ease, opacity 0.2s ease, transform 0.08s ease;
 }
-
 .mq-item:hover {
   background: #36333a;
 }
-
 .mq-item--current {
   outline: 1px solid rgba(209, 179, 255, 0.25);
 }
@@ -141,15 +156,13 @@
 .mq-item.draggable {
   cursor: grab;
 }
-
 .mq-item.draggable:active {
   cursor: grabbing;
 }
-
 .mq-item.dragging {
   opacity: 0.6;
+  transform: scale(0.995);
 }
-
 .mq-item.drag-over {
   outline: 2px dashed #8b5cf6;
   outline-offset: 2px;
@@ -160,19 +173,17 @@
   width: 56px;
   height: 56px;
 }
-
 .mq-cover {
   width: 56px;
   height: 56px;
   object-fit: cover;
   border-radius: 6px;
   display: block;
+  background: #3a3840;
 }
-
 .mq-cover--placeholder {
   background: #3a3840;
 }
-
 .mq-cover-play {
   position: absolute;
   inset: 0;
@@ -186,7 +197,6 @@
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
-
 .mq-item:hover .mq-cover-play,
 .mq-cover-play:focus-visible {
   opacity: 1;
@@ -195,26 +205,22 @@
 .mq-meta {
   min-width: 0;
 }
-
 .mq-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
-
 .mq-track {
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .mq-duration {
   opacity: 0.8;
   font-variant-numeric: tabular-nums;
 }
-
 .mq-artist {
   opacity: 0.8;
   font-size: 0.9rem;
@@ -236,14 +242,12 @@
   align-items: center;
   gap: 6px;
 }
-
 .mq-ellipsis {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-
 .mq-ellipsis-icon {
   font-size: 1rem;
   color: #cfcfcf;
@@ -252,20 +256,27 @@
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-
 .mq-ellipsis-icon:hover,
 .mq-ellipsis-icon:focus-visible {
   background: #3a3840;
   color: #ffffff;
   outline: none;
 }
-
 .mq-ellipsis .dropdown-menu {
   position: absolute;
   right: 0;
   top: 110%;
   z-index: 1100;
   min-width: 180px;
+}
+
+.mq-empty-row {
+  padding: 8px 6px;
+  color: #a892c9;
+  font-size: 0.95rem;
+  background: #2c2a30;
+  border-radius: 8px;
+  text-align: center;
 }
 
 @media (max-width: 1200px) {

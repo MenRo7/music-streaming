@@ -45,7 +45,7 @@ export interface PlayerContextType {
   albumImage: string;
   currentTrackId: number | null;
   isPlaying: boolean;
-  // ⬇️ signature étendue : options avec playlistIds
+
   playSong: (
     url: string,
     title: string,
@@ -162,7 +162,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCollection(t);
   }, []);
 
-  // ⬇️ Ajout des options (playlistIds). On les met sur currentItem en lecture manuelle.
   const playSong = useCallback<PlayerContextType['playSong']>((url, name, art, img, trackId, opts) => {
     if (trackId != null) {
       const idx = collectionRef.current.findIndex(t => t.id === trackId);
@@ -177,7 +176,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       artist: art,
       album_image: img,
       audio: url,
-      playlistIds: toNumArr(opts?.playlistIds), // <<— IMPORTANT pour le SongPlayer
+      playlistIds: toNumArr(opts?.playlistIds),
     };
     setCurrentItem({ ...t, qid: uid(), origin: 'manual', from: sourceRef.current });
     setIsPlaying(true);

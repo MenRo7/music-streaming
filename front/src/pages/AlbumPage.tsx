@@ -1,4 +1,3 @@
-// src/pages/AlbumPage.tsx
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -6,6 +5,9 @@ import MediaPage from './MediaPage';
 import { getAlbumById, Album } from '../apis/AlbumService';
 import { usePlayer, Track } from '../apis/PlayerContext';
 import { useUser } from '../apis/UserContext';
+
+import { addFavorite } from '../apis/FavoritesService';
+import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 
 const toDurationStr = (v?: string | number | null) => {
   if (v == null) return undefined;
@@ -24,11 +26,11 @@ const AlbumPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { setCollectionContext, playSong } = usePlayer();
+  const { setCollectionContext, playSong, addToQueue } = usePlayer();
 
   let currentUserId: number | undefined = undefined;
   try {
-    // @ts-ignore selon ton implémentation
+    // @ts-ignore
     const userCtx = useUser?.();
     currentUserId = userCtx?.user?.id;
   } catch {}
@@ -72,6 +74,22 @@ const AlbumPage: React.FC = () => {
     }));
   }, [album]);
 
+  useEffect(() => {
+    if (album && id) {
+      const tracks: Track[] = mediaSongs.map((s) => ({
+        id: Number(s.id),
+        name: s.name,
+        artist: s.artist,
+        album: s.album,
+        album_image: s.album_image,
+        audio: s.audio,
+        duration: s.duration,
+        playlistIds: s.playlistIds ?? [],
+      }));
+      setCollectionContext({ type: 'album', id: Number(id) }, tracks);
+    }
+  }, [album, id, mediaSongs, setCollectionContext]);
+
   if (loading) {
     return (
       <div className="media-content">
@@ -102,8 +120,37 @@ const AlbumPage: React.FC = () => {
       songs={mediaSongs}
       collectionType="album"
       collectionId={Number(id)}
-      // ⬇️ Redirection vers la page d'édition
       onEdit={canEdit ? () => navigate(`/album/${id}/edit`) : undefined}
+      getActions={(song) => {
+        const baseline = Array.from(new Set([...(song.playlistIds ?? [])])) as number[];
+
+        return [
+          {
+            label: 'Ajouter aux favoris',
+            onClick: () => {
+              addFavorite(song.id).catch((e) =>
+                console.error('Ajout aux favoris échoué', e)
+              );
+            },
+          },
+          {
+            label: 'Ajouter à une autre playlist',
+            onClick: () => {},
+            withPlaylistMenu: true as any,
+            songId: song.id as any,
+            existingPlaylistIds: baseline as any,
+            onToggle: (async (playlistId: number, checked: boolean) => {
+              try {
+                if (checked) await addMusicToPlaylist(playlistId, song.id);
+                else await removeMusicFromPlaylist(playlistId, song.id);
+              } catch (e) {
+                console.error('Maj playlist échouée', e);
+              }
+            }) as any,
+          } as any,
+          { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+        ];
+      }}
     />
   );
 };

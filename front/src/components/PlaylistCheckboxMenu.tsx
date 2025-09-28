@@ -20,7 +20,6 @@ const PlaylistCheckboxMenu: React.FC<PlaylistCheckboxMenuProps> = ({
 }) => {
   const { playlists } = usePlaylists();
 
-  // Liste contrôlée par le parent
   const selected = useMemo(() => toNumberArray(existingPlaylistIds), [existingPlaylistIds]);
   const selectedSet = useMemo(() => new Set(selected), [selected]);
 
