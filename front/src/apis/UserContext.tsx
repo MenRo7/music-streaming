@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
+import debounce from 'lodash.debounce';
 import { fetchUser } from './UserService';
 
 interface UserContextType {
@@ -20,26 +28,59 @@ export const useUser = () => {
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any>(null);
 
-  const refreshUser = async () => {
+  const doRefreshUser = useCallback(async () => {
     try {
       const res = await fetchUser();
       setUser(res.data);
+
+      if (res?.data?.id != null) {
+        localStorage.setItem('currentUserId', String(res.data.id));
+        window.dispatchEvent(new CustomEvent('user:loaded', { detail: { userId: res.data.id } }));
+      }
     } catch (err) {
       console.error('Erreur lors du chargement du profil :', err);
+      setUser(null);
+      localStorage.removeItem('currentUserId');
+      window.dispatchEvent(new CustomEvent('user:loaded', { detail: { userId: null } }));
     }
-  };
+  }, []);
+
+  const debouncedRefresh = useMemo(
+    () =>
+      debounce(() => {
+        void doRefreshUser();
+      }, 200),
+    [doRefreshUser]
+  );
+
+  const refreshUser = useCallback(async () => {
+    debouncedRefresh();
+  }, [debouncedRefresh]);
 
   useEffect(() => {
-    refreshUser();
+    void doRefreshUser();
+    return () => {
+      debouncedRefresh.cancel();
+    };
+  }, [doRefreshUser, debouncedRefresh]);
+
+  useEffect(() => {
     const onAuthChanged = () => {
       const token = localStorage.getItem('authToken');
-      if (token) refreshUser();
-      else setUser(null);
+
+      setUser(null);
+
+      if (token) {
+        void refreshUser();
+      } else {
+        localStorage.removeItem('currentUserId');
+        window.dispatchEvent(new CustomEvent('user:loaded', { detail: { userId: null } }));
+      }
     };
+
     window.addEventListener('auth:changed', onAuthChanged);
     return () => window.removeEventListener('auth:changed', onAuthChanged);
-  }, []);
-  
+  }, [refreshUser]);
 
   return (
     <UserContext.Provider value={{ user, refreshUser, setUser }}>

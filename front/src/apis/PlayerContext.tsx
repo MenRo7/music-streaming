@@ -8,6 +8,7 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
+import debounce from 'lodash.debounce';
 
 export type Track = {
   id: number;
@@ -98,6 +99,45 @@ const sameTracks = (a: Track[], b: Track[]) =>
 const toNumArr = (arr?: Array<number | string>) =>
   (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite) as number[];
 
+type PersistedState = {
+  audioUrl: string;
+  title: string;
+  artist: string;
+  albumImage: string;
+  currentTrackId: number | null;
+  isPlaying: boolean;
+  currentItem: QueueItem | null;
+  queueManual: QueueItem[];
+  queueAuto: QueueItem[];
+  history: QueueItem[];
+  shuffle: boolean;
+  repeat: RepeatMode;
+  source: SourceRef;
+  collection: Track[];
+};
+
+const STORAGE_PREFIX = 'player:queue:v1';
+
+const getUserId = (): number | null => {
+  const raw = localStorage.getItem('currentUserId');
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+};
+
+const keyFor = (userId: number) => `${STORAGE_PREFIX}:${userId}`;
+
+const safeParse = <T,>(s: string | null): T | null => {
+  if (!s) return null;
+  try {
+    return JSON.parse(s) as T;
+  } catch {
+    return null;
+  }
+};
+
+// ----------------------------------------
+
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [audioUrl, setAudioUrl] = useState('');
   const [title, setTitle] = useState('');
@@ -187,22 +227,30 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setQueueManual(q => [...q, { ...track, qid: uid(), origin: 'manual', from: sourceRef.current }]);
   }, []);
 
+  const hardReset = useCallback(() => {
+    setQueueManual([]);
+    setQueueAuto([]);
+    setHistory([]);
+    setCurrentItem(null);
+    setIsPlaying(false);
+    setSource({ type: 'none' });
+    setCollection([]);
+    setAudioUrl('');
+    setTitle('');
+    setArtist('');
+    setAlbumImage('');
+    setCurrentTrackId(null);
+    setShuffle(false);
+    setRepeat('off');
+  }, []);
+
   const clearQueue = useCallback<PlayerContextType['clearQueue']>((keepCurrent = true) => {
     setQueueManual([]);
     setQueueAuto([]);
     if (!keepCurrent) {
-      setCurrentItem(null);
-      setIsPlaying(false);
-      setHistory([]);
-      setSource({ type: 'none' });
-      setCollection([]);
-      setAudioUrl('');
-      setTitle('');
-      setArtist('');
-      setAlbumImage('');
-      setCurrentTrackId(null);
+      hardReset();
     }
-  }, []);
+  }, [hardReset]);
 
   const removeFromQueue = useCallback<PlayerContextType['removeFromQueue']>((qid) => {
     setQueueManual(m => m.filter(i => i.qid !== qid));
@@ -316,6 +364,82 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const cycleRepeat = useCallback(() => {
     setRepeat(r => (r === 'off' ? 'all' : r === 'all' ? 'one' : 'off'));
   }, []);
+
+  const debouncedSave = useMemo(
+    () =>
+      debounce((state: PersistedState, userId: number | null) => {
+        if (!userId) return;
+        try {
+          localStorage.setItem(keyFor(userId), JSON.stringify(state));
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('Impossible de sauvegarder la queue', e);
+        }
+      }, 200),
+    []
+  );
+
+  useEffect(() => {
+    const userId = getUserId();
+    const snapshot: PersistedState = {
+      audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
+      currentItem, queueManual, queueAuto, history, shuffle, repeat, source, collection,
+    };
+    debouncedSave(snapshot, userId);
+  }, [
+    audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
+    currentItem, queueManual, queueAuto, history, shuffle, repeat, source, collection,
+    debouncedSave,
+  ]);
+
+  const restoreForUser = useCallback((userId: number | null) => {
+    if (!userId) {
+      hardReset();
+      return;
+    }
+    const raw = localStorage.getItem(keyFor(userId));
+    const data = safeParse<PersistedState>(raw);
+    if (!data) return;
+
+    setAudioUrl(data.audioUrl || '');
+    setTitle(data.title || '');
+    setArtist(data.artist || '');
+    setAlbumImage(data.albumImage || '');
+    setCurrentTrackId(data.currentTrackId ?? null);
+    setIsPlaying(Boolean(data.isPlaying));
+
+    setCurrentItem(data.currentItem || null);
+    setQueueManual(Array.isArray(data.queueManual) ? data.queueManual : []);
+    setQueueAuto(Array.isArray(data.queueAuto) ? data.queueAuto : []);
+    setHistory(Array.isArray(data.history) ? data.history : []);
+    setShuffle(Boolean(data.shuffle));
+    setRepeat(data.repeat || 'off');
+    setSource(data.source || { type: 'none' });
+    setCollection(Array.isArray(data.collection) ? data.collection : []);
+  }, [hardReset]);
+
+  useEffect(() => {
+    const uid = getUserId();
+    if (uid) restoreForUser(uid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const onUserLoaded = (e: any) => {
+      const uid = e?.detail?.userId ?? null;
+      restoreForUser(uid);
+    };
+    window.addEventListener('user:loaded', onUserLoaded);
+    return () => window.removeEventListener('user:loaded', onUserLoaded);
+  }, [restoreForUser]);
+
+  useEffect(() => {
+    const onAuthChanged = () => {
+      hardReset();
+    };
+    window.addEventListener('auth:changed', onAuthChanged);
+    return () => window.removeEventListener('auth:changed', onAuthChanged);
+  }, [hardReset]);
 
   const value: PlayerContextType = useMemo(() => ({
     audioUrl, title, artist, albumImage, currentTrackId, isPlaying,

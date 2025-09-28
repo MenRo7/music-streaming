@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
+import debounce from 'lodash.debounce';
 import { getPlaylists } from '../apis/PlaylistService';
 
 interface PlaylistContextType {
@@ -19,17 +27,53 @@ export const usePlaylists = (): PlaylistContextType => {
 export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [playlists, setPlaylists] = useState<any[]>([]);
 
-  const fetchPlaylists = useCallback(async () => {
+  const doFetchPlaylists = useCallback(async () => {
     try {
       const data = await getPlaylists();
       setPlaylists(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des playlists :', error);
+      setPlaylists([]);
     }
   }, []);
 
+  const debouncedFetch = useMemo(
+    () =>
+      debounce(() => {
+        void doFetchPlaylists();
+      }, 200),
+    [doFetchPlaylists]
+  );
+
+  const fetchPlaylists = useCallback(async () => {
+    debouncedFetch();
+  }, [debouncedFetch]);
+
   useEffect(() => {
-    fetchPlaylists();
+    void doFetchPlaylists();
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [doFetchPlaylists, debouncedFetch]);
+
+  useEffect(() => {
+    const onUserLoaded = () => {
+      setPlaylists([]);
+      void fetchPlaylists();
+    };
+
+    const onAuthChanged = () => {
+      setPlaylists([]);
+      void fetchPlaylists();
+    };
+
+    window.addEventListener('user:loaded', onUserLoaded);
+    window.addEventListener('auth:changed', onAuthChanged);
+
+    return () => {
+      window.removeEventListener('user:loaded', onUserLoaded);
+      window.removeEventListener('auth:changed', onAuthChanged);
+    };
   }, [fetchPlaylists]);
 
   return (

@@ -20,6 +20,10 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
+      localStorage.removeItem('currentUserId');
+      window.dispatchEvent(
+        new CustomEvent('auth:changed', { detail: { status: 'logout' } })
+      );
       setUser(null);
       navigate('/auth');
     } catch (error) {

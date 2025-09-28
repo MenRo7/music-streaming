@@ -37,6 +37,10 @@ const AuthPage: React.FC = () => {
       } else {
         await login(email, password);
       }
+      window.dispatchEvent(
+        new CustomEvent('auth:changed', { detail: { status: 'login' } })
+      );
+
     } catch (err) {
       setError('Erreur lors de l\'authentification. Vérifiez vos informations.');
     }
