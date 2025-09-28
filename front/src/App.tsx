@@ -19,6 +19,8 @@ import AlbumPage from './pages/AlbumPage';
 import ImportPage from './pages/ImportPage';
 import MyMusicPage from './pages/MyMusicPage';
 import FavoritesPage from './pages/FavoritesPage';
+import EditAlbumPage from './pages/EditAlbumPage';
+
 
 import { AuthProvider } from './apis/AuthContext';
 import { PlaylistProvider } from './apis/PlaylistContext';
@@ -134,6 +136,22 @@ const AppShell: React.FC = () => {
                   <Sidebar />
                   <MusicQueue />
                   <FavoritesPage />
+                </>
+              }
+            />
+          }
+        />
+   
+        <Route
+          path="/album/:id/edit"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <EditAlbumPage />
                 </>
               }
             />

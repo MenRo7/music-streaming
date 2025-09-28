@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Music;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class MusicController extends Controller
 {
@@ -56,6 +57,7 @@ class MusicController extends Controller
             'title' => 'required|string|max:255',
             'audio' => 'required|mimes:mp3,wav,flac',
             'image' => 'nullable|image',
+            'album_id' => 'nullable|integer|exists:albums,id',
         ]);
 
         $user = Auth::user();
@@ -64,6 +66,9 @@ class MusicController extends Controller
         $music->title = $request->title;
         $music->artist_name = $user->name;
         $music->user_id = $user->id;
+        if ($request->filled('album_id')) {
+            $music->album_id = (int) $request->album_id;
+        }
 
         if ($request->hasFile('audio')) {
             $audioPath = $request->file('audio')->store('musics', 'public');
@@ -81,6 +86,72 @@ class MusicController extends Controller
             'message' => 'Musique ajoutée avec succès',
             'music'   => $music,
         ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'audio' => 'sometimes|file|mimes:mp3,wav,flac',
+            // plus d'image ici si tu veux forcer l’usage de l’image d’album
+        ]);
+
+        $music = Music::with(['playlists', 'favoredBy'])->find($id);
+        if (!$music) {
+            return response()->json(['message' => 'Musique non trouvée'], 404);
+        }
+        if ((int)$music->user_id !== (int)Auth::id()) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
+
+        if ($request->filled('title')) {
+            $music->title = $request->string('title');
+        }
+
+        if ($request->hasFile('audio')) {
+            // supprimer l’ancien fichier audio si existant
+            if ($music->audio) {
+                Storage::disk('public')->delete($music->audio);
+            }
+            $audioPath = $request->file('audio')->store('musics', 'public');
+            $music->audio = $audioPath;
+        }
+
+        $music->save();
+
+        return response()->json([
+            'message' => 'Musique mise à jour',
+            'music'   => $music,
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $music = Music::with(['playlists', 'favoredBy'])->find($id);
+
+        if (!$music) {
+            return response()->json(['message' => 'Musique non trouvée'], 404);
+        }
+        if ((int)$music->user_id !== (int)Auth::id()) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
+
+        // Détacher des playlists et des favoris
+        $music->playlists()->detach();
+        $music->favoredBy()->detach();
+
+        // Supprimer les fichiers associés
+        if ($music->audio) {
+            Storage::disk('public')->delete($music->audio);
+        }
+        if ($music->image) {
+            Storage::disk('public')->delete($music->image);
+        }
+
+        // Supprimer la musique
+        $music->delete();
+
+        return response()->json(['status' => 'ok']);
     }
 
     public function myMusic()
