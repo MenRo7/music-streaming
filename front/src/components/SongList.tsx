@@ -36,6 +36,8 @@ interface SongListProps<T extends UISong = UISong> {
   showDateAdded?: boolean;
   showDuration?: boolean;
   getActions?: (song: T) => DropdownAction[];
+  onAlbumClick?: (song: T) => void;
+  onArtistClick?: (song: T) => void;
 }
 
 const SongList = <T extends UISong>({
@@ -45,6 +47,8 @@ const SongList = <T extends UISong>({
   showDateAdded = true,
   showDuration = false,
   getActions,
+  onAlbumClick,
+  onArtistClick,
 }: SongListProps<T>) => {
   const { playSong, currentTrackId, isPlaying } = usePlayer();
   const [overridePlaylists, setOverridePlaylists] = useState<Record<number, number[]>>({});
@@ -71,17 +75,45 @@ const SongList = <T extends UISong>({
     });
   };
 
+  const LinkCell: React.FC<{
+    text?: string;
+    title?: string;
+    onClick?: () => void;
+    className?: string;
+  }> = ({ text, title, onClick, className }) => {
+    if (!text) return <td className={className} />;
+    const isLink = Boolean(onClick);
+    return (
+      <td
+        className={`${className || ''} ${isLink ? 'cell-link' : ''}`}
+        title={title || text}
+        role={isLink ? ('button' as any) : undefined}
+        tabIndex={isLink ? 0 : -1}
+        onClick={isLink ? onClick : undefined}
+        onKeyDown={(e) => {
+          if (isLink && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onClick?.();
+          }
+        }}
+        style={isLink ? { cursor: 'pointer', textDecoration: 'underline' } : undefined}
+      >
+        {text}
+      </td>
+    );
+  };
+
   return (
     <div className="song-table-wrapper">
       <table className="song-table">
         <colgroup>
-          <col style={{ width: 56 }} /> {/* # */}
-          <col />                       {/* Nom */}
-          {showAlbum && <col />}        {/* Album */}
-          {showArtist && <col />}       {/* Artiste */}
-          {showDateAdded && <col style={{ width: 130 }} />} {/* Date */}
-          {showDuration && <col style={{ width: 90 }} />}   {/* Durée */}
-          <col style={{ width: 64 }} /> {/* Action */}
+          <col style={{ width: 56 }} />
+          <col />
+          {showAlbum && <col />}
+          {showArtist && <col />}
+          {showDateAdded && <col style={{ width: 130 }} />}
+          {showDuration && <col style={{ width: 90 }} />}
+          <col style={{ width: 64 }} />
         </colgroup>
 
         <thead>
@@ -95,6 +127,7 @@ const SongList = <T extends UISong>({
             <th className="col-actions">Action</th>
           </tr>
         </thead>
+
         <tbody>
           {songs.map((song, index) => {
             const actions = getActions ? getActions(song) : [];
@@ -142,16 +175,25 @@ const SongList = <T extends UISong>({
                 </td>
 
                 <td className="cell--truncate col-name" title={song.name}>{song.name}</td>
+
                 {showAlbum && (
-                  <td className="cell--truncate col-album" title={song.album || ''}>
-                    {song.album}
-                  </td>
+                  <LinkCell
+                    className="cell--truncate col-album"
+                    text={song.album || ''}
+                    title={song.album || ''}
+                    onClick={onAlbumClick ? () => onAlbumClick(song) : undefined}
+                  />
                 )}
+
                 {showArtist && (
-                  <td className="cell--truncate col-artist" title={song.artist}>
-                    {song.artist}
-                  </td>
+                  <LinkCell
+                    className="cell--truncate col-artist"
+                    text={song.artist}
+                    title={song.artist}
+                    onClick={onArtistClick ? () => onArtistClick(song) : undefined}
+                  />
                 )}
+
                 {showDateAdded && (
                   <td className="col-date">{song.dateAdded}</td>
                 )}

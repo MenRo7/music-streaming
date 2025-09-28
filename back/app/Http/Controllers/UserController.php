@@ -40,17 +40,19 @@ class UserController extends Controller
             ->get()
             ->map(function ($m) {
                 return [
-                    'id'           => (int) $m->id,
-                    'name'         => $m->title,
-                    'artist'       => optional($m->user)->name ?? $m->artist_name,
-                    'album'        => optional($m->album)->title ?? 'Inconnu',
-                    'album_image'  => $m->image
+                    'id'              => (int) $m->id,
+                    'name'            => $m->title,
+                    'artist'          => optional($m->user)->name ?? $m->artist_name,
+                    'album'           => optional($m->album)->title ?? 'Inconnu',
+                    'album_image'     => $m->image
                         ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
                         : null,
-                    'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
-                    'duration'     => $m->duration,
-                    'date_added'   => optional($m->created_at)?->toDateString(),
-                    'playlist_ids' => $m->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
+                    'audio'           => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                    'duration'        => $m->duration,
+                    'date_added'      => optional($m->created_at)?->toDateString(),
+                    'playlist_ids'    => $m->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
+                    'album_id'        => $m->album_id ? (int) $m->album_id : null,
+                    'artist_user_id'  => $m->user_id ? (int) $m->user_id : null,
                 ];
             });
 

@@ -16,6 +16,8 @@ import '../styles/MediaPage.css';
 interface MediaSong extends Track {
   dateAdded?: string;
   playlistIds?: number[];
+  album_id?: number;
+  artist_user_id?: number;
 }
 
 interface MediaPageProps {
@@ -32,6 +34,8 @@ interface MediaPageProps {
   getActions?: (song: MediaSong) => { label: string; onClick: () => void }[];
   isLiked?: boolean;
   onToggleLike?: () => void;
+  onAlbumClick?: (song: UISong) => void;
+  onArtistClick?: (song: UISong) => void;
 }
 
 const toNumberArray = (arr: any[]): number[] =>
@@ -50,6 +54,8 @@ const MediaPage: React.FC<MediaPageProps> = ({
   getActions,
   isLiked = false,
   onToggleLike,
+  onAlbumClick,
+  onArtistClick,
 }) => {
   const { setCollectionContext, toggleShuffle, playSong } = usePlayer();
 
@@ -70,17 +76,21 @@ const MediaPage: React.FC<MediaPageProps> = ({
 
   const normalizedSongs: UISong[] = useMemo(
     () =>
-      songs.map((s) => ({
-        id: Number(s.id),
-        name: s.name,
-        artist: s.artist,
-        album: s.album,
-        album_image: s.album_image,
-        audio: s.audio,
-        dateAdded: s.dateAdded,
-        duration: s.duration,
-        playlistIds: toNumberArray(s.playlistIds ?? []),
-      })),
+      songs.map((s) =>
+        ({
+          id: Number(s.id),
+          name: s.name,
+          artist: s.artist,
+          album: s.album,
+          album_image: s.album_image,
+          audio: s.audio,
+          dateAdded: s.dateAdded,
+          duration: s.duration,
+          playlistIds: toNumberArray(s.playlistIds ?? []),
+          ...(s as any).album_id != null ? { album_id: (s as any).album_id } : {},
+          ...(s as any).artist_user_id != null ? { artist_user_id: (s as any).artist_user_id } : {},
+        } as any)
+      ),
     [songs]
   );
 
@@ -143,6 +153,8 @@ const MediaPage: React.FC<MediaPageProps> = ({
           showDateAdded
           showDuration={false}
           getActions={getActions as any}
+          onAlbumClick={onAlbumClick}
+          onArtistClick={onArtistClick}
         />
       </div>
       {renderModal}

@@ -15,15 +15,17 @@ class MusicController extends Controller
             ->get()
             ->map(function ($m) {
                 return [
-                    'id'           => (int) $m->id,
-                    'name'         => $m->title,
-                    'artist'       => optional($m->user)->name ?? $m->artist_name,
-                    'album'        => optional($m->album)->title ?? 'Inconnu',
-                    'album_image'  => $m->image
+                    'id'              => (int) $m->id,
+                    'name'            => $m->title,
+                    'artist'          => optional($m->user)->name ?? $m->artist_name,
+                    'album'           => optional($m->album)->title ?? 'Inconnu',
+                    'album_image'     => $m->image
                         ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
                         : null,
-                    'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
-                    'playlist_ids' => $m->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
+                    'audio'           => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                    'playlist_ids'    => $m->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
+                    'album_id'        => $m->album_id ? (int) $m->album_id : null,
+                    'artist_user_id'  => $m->user_id ? (int) $m->user_id : null,
                 ];
             });
 
@@ -39,15 +41,17 @@ class MusicController extends Controller
         }
 
         return response()->json([
-            'id'           => (int) $music->id,
-            'name'         => $music->title,
-            'artist'       => optional($music->user)->name ?? $music->artist_name,
-            'album'        => optional($music->album)->title ?? 'Inconnu',
-            'album_image'  => $music->image
+            'id'              => (int) $music->id,
+            'name'            => $music->title,
+            'artist'          => optional($music->user)->name ?? $music->artist_name,
+            'album'           => optional($music->album)->title ?? 'Inconnu',
+            'album_image'     => $music->image
                 ? asset('storage/' . $music->image) . '?v=' . optional($music->updated_at)->timestamp
                 : null,
-            'audio'        => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
-            'playlist_ids' => $music->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
+            'audio'           => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
+            'playlist_ids'    => $music->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
+            'album_id'        => $music->album_id ? (int) $music->album_id : null,
+            'artist_user_id'  => $music->user_id ? (int) $music->user_id : null,
         ]);
     }
 
@@ -93,7 +97,6 @@ class MusicController extends Controller
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'audio' => 'sometimes|file|mimes:mp3,wav,flac',
-            // plus d'image ici si tu veux forcer l’usage de l’image d’album
         ]);
 
         $music = Music::with(['playlists', 'favoredBy'])->find($id);
@@ -109,7 +112,6 @@ class MusicController extends Controller
         }
 
         if ($request->hasFile('audio')) {
-            // supprimer l’ancien fichier audio si existant
             if ($music->audio) {
                 Storage::disk('public')->delete($music->audio);
             }
@@ -130,17 +132,15 @@ class MusicController extends Controller
         $music = Music::with(['playlists', 'favoredBy'])->find($id);
 
         if (!$music) {
-            return response()->json(['message' => 'Musique non trouvée'], 404);
+                       return response()->json(['message' => 'Musique non trouvée'], 404);
         }
         if ((int)$music->user_id !== (int)Auth::id()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
-        // Détacher des playlists et des favoris
         $music->playlists()->detach();
         $music->favoredBy()->detach();
 
-        // Supprimer les fichiers associés
         if ($music->audio) {
             Storage::disk('public')->delete($music->audio);
         }
@@ -148,7 +148,6 @@ class MusicController extends Controller
             Storage::disk('public')->delete($music->image);
         }
 
-        // Supprimer la musique
         $music->delete();
 
         return response()->json(['status' => 'ok']);
@@ -164,21 +163,23 @@ class MusicController extends Controller
             ->get()
             ->map(function ($m) {
                 return [
-                    'id'           => (int) $m->id,
-                    'name'         => $m->title,
-                    'artist'       => optional($m->user)->name ?? $m->artist_name,
-                    'album'        => optional($m->album)->title ?? 'Inconnu',
-                    'album_image'  => $m->image
+                    'id'              => (int) $m->id,
+                    'name'            => $m->title,
+                    'artist'          => optional($m->user)->name ?? $m->artist_name,
+                    'album'           => optional($m->album)->title ?? 'Inconnu',
+                    'album_image'     => $m->image
                         ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
                         : null,
-                    'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
-                    'duration'     => $m->duration,
-                    'date_added'   => optional($m->created_at)?->toDateString(),
-                    'playlist_ids' => $m->playlists
+                    'audio'           => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                    'duration'        => $m->duration,
+                    'date_added'      => optional($m->created_at)?->toDateString(),
+                    'playlist_ids'    => $m->playlists
                         ->pluck('id')
                         ->map(fn($id) => (int) $id)
                         ->values()
                         ->all(),
+                    'album_id'        => $m->album_id ? (int) $m->album_id : null,
+                    'artist_user_id'  => $m->user_id ? (int) $m->user_id : null,
                 ];
             });
 

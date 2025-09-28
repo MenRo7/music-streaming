@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getFavorites, removeFavorite } from '../apis/FavoritesService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import { usePlayer } from '../apis/PlayerContext';
@@ -8,6 +9,7 @@ const toNumberArray = (arr: any[]): number[] =>
   (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
 
 const FavoritesPage: React.FC = () => {
+  const navigate = useNavigate();
   const { addToQueue } = usePlayer();
   const [songs, setSongs] = useState<UISong[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,23 +20,21 @@ const FavoritesPage: React.FC = () => {
       try {
         const raw = await getFavorites();
 
-        const formatted: UISong[] = (raw as any[]).map((m: any) => ({
-          id: Number(m.id),
-          name: m.name ?? m.title ?? 'Sans titre',
-          artist: m.artist ?? m.artist_name ?? 'Inconnu',
-          album: m.album ?? m.album_title ?? (m.album?.title ?? 'Inconnu'),
-          album_image: (m.album_image ?? m.image ?? m.album?.image ?? '') || '',
-          audio: m.audio ?? m.stream_url ?? '',
-          dateAdded:
-            m.dateAdded ??
-            m.date_added ??
-            m.favorited_at ??
-            m.created_at ??
-            '',
-
-          duration: m.duration ?? undefined,
-          playlistIds: toNumberArray(m.playlist_ids ?? m.playlists ?? []),
-        }));
+        const formatted: UISong[] = (raw as any[]).map((m: any) =>
+          ({
+            id: Number(m.id),
+            name: m.name ?? m.title ?? 'Sans titre',
+            artist: m.artist ?? m.artist_name ?? 'Inconnu',
+            album: m.album ?? m.album_title ?? (m.album?.title ?? 'Inconnu'),
+            album_image: (m.album_image ?? m.image ?? m.album?.image ?? '') || '',
+            audio: m.audio ?? m.stream_url ?? '',
+            dateAdded: m.dateAdded ?? m.date_added ?? m.favorited_at ?? m.created_at ?? '',
+            duration: m.duration ?? undefined,
+            playlistIds: toNumberArray(m.playlist_ids ?? m.playlists ?? []),
+            ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
+            ...(m.artist_user_id != null ? { artist_user_id: Number(m.artist_user_id) } : {}),
+          } as any)
+        );
 
         setSongs(formatted);
       } catch (e) {
@@ -77,6 +77,14 @@ const FavoritesPage: React.FC = () => {
           showArtist
           showDateAdded
           showDuration={false}
+          onAlbumClick={(song) => {
+            const s: any = song;
+            if (s.album_id) navigate(`/album/${s.album_id}`);
+          }}
+          onArtistClick={(song) => {
+            const s: any = song;
+            if (s.artist_user_id) navigate(`/profile/${s.artist_user_id}`);
+          }}
           getActions={(song) => [
             { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
             {

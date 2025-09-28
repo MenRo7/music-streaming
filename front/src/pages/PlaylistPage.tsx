@@ -21,7 +21,7 @@ const PlaylistPage: React.FC = () => {
   const navigate = useNavigate();
   const { fetchPlaylists } = usePlaylists();
   const { addToQueue } = usePlayer();
-  const { user: viewer } = useUser(); // ✅ user courant
+  const { user: viewer } = useUser();
 
   const [playlist, setPlaylist] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,7 +48,7 @@ const PlaylistPage: React.FC = () => {
   }, [playlist, viewer]);
 
   const handleRemoveMusicFromPlaylist = async (songId: number) => {
-    if (!playlist || !isOwner) return; // ✅ garde front
+    if (!playlist || !isOwner) return;
     try {
       await removeMusicFromPlaylist(playlist.id, songId);
       setPlaylist((prev: any) => ({
@@ -61,12 +61,12 @@ const PlaylistPage: React.FC = () => {
   };
 
   const handleEditPlaylist = () => {
-    if (!isOwner) return; // ✅ garde front
+    if (!isOwner) return;
     setIsModalOpen(true);
   };
 
   const handleDeletePlaylist = async () => {
-    if (!playlist || !isOwner) return; // ✅ garde front
+    if (!playlist || !isOwner) return;
     const ok = window.confirm('Voulez-vous vraiment supprimer cette playlist ?');
     if (!ok) return;
     try {
@@ -86,11 +86,8 @@ const PlaylistPage: React.FC = () => {
 
   const toggleLike = async () => {
     try {
-      if (liked) {
-        await unlikePlaylist(playlist.id);
-      } else {
-        await likePlaylist(playlist.id);
-      }
+      if (liked) await unlikePlaylist(playlist.id);
+      else await likePlaylist(playlist.id);
       setLiked(!liked);
     } catch (e) {
       console.error('Erreur like/unlike playlist', e);
@@ -107,8 +104,8 @@ const PlaylistPage: React.FC = () => {
       collectionId={playlist?.id}
       onEdit={isOwner ? handleEditPlaylist : undefined}
       onDelete={isOwner ? handleDeletePlaylist : undefined}
-      isLiked={liked}
-      onToggleLike={toggleLike}
+      isLiked={!isOwner ? liked : undefined}
+      onToggleLike={!isOwner ? toggleLike : undefined}
       renderModal={
         isOwner ? (
           <CreateEditPlaylistModal
@@ -149,7 +146,6 @@ const PlaylistPage: React.FC = () => {
           { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
         ];
 
-        // ✅ action visible uniquement pour le propriétaire
         if (isOwner) {
           base.push({
             label: 'Supprimer de cette playlist',
@@ -158,6 +154,14 @@ const PlaylistPage: React.FC = () => {
         }
 
         return base;
+      }}
+      onAlbumClick={(song) => {
+        const s: any = song;
+        if (s.album_id) navigate(`/album/${s.album_id}`);
+      }}
+      onArtistClick={(song) => {
+        const s: any = song;
+        if (s.artist_user_id) navigate(`/profile/${s.artist_user_id}`);
       }}
     />
   );

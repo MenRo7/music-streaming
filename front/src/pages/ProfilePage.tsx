@@ -56,37 +56,49 @@ const ProfilePage: React.FC = () => {
 
         setUser(v);
 
-        const formattedSongs: UISong[] = (mySongs as any[]).map((m: any) => ({
-          id: Number(m.id),
-          name: m.name,
-          artist: m.artist,
-          album: m.album ?? "Inconnu",
-          album_image: m.album_image || "",
-          audio: m.audio || "",
-          dateAdded: m.date_added || "",
-          duration: m.duration ?? undefined,
-          playlistIds: toNumberArray(m.playlist_ids || []),
-        }));
+        const formattedSongs: UISong[] = (mySongs as any[]).map((m: any) =>
+          ({
+            id: Number(m.id),
+            name: m.name,
+            artist: m.artist,
+            album: m.album ?? "Inconnu",
+            album_image: m.album_image || "",
+            audio: m.audio || "",
+            dateAdded: m.date_added || "",
+            duration: m.duration ?? undefined,
+            playlistIds: toNumberArray(m.playlist_ids || []),
+            ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
+            artist_user_id: Number(v?.id),
+          } as any)
+        );
+
         setSongs(formattedSongs);
         setAlbums(myAlbums || []);
         setPlaylists(myPlaylists || []);
       } else {
-        const summaryRes = await fetchUserSummary(targetId);
+        const summaryRes = await fetchUserSummary(targetId!);
         const summary = summaryRes.data;
 
         setUser(summary.user);
 
-        const formattedSongs: UISong[] = (summary.musics as any[]).map((m: any) => ({
-          id: Number(m.id),
-          name: m.name,
-          artist: m.artist,
-          album: m.album ?? "Inconnu",
-          album_image: m.album_image || "",
-          audio: m.audio || "",
-          dateAdded: m.date_added || "",
-          duration: m.duration ?? undefined,
-          playlistIds: toNumberArray(m.playlist_ids || []),
-        }));
+        const formattedSongs: UISong[] = (summary.musics as any[]).map((m: any) =>
+          ({
+            id: Number(m.id),
+            name: m.name,
+            artist: m.artist,
+            album: m.album ?? "Inconnu",
+            album_image: m.album_image || "",
+            audio: m.audio || "",
+            dateAdded: m.date_added || "",
+            duration: m.duration ?? undefined,
+            playlistIds: toNumberArray(m.playlist_ids || []),
+            ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
+            ...(m.artist_user_id != null
+              ? { artist_user_id: Number(m.artist_user_id) }
+              : { artist_user_id: Number(summary?.user?.id) }),
+          } as any)
+        );
+
         setSongs(formattedSongs);
         setAlbums(summary.albums || []);
         setPlaylists(summary.playlists || []);
@@ -242,6 +254,16 @@ const ProfilePage: React.FC = () => {
             showDateAdded
             showDuration={false}
             getActions={songActions as any}
+            onAlbumClick={(song) => {
+              const s: any = song;
+              if (s.album_id) navigate(`/album/${s.album_id}`);
+            }}
+            onArtistClick={(song) => {
+              const s: any = song;
+              if (s.artist_user_id) navigate(`/profile/${s.artist_user_id}`);
+              else if (isSelf) navigate(`/profile`);
+              else if (user?.id) navigate(`/profile/${user.id}`);
+            }}
           />
         </div>
 

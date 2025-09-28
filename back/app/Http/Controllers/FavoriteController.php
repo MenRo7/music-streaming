@@ -13,14 +13,15 @@ class FavoriteController extends Controller
         $user = Auth::user();
 
         $favorites = $user->favorites()
-            ->with(['user:id,name', 'album:id,title', 'playlists:id'])
-            // ✅ s’assurer que le pivot created_at est présent
+            ->with([
+                'user:id,name',
+                'album:id,title,image',
+                'playlists:id'
+            ])
             ->withPivot('created_at')
-            // ✅ l’ordre par la colonne de la table pivot
             ->orderByDesc('favorites.created_at')
             ->get()
             ->map(function ($m) {
-                // created_at peut être Carbon OU une string selon le contexte
                 $pivotCreatedAt = $m->pivot->created_at ?? null;
                 $dateAdded = null;
                 if ($pivotCreatedAt) {
@@ -30,21 +31,19 @@ class FavoriteController extends Controller
                 }
 
                 return [
-                    'id'          => (int) $m->id,
-                    'name'        => $m->title,
-                    'artist'      => optional($m->user)->name ?? $m->artist_name,
-                    'album'       => optional($m->album)->title ?? 'Inconnu',
-                    'album_image' => $m->image
+                    'id'              => (int) $m->id,
+                    'name'            => $m->title,
+                    'artist'          => optional($m->user)->name ?? $m->artist_name,
+                    'artist_user_id'  => optional($m->user)->id ? (int) $m->user->id : null,
+                    'album'           => optional($m->album)->title ?? 'Inconnu',
+                    'album_id'        => optional($m->album)->id ? (int) $m->album->id : null,
+                    'album_image'     => $m->image
                         ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
                         : null,
-                    'audio'       => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
-                    'duration'    => $m->duration,
-
-                    // ✅ clé alignée avec le front + format identique aux autres pages
-                    'dateAdded'   => $dateAdded,
-
-                    // ✅ même nommage que le front
-                    'playlistIds' => $m->playlists
+                    'audio'           => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                    'duration'        => $m->duration,
+                    'dateAdded'       => $dateAdded,
+                    'playlistIds'     => $m->playlists
                         ->pluck('id')
                         ->map(fn ($id) => (int) $id)
                         ->values()

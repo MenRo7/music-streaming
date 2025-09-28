@@ -1,4 +1,3 @@
-// src/pages/AlbumPage.tsx
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -7,7 +6,6 @@ import { getAlbumById, Album, likeAlbum, unlikeAlbum } from '../apis/AlbumServic
 import { usePlayer, Track } from '../apis/PlayerContext';
 import { useUser } from '../apis/UserContext';
 
-// ✅ nouvelles importations pour les actions
 import { addFavorite } from '../apis/FavoritesService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 
@@ -30,13 +28,8 @@ const AlbumPage: React.FC = () => {
   const [liked, setLiked] = useState(false);
 
   const { addToQueue } = usePlayer();
-
-  let currentUserId: number | undefined = undefined;
-  try {
-    // @ts-ignore selon ton implémentation
-    const userCtx = useUser?.();
-    currentUserId = userCtx?.user?.id;
-  } catch {}
+  const { user } = useUser();
+  const currentUserId = user?.id;
 
   const canEdit =
     Boolean(album?.user_id) &&
@@ -80,11 +73,8 @@ const AlbumPage: React.FC = () => {
 
   const toggleLike = async () => {
     try {
-      if (liked) {
-        await unlikeAlbum(Number(id));
-      } else {
-        await likeAlbum(Number(id));
-      }
+      if (liked) await unlikeAlbum(Number(id));
+      else await likeAlbum(Number(id));
       setLiked(!liked);
     } catch (e) {
       console.error('Erreur like/unlike album', e);
@@ -121,11 +111,9 @@ const AlbumPage: React.FC = () => {
       songs={mediaSongs}
       collectionType="album"
       collectionId={Number(id)}
-      // ✨ On laisse l’édition visible uniquement si propriétaire
       onEdit={canEdit ? () => navigate(`/album/${id}/edit`) : undefined}
-      isLiked={liked}
-      onToggleLike={toggleLike}
-      // ✨ Les actions par morceau (toujours disponibles, propriétaire ou non)
+      isLiked={!canEdit ? liked : undefined}
+      onToggleLike={!canEdit ? toggleLike : undefined}
       getActions={(song) => {
         const baseline = Array.from(new Set(song.playlistIds ?? [])) as number[];
         return [
@@ -153,6 +141,10 @@ const AlbumPage: React.FC = () => {
           },
           { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
         ];
+      }}
+      onAlbumClick={() => navigate(`/album/${id}`)}
+      onArtistClick={() => {
+        if (album.user_id) navigate(`/profile/${album.user_id}`);
       }}
     />
   );
