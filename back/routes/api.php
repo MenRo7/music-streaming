@@ -31,6 +31,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/album/{id}', [AlbumController::class, 'show']);
     Route::put('/album/{id}', [AlbumController::class, 'update']);
     Route::delete('/album/{id}', [AlbumController::class, 'destroy']);
+    Route::post('/album/{id}/like', [AlbumController::class, 'like']);
+    Route::delete('/album/{id}/like', [AlbumController::class, 'unlike']);
 
     Route::get('/user', [UserController::class, 'getUser']);
     Route::post('/user/update', [UserController::class, 'updateUser']);
@@ -44,11 +46,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/playlists/{playlist}/remove-music', [PlaylistController::class, 'removeMusic']);
     Route::put('/playlists/{id}', [PlaylistController::class, 'update']);
     Route::delete('/playlists/{id}', [PlaylistController::class, 'destroy']);
+    Route::post('/playlists/{id}/like', [PlaylistController::class, 'like']);
+    Route::delete('/playlists/{id}/like', [PlaylistController::class, 'unlike']);
 
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/favorites/{music}', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{music}', [FavoriteController::class, 'destroy']);
 
+    Route::get('/likes/summary', [UserController::class, 'likesSummary']);
     Route::get('/search', [GlobalSearchController::class, 'search']);
 });
 

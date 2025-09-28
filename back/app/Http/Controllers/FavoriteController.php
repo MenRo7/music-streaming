@@ -2,48 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-use App\Models\Music;
+use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $user = $request->user();
-
-        $musics = $user->favorites()
-            ->with(['user:id,name', 'playlists:id'])
-            ->latest('favorites.created_at')
+        $user = Auth::user();
+        $favorites = $user->favorites()
+            ->with(['user:id,name', 'album:id,title', 'playlists:id'])
+            ->orderByDesc('favorites.created_at')
             ->get()
-            ->map(function (Music $m) {
+            ->map(function ($m) {
                 return [
                     'id'           => (int) $m->id,
-                    'title'        => $m->title,
-                    'artist_name'  => optional($m->user)->name ?? $m->artist_name,
-                    'duration'     => $m->duration, // string "MM:SS" si dispo
-                    'image'        => $m->image ? asset('storage/' . $m->image) : null,
+                    'name'         => $m->title,
+                    'artist'       => optional($m->user)->name ?? $m->artist_name,
+                    'album'        => optional($m->album)->title ?? 'Inconnu',
+                    'album_image'  => $m->image
+                        ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
+                        : null,
                     'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
-                    'playlist_ids' => $m->playlists->pluck('id')->map(fn($id) => (int) $id)->values(),
-                    'date_added'   => optional($m->pivot?->created_at)?->toDateString(),
-
+                    'duration'     => $m->duration,
+                    'date_added'   => optional($m->pivot->created_at)?->toDateString(), // date d'ajout en favori
+                    'playlist_ids' => $m->playlists
+                        ->pluck('id')
+                        ->map(fn($id) => (int) $id)
+                        ->values()
+                        ->all(),
                 ];
             });
 
-        return response()->json(['songs' => $musics]);
+        return response()->json($favorites);
     }
 
-    public function store(Request $request, Music $music)
+    public function store(\App\Models\Music $music)
     {
-        $user = $request->user();
+        $user = Auth::user();
         $user->favorites()->syncWithoutDetaching([$music->id]);
         return response()->json(['status' => 'ok']);
     }
 
-    public function destroy(Request $request, Music $music)
+    public function destroy(\App\Models\Music $music)
     {
-        $user = $request->user();
+        $user = Auth::user();
         $user->favorites()->detach($music->id);
         return response()->json(['status' => 'ok']);
     }

@@ -20,5 +20,11 @@ class Album extends Model
     {
         return $this->hasMany(Music::class, 'album_id');
     }
+
+    public function likedBy()
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'album_likes')
+            ->withTimestamps();
+    }
 }
 

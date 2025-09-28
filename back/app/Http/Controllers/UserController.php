@@ -147,4 +147,36 @@ class UserController extends Controller
             ],
         ], 200);
     }
+
+    public function likesSummary()
+    {
+        $user = Auth::user();
+
+        $albums = $user->likedAlbums()
+            ->select('albums.id', 'albums.title', 'albums.image')
+            ->get()
+            ->map(function ($a) {
+                return [
+                    'id' => (int) $a->id,
+                    'title' => $a->title,
+                    'image' => $a->image ? asset('storage/' . $a->image) : null,
+                ];
+            });
+
+        $playlists = $user->likedPlaylists()
+            ->select('playlists.id', 'playlists.title', 'playlists.image')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => (int) $p->id,
+                    'title' => $p->title,
+                    'image' => $p->image ? asset('storage/' . $p->image) : null,
+                ];
+            });
+
+        return response()->json([
+            'albums' => $albums,
+            'playlists' => $playlists,
+        ]);
+    }
 }

@@ -21,4 +21,10 @@ class Playlist extends Model
         return $this->belongsToMany(Music::class, 'music_playlist', 'playlist_id', 'music_id')
                     ->withTimestamps();
     }
+
+    public function likedBy()
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'playlist_likes')
+            ->withTimestamps();
+    }
 }

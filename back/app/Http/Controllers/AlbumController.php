@@ -212,6 +212,10 @@ class AlbumController extends Controller
     {
         $musics = $album->tracks->map(fn ($m) => $this->formatTrack($m));
 
+        $isLiked = Auth::check()
+            ? $album->likedBy()->where('user_id', Auth::id())->exists()
+            : false;
+
         return [
             'id'          => (int) $album->id,
             'title'       => $album->title,
@@ -221,6 +225,7 @@ class AlbumController extends Controller
             'artist_name' => optional($album->user)->name ?? $album->artist_name,
             'created_at'  => optional($album->created_at)?->format('d/m/Y'),
             'musics'      => $musics,
+            'is_liked'    => $isLiked,
         ];
     }
 
@@ -240,5 +245,21 @@ class AlbumController extends Controller
                 ->all(),
             'date_added'   => optional($m->created_at)?->format('d/m/Y'),
         ];
+    }
+
+    public function like($id)
+    {
+        $album = Album::findOrFail($id);
+        $user = Auth::user();
+        $user->likedAlbums()->syncWithoutDetaching([$album->id]);
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function unlike($id)
+    {
+        $album = Album::findOrFail($id);
+        $user = Auth::user();
+        $user->likedAlbums()->detach($album->id);
+        return response()->json(['status' => 'ok']);
     }
 }

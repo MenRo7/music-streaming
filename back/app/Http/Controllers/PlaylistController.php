@@ -29,11 +29,15 @@ class PlaylistController extends Controller
         if (!$playlist) {
             return response()->json(['message' => 'Playlist non trouvée'], 404);
         }
+        $isLiked = Auth::check()
+            ? $playlist->likedBy()->where('user_id', Auth::id())->exists()
+            : false;
 
         return response()->json([
             'id' => $playlist->id,
             'title' => $playlist->title,
             'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
+            'is_liked' => $isLiked,
             'songs' => $playlist->musics->map(function ($music) {
                 return [
                     'id' => $music->id,
@@ -129,5 +133,21 @@ class PlaylistController extends Controller
         $musicId = $request->input('music_id');
         $playlist->musics()->detach($musicId);
         return response()->json(['message' => 'Musique retirée']);
+    }
+
+    public function like($id)
+    {
+        $pl = Playlist::findOrFail($id);
+        $user = Auth::user();
+        $user->likedPlaylists()->syncWithoutDetaching([$pl->id]);
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function unlike($id)
+    {
+        $pl = Playlist::findOrFail($id);
+        $user = Auth::user();
+        $user->likedPlaylists()->detach($pl->id);
+        return response()->json(['status' => 'ok']);
     }
 }

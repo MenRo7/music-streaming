@@ -60,4 +60,15 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function likedAlbums()
+    {
+        return $this->belongsToMany(\App\Models\Album::class, 'album_likes')
+            ->withTimestamps();
+    }
+
+    public function likedPlaylists()
+    {
+        return $this->belongsToMany(\App\Models\Playlist::class, 'playlist_likes')
+            ->withTimestamps();
+    }
 }
