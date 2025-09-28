@@ -7,6 +7,10 @@ import { getAlbumById, Album, likeAlbum, unlikeAlbum } from '../apis/AlbumServic
 import { usePlayer, Track } from '../apis/PlayerContext';
 import { useUser } from '../apis/UserContext';
 
+// ✅ nouvelles importations pour les actions
+import { addFavorite } from '../apis/FavoritesService';
+import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
+
 const toDurationStr = (v?: string | number | null) => {
   if (v == null) return undefined;
   if (typeof v === 'string') return v;
@@ -25,7 +29,7 @@ const AlbumPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [liked, setLiked] = useState(false);
 
-  const { setCollectionContext, playSong } = usePlayer();
+  const { addToQueue } = usePlayer();
 
   let currentUserId: number | undefined = undefined;
   try {
@@ -117,9 +121,39 @@ const AlbumPage: React.FC = () => {
       songs={mediaSongs}
       collectionType="album"
       collectionId={Number(id)}
+      // ✨ On laisse l’édition visible uniquement si propriétaire
       onEdit={canEdit ? () => navigate(`/album/${id}/edit`) : undefined}
       isLiked={liked}
       onToggleLike={toggleLike}
+      // ✨ Les actions par morceau (toujours disponibles, propriétaire ou non)
+      getActions={(song) => {
+        const baseline = Array.from(new Set(song.playlistIds ?? [])) as number[];
+        return [
+          {
+            label: 'Ajouter aux favoris',
+            onClick: () =>
+              addFavorite(song.id).catch((e) =>
+                console.error('Ajout aux favoris échoué', e)
+              ),
+          },
+          {
+            label: 'Ajouter à une playlist',
+            onClick: () => {},
+            withPlaylistMenu: true,
+            songId: song.id,
+            existingPlaylistIds: baseline,
+            onToggle: async (playlistId: number, checked: boolean) => {
+              try {
+                if (checked) await addMusicToPlaylist(playlistId, song.id);
+                else await removeMusicFromPlaylist(playlistId, song.id);
+              } catch (e) {
+                console.error('Maj playlist échouée', e);
+              }
+            },
+          },
+          { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+        ];
+      }}
     />
   );
 };

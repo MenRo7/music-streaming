@@ -19,16 +19,22 @@ const FavoritesPage: React.FC = () => {
         const raw = await getFavorites();
 
         const formatted: UISong[] = (raw as any[]).map((m: any) => ({
-          id: Number(m.id ?? m.music_id ?? m.song_id),
+          id: Number(m.id),
           name: m.name ?? m.title ?? 'Sans titre',
           artist: m.artist ?? m.artist_name ?? 'Inconnu',
           album: m.album ?? m.album_title ?? (m.album?.title ?? 'Inconnu'),
-          album_image: m.album_image ?? m.image ?? (m.album?.image ?? ''),
+          album_image: (m.album_image ?? m.image ?? m.album?.image ?? '') || '',
           audio: m.audio ?? m.stream_url ?? '',
-          dateAdded: m.date_added ?? m.favorited_at ?? m.created_at ?? '',
+          dateAdded:
+            m.dateAdded ??
+            m.date_added ??
+            m.favorited_at ??
+            m.created_at ??
+            '',
+
           duration: m.duration ?? undefined,
           playlistIds: toNumberArray(m.playlist_ids ?? m.playlists ?? []),
-        })).filter(s => Number.isFinite(s.id) && !!s.audio);
+        }));
 
         setSongs(formatted);
       } catch (e) {
@@ -41,7 +47,9 @@ const FavoritesPage: React.FC = () => {
   }, []);
 
   const handleTogglePlaylist = async (
-    playlistId: number | string, checked: boolean, songId: number | string
+    playlistId: number | string,
+    checked: boolean,
+    songId: number | string
   ) => {
     const pid = Number(playlistId);
     const sid = Number(songId);
@@ -83,7 +91,7 @@ const FavoritesPage: React.FC = () => {
               label: 'Retirer des favoris',
               onClick: async () => {
                 await removeFavorite(song.id);
-                setSongs(prev => prev.filter(s => s.id !== song.id));
+                setSongs((prev) => prev.filter((s) => s.id !== song.id));
               },
             },
           ]}
