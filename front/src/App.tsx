@@ -159,6 +159,22 @@ const AppShell: React.FC = () => {
         />
 
         <Route
+          path="/profile/:id"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <ProfilePage />
+                  </>
+              } 
+            />
+          }
+        />
+
+        <Route
           path="/main"
           element={
             <PrivateRoute

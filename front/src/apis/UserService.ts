@@ -11,6 +11,10 @@ export const fetchUser = async () => {
   return axios.get(`${API_URL}/user`, getAuthHeader());
 };
 
+export const fetchUserSummary = async (userId: number) => {
+  return axios.get(`${API_URL}/users/${userId}/summary`, getAuthHeader());
+};
+
 export const updateUserProfile = async (formData: FormData) => {
   return axios.post(`${API_URL}/user/update`, formData, {
     ...getAuthHeader(),

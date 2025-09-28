@@ -21,7 +21,7 @@ class AlbumController extends Controller
                 'image'       => $album->image ? asset('storage/' . $album->image) : null,
                 'user_id'     => (int) $album->user_id,
                 'artist_name' => $album->artist_name,
-                'created_at'  => $album->created_at,
+                'created_at'  => optional($album->created_at)?->format('d/m/Y'),
             ];
         });
 
@@ -96,9 +96,6 @@ class AlbumController extends Controller
         ]);
     }
 
-    /**
-     * Liste des albums de l'utilisateur connecté.
-     */
     public function myAlbums()
     {
         $user = Auth::user();
@@ -114,7 +111,7 @@ class AlbumController extends Controller
                     'image'       => $album->image ? asset('storage/' . $album->image) : null,
                     'user_id'     => (int) $album->user_id,
                     'artist_name' => $album->artist_name,
-                    'created_at'  => $album->created_at,
+                    'created_at'  => optional($album->created_at)?->format('d/m/Y'),
                 ];
             });
 
@@ -164,7 +161,7 @@ class AlbumController extends Controller
     public function destroy($id)
     {
         $album = Album::with(['tracks' => function ($q) {
-            $q->with(['playlists:id', 'favoredBy:id']); // pour éviter N+1 sur détachements
+            $q->with(['playlists:id', 'favoredBy:id']);
         }])->find($id);
 
         if (!$album) {
@@ -177,17 +174,13 @@ class AlbumController extends Controller
 
         DB::beginTransaction();
         try {
-            // Supprimer TOUTES les musiques de l'album (fichiers + détachements)
             foreach ($album->tracks as $music) {
-                // détacher des playlists
                 $music->playlists()->detach();
 
-                // détacher des favoris
                 if (method_exists($music, 'favoredBy')) {
                     $music->favoredBy()->detach();
                 }
 
-                // supprimer les fichiers
                 if ($music->audio && Storage::disk('public')->exists($music->audio)) {
                     Storage::disk('public')->delete($music->audio);
                 }
@@ -195,16 +188,13 @@ class AlbumController extends Controller
                     Storage::disk('public')->delete($music->image);
                 }
 
-                // supprimer la musique
                 $music->delete();
             }
 
-            // supprimer l'image de l'album si présente
             if ($album->image && Storage::disk('public')->exists($album->image)) {
                 Storage::disk('public')->delete($album->image);
             }
 
-            // supprimer l'album
             $album->delete();
 
             DB::commit();
@@ -229,7 +219,7 @@ class AlbumController extends Controller
             'image'       => $album->image ? asset('storage/' . $album->image) : null,
             'user_id'     => (int) $album->user_id,
             'artist_name' => optional($album->user)->name ?? $album->artist_name,
-            'created_at'  => optional($album->created_at)?->toDateString(),
+            'created_at'  => optional($album->created_at)?->format('d/m/Y'),
             'musics'      => $musics,
         ];
     }
@@ -248,6 +238,7 @@ class AlbumController extends Controller
                 ->map(fn($id) => (int) $id)
                 ->values()
                 ->all(),
+            'date_added'   => optional($m->created_at)?->format('d/m/Y'),
         ];
     }
 }

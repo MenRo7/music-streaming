@@ -144,7 +144,7 @@ const GlobalSearchBar: React.FC = () => {
             loadingMore={loadingMore}
             onAlbumClick={(id) => { setShowResults(false); navigate(`/album/${id}`); }}
             onPlaylistClick={(id) => { setShowResults(false); navigate(`/playlist/${id}`); }}
-            onUserClick={(id) => { setShowResults(false); navigate(`/profile/${id}`); }}
+            onUserClick={(id) => { setShowResults(false); navigate(`/profile?user=${id}`); }}
           />
           {loadingMore && <div>Chargement...</div>}
         </div>

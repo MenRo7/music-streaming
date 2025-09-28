@@ -34,6 +34,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', [UserController::class, 'getUser']);
     Route::post('/user/update', [UserController::class, 'updateUser']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::get('/users/{id}/summary', [UserController::class, 'summary']);
 
     Route::get('/playlists', [PlaylistController::class, 'index']);
     Route::get('/playlists/{id}', [PlaylistController::class, 'show']);

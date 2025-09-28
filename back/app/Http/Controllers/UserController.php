@@ -11,6 +11,88 @@ use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
+    public function show($id)
+    {
+        $user = \App\Models\User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non trouvé'], 404);
+        }
+
+        return response()->json([
+            'id' => (int) $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+            'updated_at' => $user->updated_at,
+        ]);
+    }
+
+    public function summary($id)
+    {
+        $user = \App\Models\User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non trouvé'], 404);
+        }
+
+        $musics = \App\Models\Music::where('user_id', $user->id)
+            ->with(['user:id,name', 'album:id,title', 'playlists:id'])
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($m) {
+                return [
+                    'id'           => (int) $m->id,
+                    'name'         => $m->title,
+                    'artist'       => optional($m->user)->name ?? $m->artist_name,
+                    'album'        => optional($m->album)->title ?? 'Inconnu',
+                    'album_image'  => $m->image
+                        ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
+                        : null,
+                    'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                    'duration'     => $m->duration,
+                    'date_added'   => optional($m->created_at)?->toDateString(),
+                    'playlist_ids' => $m->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
+                ];
+            });
+
+        $albums = \App\Models\Album::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($a) {
+                return [
+                    'id'          => (int) $a->id,
+                    'title'       => $a->title,
+                    'type'        => $a->type,
+                    'image'       => $a->image ? asset('storage/' . $a->image) : null,
+                    'user_id'     => (int) $a->user_id,
+                    'artist_name' => $a->artist_name,
+                    'created_at'  => optional($a->created_at)?->format('d/m/Y'),
+                ];
+            });
+
+        $playlists = \App\Models\Playlist::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($pl) {
+                return [
+                    'id'    => (int) $pl->id,
+                    'title' => $pl->title,
+                    'image' => $pl->image ? asset('storage/' . $pl->image) : null,
+                ];
+            });
+
+        return response()->json([
+            'user'      => [
+                'id' => (int) $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+            ],
+            'musics'    => $musics,
+            'albums'    => $albums,
+            'playlists' => $playlists,
+        ]);
+    }
+
     public function getUser()
     {
         if (Auth::check()) {
