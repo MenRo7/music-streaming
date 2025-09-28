@@ -51,7 +51,9 @@ export const updateAlbum = async (id: number, formData: FormData) => {
     body: formData,
   });
   if (!res.ok) throw new Error('Erreur mise à jour album');
-  return res.json();
+  const data = await res.json();
+  window.dispatchEvent(new Event('library:changed'));
+  return data;
 };
 
 export const deleteAlbum = async (id: number) => {
@@ -60,7 +62,14 @@ export const deleteAlbum = async (id: number) => {
     headers: authHeaders() as any,
   });
   if (!res.ok) throw new Error('Erreur suppression album');
-  return res.json();
+  const data = await res.json();
+
+  const ids: number[] = Array.isArray(data?.deleted_track_ids) ? data.deleted_track_ids : [];
+  if (ids.length > 0) {
+    window.dispatchEvent(new CustomEvent('library:pruned', { detail: { trackIds: ids } }));
+  }
+  window.dispatchEvent(new Event('library:changed'));
+  return data;
 };
 
 export const addTrackToAlbum = async (albumId: number, formData: FormData) => {
@@ -71,7 +80,9 @@ export const addTrackToAlbum = async (albumId: number, formData: FormData) => {
     body: formData,
   });
   if (!res.ok) throw new Error('Erreur ajout titre');
-  return res.json();
+  const data = await res.json();
+  window.dispatchEvent(new Event('library:changed'));
+  return data;
 };
 
 export const updateTrack = async (trackId: number, formData: FormData) => {
@@ -82,7 +93,9 @@ export const updateTrack = async (trackId: number, formData: FormData) => {
     body: formData,
   });
   if (!res.ok) throw new Error('Erreur mise à jour titre');
-  return res.json();
+  const data = await res.json();
+  window.dispatchEvent(new Event('library:changed'));
+  return data;
 };
 
 export const deleteTrack = async (trackId: number) => {
@@ -91,7 +104,14 @@ export const deleteTrack = async (trackId: number) => {
     headers: authHeaders() as any,
   });
   if (!res.ok) throw new Error('Erreur suppression titre');
-  return res.json();
+  const data = await res.json();
+
+  const ids: number[] = Array.isArray(data?.deleted_track_ids) ? data.deleted_track_ids : [];
+  if (ids.length > 0) {
+    window.dispatchEvent(new CustomEvent('library:pruned', { detail: { trackIds: ids } }));
+  }
+  window.dispatchEvent(new Event('library:changed'));
+  return data;
 };
 
 export const likeAlbum = async (albumId: number) => {

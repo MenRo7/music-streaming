@@ -58,9 +58,9 @@ class MusicController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'audio' => 'required|mimes:mp3,wav,flac',
-            'image' => 'nullable|image',
+            'title'    => 'required|string|max:255',
+            'audio'    => 'required|mimes:mp3,wav,flac',
+            'image'    => 'nullable|image',
             'album_id' => 'nullable|integer|exists:albums,id',
         ]);
 
@@ -132,7 +132,7 @@ class MusicController extends Controller
         $music = Music::with(['playlists', 'favoredBy'])->find($id);
 
         if (!$music) {
-                       return response()->json(['message' => 'Musique non trouvée'], 404);
+            return response()->json(['message' => 'Musique non trouvée'], 404);
         }
         if ((int)$music->user_id !== (int)Auth::id()) {
             return response()->json(['message' => 'Non autorisé'], 403);
@@ -148,9 +148,13 @@ class MusicController extends Controller
             Storage::disk('public')->delete($music->image);
         }
 
+        $deletedId = (int)$music->id;
         $music->delete();
 
-        return response()->json(['status' => 'ok']);
+        return response()->json([
+            'status'            => 'ok',
+            'deleted_track_ids' => [$deletedId],
+        ]);
     }
 
     public function myMusic()

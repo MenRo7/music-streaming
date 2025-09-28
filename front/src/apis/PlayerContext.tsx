@@ -9,7 +9,6 @@ import React, {
   ReactNode,
 } from 'react';
 import debounce from 'lodash.debounce';
-import { API_URL } from './api';
 
 export type Track = {
   id: number;
@@ -100,7 +99,6 @@ const sameTracks = (a: Track[], b: Track[]) =>
 const toNumArr = (arr?: Array<number | string>) =>
   (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite) as number[];
 
-// ---------- Persistance ----------
 type PersistedState = {
   audioUrl: string;
   title: string;
@@ -138,48 +136,7 @@ const safeParse = <T,>(s: string | null): T | null => {
   }
 };
 
-const authHeaders = () => {
-  const token = localStorage.getItem('authToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
-type MusicDTO = {
-  id: number;
-  name?: string;
-  title?: string;
-  artist?: string;
-  artist_name?: string;
-  album?: string;
-  album_id?: number | null;
-  album_image?: string | null;
-  audio?: string | null;
-};
-
-type AlbumDTO = {
-  id: number;
-  title: string;
-  image?: string | null;
-};
-
-async function fetchMusicById(id: number): Promise<MusicDTO | null> {
-  try {
-    const res = await fetch(`${API_URL}/music/${id}`, { headers: authHeaders() as any });
-    if (!res.ok) return null;
-    return (await res.json()) as MusicDTO;
-  } catch {
-    return null;
-  }
-}
-
-async function fetchAlbumById(id: number): Promise<AlbumDTO | null> {
-  try {
-    const res = await fetch(`${API_URL}/album/${id}`, { headers: authHeaders() as any });
-    if (!res.ok) return null;
-    return (await res.json()) as AlbumDTO;
-  } catch {
-    return null;
-  }
-}
+// ----------------------------------------
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [audioUrl, setAudioUrl] = useState('');
@@ -206,10 +163,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const queueManualRef = useRef<QueueItem[]>(queueManual);
   const queueAutoRef = useRef<QueueItem[]>(queueAuto);
-  const currentItemRef = useRef<QueueItem | null>(currentItem);
   useEffect(() => { queueManualRef.current = queueManual; }, [queueManual]);
   useEffect(() => { queueAutoRef.current = queueAuto; }, [queueAuto]);
-  useEffect(() => { currentItemRef.current = currentItem; }, [currentItem]);
 
   const upNext = useMemo(() => [...queueManual, ...queueAuto], [queueManual, queueAuto]);
 
@@ -292,7 +247,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const clearQueue = useCallback<PlayerContextType['clearQueue']>((keepCurrent = true) => {
     setQueueManual([]);
     setQueueAuto([]);
-    if (!keepCurrent) hardReset();
+    if (!keepCurrent) {
+      hardReset();
+    }
   }, [hardReset]);
 
   const removeFromQueue = useCallback<PlayerContextType['removeFromQueue']>((qid) => {
@@ -415,6 +372,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         try {
           localStorage.setItem(keyFor(userId), JSON.stringify(state));
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.warn('Impossible de sauvegarder la queue', e);
         }
       }, 200),
@@ -441,10 +399,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
     const raw = localStorage.getItem(keyFor(userId));
     const data = safeParse<PersistedState>(raw);
-    if (!data) {
-      hardReset();
-      return;
-    }
+    if (!data) return;
 
     setAudioUrl(data.audioUrl || '');
     setTitle(data.title || '');
@@ -463,80 +418,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCollection(Array.isArray(data.collection) ? data.collection : []);
   }, [hardReset]);
 
-  const rehydrateInFlight = useRef(false);
-
-  const rehydrateQueueMetadata = useCallback(async () => {
-    if (rehydrateInFlight.current) return;
-    rehydrateInFlight.current = true;
-    try {
-      const items: QueueItem[] = [
-        ...(currentItemRef.current ? [currentItemRef.current] : []),
-        ...queueManualRef.current,
-        ...queueAutoRef.current,
-      ];
-      if (items.length === 0) return;
-
-      const uniqueTrackIds = Array.from(new Set(items.map(i => i.id))).filter(Number.isFinite) as number[];
-
-      const musics = await Promise.all(uniqueTrackIds.map(id => fetchMusicById(id)));
-      const musicMap = new Map<number, MusicDTO>();
-      const albumIds = new Set<number>();
-      for (const m of musics) {
-        if (m && Number.isFinite(m.id)) {
-          musicMap.set(Number(m.id), m);
-          const aid = m.album_id;
-          if (aid && Number.isFinite(aid)) albumIds.add(Number(aid));
-        }
-      }
-
-      const albumList = await Promise.all(Array.from(albumIds).map(id => fetchAlbumById(id)));
-      const albumMap = new Map<number, AlbumDTO>();
-      for (const a of albumList) {
-        if (a && Number.isFinite(a.id)) albumMap.set(Number(a.id), a);
-      }
-
-      const patch = (it: QueueItem): QueueItem => {
-        const m = musicMap.get(it.id);
-        if (!m) return it;
-
-        const freshName = m.name ?? m.title ?? it.name;
-        const freshArtist = m.artist ?? m.artist_name ?? it.artist;
-        const freshAlbum = m.album ?? it.album;
-        const fromAlbum = m.album_id ? albumMap.get(m.album_id) : undefined;
-        const freshCover = (fromAlbum && 'image' in fromAlbum ? fromAlbum.image : undefined) ?? m.album_image ?? it.album_image ?? '';
-        const freshAudio = m.audio ?? it.audio;
-
-        return {
-          ...it,
-          name: freshName || it.name,
-          artist: freshArtist || it.artist,
-          album: freshAlbum || it.album,
-          album_image: freshCover || it.album_image,
-          audio: freshAudio || it.audio,
-        };
-      };
-
-      const updatedCurrent = currentItemRef.current ? patch(currentItemRef.current) : null;
-      const updatedManual = queueManualRef.current.map(patch);
-      const updatedAuto = queueAutoRef.current.map(patch);
-
-      if (updatedCurrent) {
-        setCurrentItem(updatedCurrent);
-        if (currentItemRef.current && updatedCurrent.id === currentItemRef.current.id) {
-          applyCurrentToCompatFields(updatedCurrent);
-        }
-      }
-      setQueueManual(updatedManual);
-      setQueueAuto(updatedAuto);
-    } finally {
-      rehydrateInFlight.current = false;
-    }
-  }, [applyCurrentToCompatFields]);
-
   useEffect(() => {
     const uid = getUserId();
     if (uid) restoreForUser(uid);
-    setTimeout(() => { void rehydrateQueueMetadata(); }, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -544,11 +428,10 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const onUserLoaded = (e: any) => {
       const uid = e?.detail?.userId ?? null;
       restoreForUser(uid);
-      setTimeout(() => { void rehydrateQueueMetadata(); }, 0);
     };
     window.addEventListener('user:loaded', onUserLoaded);
     return () => window.removeEventListener('user:loaded', onUserLoaded);
-  }, [restoreForUser, rehydrateQueueMetadata]);
+  }, [restoreForUser]);
 
   useEffect(() => {
     const onAuthChanged = () => {
@@ -558,17 +441,49 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return () => window.removeEventListener('auth:changed', onAuthChanged);
   }, [hardReset]);
 
-  useEffect(() => {
-    const onFocus = () => { void rehydrateQueueMetadata(); };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [rehydrateQueueMetadata]);
+  const pruneByIds = useCallback((ids: number[]) => {
+    const bad = new Set(ids.map(Number).filter(Number.isFinite));
+
+    setQueueManual(q => q.filter(item => !bad.has(Number((item as any).id))));
+    setQueueAuto(q => q.filter(item => !bad.has(Number((item as any).id))));
+    setHistory(h => h.filter(item => !bad.has(Number((item as any).id))));
+
+    setCurrentItem(cur => {
+      if (cur && bad.has(Number((cur as any).id))) {
+        const manual = queueManualRef.current;
+        const auto = queueAutoRef.current;
+
+        const nextItem = manual[0] ?? auto[0] ?? null;
+        if (nextItem) {
+          if (manual[0]) setQueueManual(manual.slice(1));
+          else if (auto[0]) setQueueAuto(auto.slice(1));
+
+          applyCurrentToCompatFields(nextItem);
+          return nextItem;
+        } else {
+          setIsPlaying(false);
+          setAudioUrl('');
+          setTitle('');
+          setArtist('');
+          setAlbumImage('');
+          setCurrentTrackId(null);
+          return null;
+        }
+      }
+      return cur;
+    });
+  }, [applyCurrentToCompatFields]);
 
   useEffect(() => {
-    const onLibraryChanged = () => { void rehydrateQueueMetadata(); };
-    window.addEventListener('library:changed', onLibraryChanged);
-    return () => window.removeEventListener('library:changed', onLibraryChanged);
-  }, [rehydrateQueueMetadata]);
+    const onPruned = (e: any) => {
+      const ids = e?.detail?.trackIds;
+      if (Array.isArray(ids) && ids.length > 0) {
+        pruneByIds(ids);
+      }
+    };
+    window.addEventListener('library:pruned', onPruned);
+    return () => window.removeEventListener('library:pruned', onPruned);
+  }, [pruneByIds]);
 
   const value: PlayerContextType = useMemo(() => ({
     audioUrl, title, artist, albumImage, currentTrackId, isPlaying,

@@ -85,6 +85,8 @@ class AlbumController extends Controller
             if (isset($songData['image'])) {
                 $imagePath = Storage::disk('public')->put('music_images', $songData['image']);
                 $music->image = $imagePath;
+            } elseif ($album->image) {
+                $music->image = $album->image;
             }
 
             $music->save();
@@ -142,11 +144,16 @@ class AlbumController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            if ($album->image) {
+            if ($album->image && Storage::disk('public')->exists($album->image)) {
                 Storage::disk('public')->delete($album->image);
             }
             $imagePath = $request->file('image')->store('album_images', 'public');
             $album->image = $imagePath;
+
+            foreach ($album->tracks as $music) {
+                $music->image = $imagePath;
+                $music->save();
+            }
         }
 
         $album->save();
@@ -174,6 +181,12 @@ class AlbumController extends Controller
 
         DB::beginTransaction();
         try {
+            $deletedTrackIds = [];
+
+            if (method_exists($album, 'likedBy')) {
+                $album->likedBy()->detach();
+            }
+
             foreach ($album->tracks as $music) {
                 $music->playlists()->detach();
 
@@ -188,6 +201,7 @@ class AlbumController extends Controller
                     Storage::disk('public')->delete($music->image);
                 }
 
+                $deletedTrackIds[] = (int) $music->id;
                 $music->delete();
             }
 
@@ -195,10 +209,16 @@ class AlbumController extends Controller
                 Storage::disk('public')->delete($album->image);
             }
 
+            $albumId = (int) $album->id;
             $album->delete();
 
             DB::commit();
-            return response()->json(['status' => 'ok']);
+
+            return response()->json([
+                'status'            => 'ok',
+                'deleted_track_ids' => $deletedTrackIds,
+                'deleted_album_id'  => $albumId,
+            ]);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -212,7 +232,7 @@ class AlbumController extends Controller
     {
         $musics = $album->tracks->map(fn ($m) => $this->formatTrack($m));
 
-        $isLiked = Auth::check()
+        $isLiked = (method_exists($album, 'likedBy') && Auth::check())
             ? $album->likedBy()->where('user_id', Auth::id())->exists()
             : false;
 
