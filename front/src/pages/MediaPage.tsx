@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faRandom, faEllipsisH, faBars } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlay,
+  faRandom,
+  faEllipsisH,
+  faBars,
+  faHeart as faHeartSolid,
+} from '@fortawesome/free-solid-svg-icons';
+import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
 import SongList, { UISong } from '../components/SongList';
 import { usePlayer, Track } from '../apis/PlayerContext';
@@ -23,43 +30,57 @@ interface MediaPageProps {
   onDelete?: () => void;
   renderModal?: React.ReactNode;
   getActions?: (song: MediaSong) => { label: string; onClick: () => void }[];
+  isLiked?: boolean;
+  onToggleLike?: () => void;
 }
 
 const toNumberArray = (arr: any[]): number[] =>
   (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
 
 const MediaPage: React.FC<MediaPageProps> = ({
-  title, artist, image, songs,
-  collectionType, collectionId, onEdit, onDelete, renderModal, getActions,
+  title,
+  artist,
+  image,
+  songs,
+  collectionType,
+  collectionId,
+  onEdit,
+  onDelete,
+  renderModal,
+  getActions,
+  isLiked = false,
+  onToggleLike,
 }) => {
   const { setCollectionContext, toggleShuffle, playSong } = usePlayer();
 
   const tracks = useMemo<Track[]>(
-    () => songs.map(s => ({
-      id: Number(s.id),
-      name: s.name,
-      artist: s.artist,
-      album: s.album,
-      album_image: s.album_image,
-      audio: s.audio,
-      duration: s.duration,
-      playlistIds: toNumberArray(s.playlistIds ?? []),
-    })),
+    () =>
+      songs.map((s) => ({
+        id: Number(s.id),
+        name: s.name,
+        artist: s.artist,
+        album: s.album,
+        album_image: s.album_image,
+        audio: s.audio,
+        duration: s.duration,
+        playlistIds: toNumberArray(s.playlistIds ?? []),
+      })),
     [songs]
   );
 
   const normalizedSongs: UISong[] = useMemo(
-    () => songs.map(s => ({
-      id: Number(s.id),
-      name: s.name,
-      artist: s.artist,
-      album: s.album,
-      album_image: s.album_image,
-      audio: s.audio,
-      dateAdded: s.dateAdded,
-      duration: s.duration,
-      playlistIds: toNumberArray(s.playlistIds ?? []),
-    })),
+    () =>
+      songs.map((s) => ({
+        id: Number(s.id),
+        name: s.name,
+        artist: s.artist,
+        album: s.album,
+        album_image: s.album_image,
+        audio: s.audio,
+        dateAdded: s.dateAdded,
+        duration: s.duration,
+        playlistIds: toNumberArray(s.playlistIds ?? []),
+      })),
     [songs]
   );
 
@@ -93,6 +114,16 @@ const MediaPage: React.FC<MediaPageProps> = ({
         <div className="media-controls">
           <FontAwesomeIcon icon={faPlay} className="control-icon" onClick={onPlayAll} />
           <FontAwesomeIcon icon={faRandom} className="control-icon" onClick={onShuffleAll} />
+
+          {onToggleLike && (
+            <FontAwesomeIcon
+              icon={isLiked ? faHeartSolid : faHeartRegular}
+              className={`control-icon heart-icon ${isLiked ? 'liked' : ''}`}
+              onClick={onToggleLike}
+              title={isLiked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            />
+          )}
+
           {(onEdit || onDelete) && (
             <DropdownMenu
               items={[

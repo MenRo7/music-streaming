@@ -59,3 +59,15 @@ export const removeMusicFromPlaylist = async (playlistId: number, musicId: numbe
   );
   return response.data;
 };
+
+export const likePlaylist = async (playlistId: number) => {
+  const res = await axios.post(`${API_URL}/playlists/${playlistId}/like`, {}, getAuthHeaders());
+  window.dispatchEvent(new Event('likes:changed'));
+  return res.data;
+};
+
+export const unlikePlaylist = async (playlistId: number) => {
+  const res = await axios.delete(`${API_URL}/playlists/${playlistId}/like`, getAuthHeaders());
+  window.dispatchEvent(new Event('likes:changed'));
+  return res.data;
+};

@@ -51,7 +51,6 @@ const SongList = <T extends UISong>({
 
   const handlePlaySong = (song: T) => {
     if (!song.audio) return;
-    // ⬇️ On passe la baseline de playlists au PlayerContext pour le SongPlayer
     playSong(
       song.audio,
       song.name,
@@ -73,83 +72,106 @@ const SongList = <T extends UISong>({
   };
 
   return (
-    <table className="song-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Nom</th>
-          {showAlbum && <th>Album</th>}
-          {showArtist && <th>Artiste</th>}
-          {showDateAdded && <th>Date d&apos;ajout</th>}
-          {showDuration && <th>Durée</th>}
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {songs.map((song, index) => {
-          const actions = getActions ? getActions(song) : [];
+    <div className="song-table-wrapper">
+      <table className="song-table">
+        <colgroup>
+          <col style={{ width: 56 }} /> {/* # */}
+          <col />                       {/* Nom */}
+          {showAlbum && <col />}        {/* Album */}
+          {showArtist && <col />}       {/* Artiste */}
+          {showDateAdded && <col style={{ width: 130 }} />} {/* Date */}
+          {showDuration && <col style={{ width: 90 }} />}   {/* Durée */}
+          <col style={{ width: 64 }} /> {/* Action */}
+        </colgroup>
 
-          const sharedDropdownItems = actions.flatMap((action) => {
-            if (!action.withPlaylistMenu) {
-              return [{ label: action.label, onClick: action.onClick }];
-            }
+        <thead>
+          <tr>
+            <th className="col-index">#</th>
+            <th className="col-name">Nom</th>
+            {showAlbum && <th className="col-album">Album</th>}
+            {showArtist && <th className="col-artist">Artiste</th>}
+            {showDateAdded && <th className="col-date">Date d&apos;ajout</th>}
+            {showDuration && <th className="col-duration">Durée</th>}
+            <th className="col-actions">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {songs.map((song, index) => {
+            const actions = getActions ? getActions(song) : [];
 
-            const raw =
-              (overridePlaylists[song.id] ??
-                action.existingPlaylistIds ??
-                song.playlistIds ??
-                []) as (number | string)[];
+            const sharedDropdownItems = actions.flatMap((action) => {
+              if (!action.withPlaylistMenu) {
+                return [{ label: action.label, onClick: action.onClick }];
+              }
 
-            const computedExisting = Array.from(new Set(raw.map(Number)))
-              .filter((n) => Number.isFinite(n)) as number[];
+              const raw =
+                (overridePlaylists[song.id] ??
+                  action.existingPlaylistIds ??
+                  song.playlistIds ??
+                  []) as (number | string)[];
 
-            const idsKey = computedExisting.slice().sort((a, b) => a - b).join('_');
+              const computedExisting = Array.from(new Set(raw.map(Number)))
+                .filter((n) => Number.isFinite(n)) as number[];
 
-            return [{
-              label: action.label || 'Ajouter à une playlist',
-              onClick: () => {},
-              submenuContent: (
-                <PlaylistCheckboxMenu
-                  key={`pcm-${song.id}-${idsKey}`}
-                  songId={action.songId ?? song.id}
-                  existingPlaylistIds={computedExisting}
-                  onToggle={(playlistId, checked) => {
-                    toggleLocal(song, playlistId, checked);
-                    action.onToggle?.(playlistId, checked);
-                  }}
-                />
-              ),
-            }];
-          });
+              const idsKey = computedExisting.slice().sort((a, b) => a - b).join('_');
 
-          return (
-            <tr
-              key={song.id}
-              className={`song-row ${isPlaying && Number(currentTrackId) === Number(song.id) ? 'playing' : ''}`}
-            >
-              <td className="track-number-cell" onClick={() => handlePlaySong(song)}>
-                <span className="track-number">{index + 1}</span>
-                <FontAwesomeIcon icon={faPlay} className="hover-play-icon" />
-              </td>
+              return [{
+                label: action.label || 'Ajouter à une playlist',
+                onClick: () => {},
+                submenuContent: (
+                  <PlaylistCheckboxMenu
+                    key={`pcm-${song.id}-${idsKey}`}
+                    songId={action.songId ?? song.id}
+                    existingPlaylistIds={computedExisting}
+                    onToggle={(playlistId, checked) => {
+                      toggleLocal(song, playlistId, checked);
+                      action.onToggle?.(playlistId, checked);
+                    }}
+                  />
+                ),
+              }];
+            });
 
-              <td>{song.name}</td>
-              {showAlbum && <td>{song.album}</td>}
-              {showArtist && <td>{song.artist}</td>}
-              {showDateAdded && <td>{song.dateAdded}</td>}
-              {showDuration && <td>{song.duration || '—'}</td>}
+            const isCurrent = isPlaying && Number(currentTrackId) === Number(song.id);
 
-              <td>
-                <DropdownMenu
-                  items={sharedDropdownItems}
-                  trigger={<FontAwesomeIcon icon={faEllipsisV} className="action-icon" />}
-                  menuClassName="song-dropdown-menu"
-                />
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+            return (
+              <tr key={song.id} className={`song-row ${isCurrent ? 'playing' : ''}`}>
+                <td className="track-number-cell col-index" onClick={() => handlePlaySong(song)}>
+                  <span className="track-number">{index + 1}</span>
+                  <FontAwesomeIcon icon={faPlay} className="hover-play-icon" />
+                </td>
+
+                <td className="cell--truncate col-name" title={song.name}>{song.name}</td>
+                {showAlbum && (
+                  <td className="cell--truncate col-album" title={song.album || ''}>
+                    {song.album}
+                  </td>
+                )}
+                {showArtist && (
+                  <td className="cell--truncate col-artist" title={song.artist}>
+                    {song.artist}
+                  </td>
+                )}
+                {showDateAdded && (
+                  <td className="col-date">{song.dateAdded}</td>
+                )}
+                {showDuration && (
+                  <td className="col-duration">{song.duration || '—'}</td>
+                )}
+
+                <td className="col-actions">
+                  <DropdownMenu
+                    items={sharedDropdownItems}
+                    trigger={<FontAwesomeIcon icon={faEllipsisV} className="action-icon" />}
+                    menuClassName="song-dropdown-menu"
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

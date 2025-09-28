@@ -24,3 +24,11 @@ export const updateUserProfile = async (formData: FormData) => {
     },
   });
 };
+
+export const getLikesSummary = async (): Promise<{
+  albums: { id: number; title: string; image: string | null }[];
+  playlists: { id: number; title: string; image: string | null }[];
+}> => {
+  const res = await axios.get(`${API_URL}/likes/summary`, getAuthHeader());
+  return res.data;
+};

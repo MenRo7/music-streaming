@@ -158,8 +158,6 @@ const ProfilePage: React.FC = () => {
           {
             label: "Supprimer",
             onClick: async () => {
-              const ok = window.confirm("Voulez-vous vraiment supprimer cette musique ?");
-              if (!ok) return;
               try {
                 await deleteMusic(song.id);
                 setSongs((prev) => prev.filter((m) => m.id !== song.id));

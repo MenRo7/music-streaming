@@ -131,3 +131,7 @@
 .album-row::-webkit-scrollbar-thumb:hover {
   background-color: #555;
 }
+
+.heart-icon.liked {
+  color: #5e2d91;
+}

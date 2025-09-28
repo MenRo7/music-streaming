@@ -1,8 +1,18 @@
+/* Wrapper pour activer le scroll horizontal “au besoin” */
+.song-table-wrapper {
+  width: 100%;
+  overflow-x: auto;         /* ✅ scroll horizontal si nécessaire */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Table responsive + ellipsis */
 .song-table {
   width: 100%;
   margin-top: 20px;
   border-collapse: collapse;
   color: #f3f0ff;
+  table-layout: fixed;      /* ✅ colonnes stables + ellipsis fonctionnel */
+  min-width: 640px;         /* évite de s’écraser trop sur mobile; scroller sinon */
 }
 
 .song-table th,
@@ -14,16 +24,34 @@
 .song-table th {
   background-color: #333;
   color: #fff;
+  position: sticky;
+  top: 0;                   /* header sticky si le conteneur scrolle verticalement */
+  z-index: 1;
 }
 
 .song-table td {
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #333;
 }
 
+/* Ellipsis pour les longues chaînes */
+.cell--truncate {
+  max-width: 0;             /* indispensable avec table-layout:fixed pour ellipsis */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ligne hover + état “playing” */
 .song-table tr:hover {
-  background-color: #555;
+  background-color: #3a3a3a;
 }
 
+.song-row.playing {
+  background-color: #5e2d91;
+  color: #fff;
+}
+
+/* Col # (play) */
 .track-number-cell {
   width: 40px;
   text-align: center;
@@ -47,21 +75,14 @@
   pointer-events: none;
 }
 
-.song-row:hover .track-number {
-  opacity: 0;
-}
-
+.song-row:hover .track-number { opacity: 0; }
 .song-row:hover .hover-play-icon {
   opacity: 1;
   pointer-events: auto;
-  color: #5e2d91;
-}
-
-.song-row.playing {
-  background-color: #5e2d91;
   color: #fff;
 }
 
+/* Actions */
 .action-icon {
   font-size: 1.1rem;
   color: #f3f0ff;
@@ -70,11 +91,37 @@
   transition: color 0.3s;
 }
 
-.action-icon:hover {
-  color: #5e2d91;
-}
+.action-icon:hover { color: #bda2e6; }
 
+/* Dropdown position */
 .song-dropdown-menu {
   top: 25px;
   right: 10px;
+}
+
+/* ---- Breakpoints ----
+   Masquer progressivement des colonnes sur petits écrans
+   (tout en gardant le scroll horizontal si on veut tout voir)
+*/
+
+/* < 720px : masquer la Date (si affichée) */
+@media (max-width: 720px) {
+  .song-table .col-date {
+    display: none;
+  }
+}
+
+/* < 560px : masquer l’Album (si affiché) */
+@media (max-width: 560px) {
+  .song-table .col-album {
+    display: none;
+  }
+}
+
+/* < 420px : réduire padding pour gagner de la place */
+@media (max-width: 420px) {
+  .song-table th,
+  .song-table td {
+    padding: 10px 8px;
+  }
 }

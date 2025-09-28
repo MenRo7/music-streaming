@@ -154,7 +154,6 @@ const EditAlbumPage: React.FC = () => {
   };
 
   const removeAlbum = async () => {
-    if (!window.confirm('Supprimer définitivement cet album (et toutes ses musiques) ?')) return;
     try {
       setDeletingAlbum(true);
       await deleteAlbum(albumId);

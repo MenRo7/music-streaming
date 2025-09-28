@@ -100,8 +100,6 @@ const MyMusicPage: React.FC = () => {
             {
               label: 'Supprimer',
               onClick: async () => {
-                const confirmed = window.confirm('Voulez-vous vraiment supprimer cette musique ?');
-                if (!confirmed) return;
                 try {
                   await deleteMusic(song.id);
                   setMusics((prev) => prev.filter((m) => m.id !== song.id));

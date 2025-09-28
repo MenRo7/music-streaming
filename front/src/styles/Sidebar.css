@@ -137,4 +137,14 @@
     transition: background-color 0.3s;
     grid-template-columns: 1fr;
   }
+
+  .sidebar-section-separator {
+    margin: 12px 4px 4px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    color: #bfbfbf;
+    font-size: 12px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
 }

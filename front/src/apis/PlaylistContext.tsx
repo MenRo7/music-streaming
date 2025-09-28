@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getPlaylists } from '../apis/PlaylistService';
 
 interface PlaylistContextType {
   playlists: any[];
-  fetchPlaylists: () => void;
+  fetchPlaylists: () => Promise<void>;
 }
 
 const PlaylistContext = createContext<PlaylistContextType | undefined>(undefined);
@@ -19,18 +19,18 @@ export const usePlaylists = (): PlaylistContextType => {
 export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [playlists, setPlaylists] = useState<any[]>([]);
 
-  const fetchPlaylists = async () => {
+  const fetchPlaylists = useCallback(async () => {
     try {
       const data = await getPlaylists();
-      setPlaylists(data);
+      setPlaylists(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des playlists :', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPlaylists();
-  }, []);
+  }, [fetchPlaylists]);
 
   return (
     <PlaylistContext.Provider value={{ playlists, fetchPlaylists }}>
@@ -38,4 +38,3 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     </PlaylistContext.Provider>
   );
 };
-

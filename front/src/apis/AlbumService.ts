@@ -20,6 +20,7 @@ export interface Album {
   created_at?: string | null;
   musics?: AlbumMusic[];
   user_id?: number;
+  is_liked?: boolean;
 }
 
 const authHeaders = () => {
@@ -91,4 +92,16 @@ export const deleteTrack = async (trackId: number) => {
   });
   if (!res.ok) throw new Error('Erreur suppression titre');
   return res.json();
+};
+
+export const likeAlbum = async (albumId: number) => {
+  const res = await axios.post(`${API_URL}/album/${albumId}/like`, {}, { headers: authHeaders() });
+  window.dispatchEvent(new Event('likes:changed'));
+  return res.data;
+};
+
+export const unlikeAlbum = async (albumId: number) => {
+  const res = await axios.delete(`${API_URL}/album/${albumId}/like`, { headers: authHeaders() });
+  window.dispatchEvent(new Event('likes:changed'));
+  return res.data;
 };

@@ -3,7 +3,7 @@ import '../styles/PlaylistCard.css';
 
 interface PlaylistCardProps {
   title: string;
-  image?: string;
+  image?: string | null;
   onClick?: () => void;
 }
 

@@ -6,8 +6,10 @@ import {
   getPlaylistById,
   deletePlaylist,
   removeMusicFromPlaylist,
+  addMusicToPlaylist,
+  likePlaylist,
+  unlikePlaylist,
 } from '../apis/PlaylistService';
-import { addMusicToPlaylist } from '../apis/PlaylistService';
 import { usePlaylists } from '../apis/PlaylistContext';
 import { addFavorite } from '../apis/FavoritesService';
 import { usePlayer } from '../apis/PlayerContext';
@@ -21,12 +23,14 @@ const PlaylistPage: React.FC = () => {
 
   const [playlist, setPlaylist] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [liked, setLiked] = useState(false);
 
   const fetchPlaylist = async () => {
     if (!id) return;
     try {
       const data = await getPlaylistById(parseInt(id, 10));
       setPlaylist(data);
+      setLiked(Boolean((data as any)?.is_liked));
     } catch (error) {
       console.error('Erreur de chargement de la playlist:', error);
     }
@@ -41,7 +45,7 @@ const PlaylistPage: React.FC = () => {
         songs: prev.songs.filter((song: any) => song.id !== songId),
       }));
     } catch {
-      alert("Erreur lors de la suppression de la musique de la playlist.");
+      alert('Erreur lors de la suppression de la musique de la playlist.');
     }
   };
 
@@ -49,8 +53,6 @@ const PlaylistPage: React.FC = () => {
 
   const handleDeletePlaylist = async () => {
     if (!playlist) return;
-    const confirmDelete = window.confirm('Voulez-vous vraiment supprimer cette playlist ?');
-    if (!confirmDelete) return;
     try {
       await deletePlaylist(playlist.id);
       fetchPlaylists();
@@ -70,6 +72,19 @@ const PlaylistPage: React.FC = () => {
     fetchPlaylist();
   }, [id]);
 
+  const toggleLike = async () => {
+    try {
+      if (liked) {
+        await unlikePlaylist(playlist.id);
+      } else {
+        await likePlaylist(playlist.id);
+      }
+      setLiked(!liked);
+    } catch (e) {
+      console.error('Erreur like/unlike playlist', e);
+    }
+  };
+
   return (
     <MediaPage
       title={playlist?.title}
@@ -80,6 +95,8 @@ const PlaylistPage: React.FC = () => {
       collectionId={playlist?.id}
       onEdit={handleEditPlaylist}
       onDelete={handleDeletePlaylist}
+      isLiked={liked}
+      onToggleLike={toggleLike}
       renderModal={
         <CreateEditPlaylistModal
           isOpen={isModalOpen}
