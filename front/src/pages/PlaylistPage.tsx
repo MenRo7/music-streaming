@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import MediaPage from './MediaPage';
@@ -14,12 +14,14 @@ import { usePlaylists } from '../apis/PlaylistContext';
 import { addFavorite } from '../apis/FavoritesService';
 import { usePlayer } from '../apis/PlayerContext';
 import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
+import { useUser } from '../apis/UserContext';
 
 const PlaylistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { fetchPlaylists } = usePlaylists();
   const { addToQueue } = usePlayer();
+  const { user: viewer } = useUser(); // ✅ user courant
 
   const [playlist, setPlaylist] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,8 +38,17 @@ const PlaylistPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    fetchPlaylist();
+  }, [id]);
+
+  const isOwner = useMemo(() => {
+    if (!playlist || !viewer) return false;
+    return Number(playlist.user_id) === Number(viewer.id);
+  }, [playlist, viewer]);
+
   const handleRemoveMusicFromPlaylist = async (songId: number) => {
-    if (!playlist) return;
+    if (!playlist || !isOwner) return; // ✅ garde front
     try {
       await removeMusicFromPlaylist(playlist.id, songId);
       setPlaylist((prev: any) => ({
@@ -49,10 +60,15 @@ const PlaylistPage: React.FC = () => {
     }
   };
 
-  const handleEditPlaylist = () => setIsModalOpen(true);
+  const handleEditPlaylist = () => {
+    if (!isOwner) return; // ✅ garde front
+    setIsModalOpen(true);
+  };
 
   const handleDeletePlaylist = async () => {
-    if (!playlist) return;
+    if (!playlist || !isOwner) return; // ✅ garde front
+    const ok = window.confirm('Voulez-vous vraiment supprimer cette playlist ?');
+    if (!ok) return;
     try {
       await deletePlaylist(playlist.id);
       fetchPlaylists();
@@ -67,10 +83,6 @@ const PlaylistPage: React.FC = () => {
     fetchPlaylist();
     fetchPlaylists();
   };
-
-  useEffect(() => {
-    fetchPlaylist();
-  }, [id]);
 
   const toggleLike = async () => {
     try {
@@ -93,24 +105,26 @@ const PlaylistPage: React.FC = () => {
       isPlaylist={true}
       collectionType="playlist"
       collectionId={playlist?.id}
-      onEdit={handleEditPlaylist}
-      onDelete={handleDeletePlaylist}
+      onEdit={isOwner ? handleEditPlaylist : undefined}
+      onDelete={isOwner ? handleDeletePlaylist : undefined}
       isLiked={liked}
       onToggleLike={toggleLike}
       renderModal={
-        <CreateEditPlaylistModal
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          initialData={playlist}
-          mode="edit"
-        />
+        isOwner ? (
+          <CreateEditPlaylistModal
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            initialData={playlist}
+            mode="edit"
+          />
+        ) : null
       }
       getActions={(song) => {
         const baseline = Array.from(
           new Set([...(song.playlistIds ?? []), ...(playlist?.id ? [Number(playlist.id)] : [])])
         ) as number[];
 
-        return [
+        const base = [
           {
             label: 'Ajouter aux favoris',
             onClick: () => {
@@ -133,11 +147,17 @@ const PlaylistPage: React.FC = () => {
             },
           },
           { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
-          {
+        ];
+
+        // ✅ action visible uniquement pour le propriétaire
+        if (isOwner) {
+          base.push({
             label: 'Supprimer de cette playlist',
             onClick: () => handleRemoveMusicFromPlaylist(song.id),
-          },
-        ];
+          } as any);
+        }
+
+        return base;
       }}
     />
   );

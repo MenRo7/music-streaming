@@ -29,24 +29,26 @@ class PlaylistController extends Controller
         if (!$playlist) {
             return response()->json(['message' => 'Playlist non trouvée'], 404);
         }
+
         $isLiked = Auth::check()
             ? $playlist->likedBy()->where('user_id', Auth::id())->exists()
             : false;
 
         return response()->json([
-            'id' => $playlist->id,
-            'title' => $playlist->title,
-            'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
-            'is_liked' => $isLiked,
-            'songs' => $playlist->musics->map(function ($music) {
+            'id'        => $playlist->id,
+            'user_id'   => (int) $playlist->user_id,
+            'title'     => $playlist->title,
+            'image'     => $playlist->image ? asset('storage/' . $playlist->image) : null,
+            'is_liked'  => $isLiked,
+            'songs'     => $playlist->musics->map(function ($music) {
                 return [
-                    'id' => $music->id,
-                    'name' => $music->title,
-                    'artist' => optional($music->user)->name ?? $music->artist_name,
-                    'album' => optional($music->album)->title ?? 'Inconnu',
+                    'id'          => $music->id,
+                    'name'        => $music->title,
+                    'artist'      => optional($music->user)->name ?? $music->artist_name,
+                    'album'       => optional($music->album)->title ?? 'Inconnu',
                     'album_image' => $music->image ? asset('storage/' . $music->image) : null,
-                    'audio' => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
-                    'dateAdded' => optional($music->pivot->created_at)->format('d/m/Y'),
+                    'audio'       => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
+                    'dateAdded'   => optional($music->pivot->created_at)->format('d/m/Y'),
                     'playlistIds' => $music->playlists->pluck('id'),
                 ];
             }),
@@ -85,6 +87,10 @@ class PlaylistController extends Controller
     {
         $playlist = Playlist::findOrFail($id);
 
+        if ((int)$playlist->user_id !== (int)Auth::id()) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpg,jpeg,png',
@@ -96,7 +102,6 @@ class PlaylistController extends Controller
             if ($playlist->image) {
                 Storage::disk('public')->delete($playlist->image);
             }
-
             $path = $request->file('image')->store('playlist_images', 'public');
             $playlist->image = $path;
         }
@@ -104,9 +109,9 @@ class PlaylistController extends Controller
         $playlist->save();
 
         return response()->json([
-            'message' => 'Playlist mise à jour avec succès',
+            'message'  => 'Playlist mise à jour avec succès',
             'playlist' => [
-                'id' => $playlist->id,
+                'id'    => $playlist->id,
                 'title' => $playlist->title,
                 'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
             ],
@@ -121,8 +126,12 @@ class PlaylistController extends Controller
         return response()->json(['message' => 'Playlist supprimée']);
     }
 
-    public function addMusic(Request $request, Playlist $playlist)
+   public function addMusic(Request $request, Playlist $playlist)
     {
+        if ((int)$playlist->user_id !== (int)Auth::id()) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
+
         $musicId = $request->input('music_id');
         $playlist->musics()->syncWithoutDetaching([$musicId]);
         return response()->json(['message' => 'Musique ajoutée']);
@@ -130,6 +139,10 @@ class PlaylistController extends Controller
 
     public function removeMusic(Request $request, Playlist $playlist)
     {
+        if ((int)$playlist->user_id !== (int)Auth::id()) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
+
         $musicId = $request->input('music_id');
         $playlist->musics()->detach($musicId);
         return response()->json(['message' => 'Musique retirée']);
