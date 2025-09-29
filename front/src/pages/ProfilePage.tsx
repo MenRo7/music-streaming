@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { fetchUser, fetchUserSummary } from "../apis/UserService";
+import {
+  fetchUser,
+  fetchUserSummary,
+  isSubscribedToUser,
+  subscribeToUser,
+  unsubscribeFromUser,
+} from "../apis/UserService";
+
 import { getUserMusics, getUserAlbums, deleteMusic } from "../apis/MyMusicService";
 import { getPlaylists, addMusicToPlaylist, removeMusicFromPlaylist } from "../apis/PlaylistService";
 import { addFavorite } from "../apis/FavoritesService";
@@ -36,6 +43,10 @@ const ProfilePage: React.FC = () => {
   const [albums, setAlbums] = useState<any[]>([]);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // abonnement
+  const [subscribed, setSubscribed] = useState<boolean>(false);
+  const [subPending, setSubPending] = useState<boolean>(false);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -75,6 +86,7 @@ const ProfilePage: React.FC = () => {
         setSongs(formattedSongs);
         setAlbums(myAlbums || []);
         setPlaylists(myPlaylists || []);
+        setSubscribed(false)
       } else {
         const summaryRes = await fetchUserSummary(targetId!);
         const summary = summaryRes.data;
@@ -102,6 +114,12 @@ const ProfilePage: React.FC = () => {
         setSongs(formattedSongs);
         setAlbums(summary.albums || []);
         setPlaylists(summary.playlists || []);
+
+        try {
+          const isSub = await isSubscribedToUser(Number(summary.user.id));          setSubscribed(isSub);
+        } catch {
+          setSubscribed(false);
+        }
       }
     } catch (e) {
       console.error("Erreur chargement profil:", e);
@@ -138,6 +156,25 @@ const ProfilePage: React.FC = () => {
     } catch (e) {
       console.error("Maj playlist échouée", e);
       alert("Erreur lors de la modification de la playlist.");
+    }
+  };
+
+  const onToggleSubscribe = async () => {
+    if (!user?.id || isSelf || subPending) return;
+    setSubPending(true);
+    try {
+      if (subscribed) {
+        await unsubscribeFromUser(Number(user.id));
+        setSubscribed(false);
+      } else {
+        await subscribeToUser(Number(user.id));
+        setSubscribed(true);
+      }
+      window.dispatchEvent(new Event("subscriptions:changed"));
+    } catch (e) {
+      console.error("Erreur abonnement/désabonnement:", e);
+    } finally {
+      setSubPending(false);
     }
   };
 
@@ -215,10 +252,22 @@ const ProfilePage: React.FC = () => {
             src={hasAvatar ? user.profile_image : "/placeholder-avatar.png"}
             alt="User Profile"
           />
-          <div className="profile-info">
+
+          <div className="profile-info" style={{ flex: 1 }}>
             <h1>{user?.name ?? "Profil"}</h1>
             {isSelf && <p>{user?.email}</p>}
           </div>
+
+          {!isSelf && (
+            <button
+              className={`subscribe-btn ${subscribed ? "is-subscribed" : ""}`}
+              onClick={onToggleSubscribe}
+              disabled={subPending}
+              title={subscribed ? "Se désabonner" : "S’abonner"}
+            >
+              {subscribed ? "Abonné" : "S’abonner +"}
+            </button>
+          )}
 
           {isSelf && (
             <DropdownMenu

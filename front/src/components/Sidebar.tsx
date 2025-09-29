@@ -5,15 +5,18 @@ import { usePlaylists } from '../apis/PlaylistContext';
 import { getLikesSummary } from '../apis/UserService';
 
 import PlaylistCard from './PlaylistCard';
+import ProfileCircleCard from './PrrofileCircleCard';
+
 import CreateEditPlaylistModal from './CreateEditPlaylistModal';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTimes, faHeart } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 import '../styles/Sidebar.css';
 
 type LikedAlbum = { id: number; title: string; image: string | null };
 type LikedPlaylist = { id: number; title: string; image: string | null };
+type SubscribedProfile = { id: number; name: string; image: string | null };
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -25,11 +28,12 @@ const Sidebar: React.FC = () => {
 
   const [likedAlbums, setLikedAlbums] = useState<LikedAlbum[]>([]);
   const [likedPlaylists, setLikedPlaylists] = useState<LikedPlaylist[]>([]);
+  const [subs, setSubs] = useState<SubscribedProfile[]>([]);
   const [loadingLikes, setLoadingLikes] = useState(false);
 
   const handleFilterClick = (filter: string) => {
-    setActiveFilters((prevFilters) => {
-      const next = new Set(prevFilters);
+    setActiveFilters((prev) => {
+      const next = new Set(prev);
       if (next.has(filter)) next.delete(filter);
       else next.add(filter);
       return next;
@@ -54,6 +58,7 @@ const Sidebar: React.FC = () => {
       const res = await getLikesSummary();
       setLikedAlbums(res.albums ?? []);
       setLikedPlaylists(res.playlists ?? []);
+      setSubs(res.profiles ?? []); // profils suivis
     } catch (e) {
       console.error('Erreur chargement likes:', e);
     } finally {
@@ -120,6 +125,21 @@ const Sidebar: React.FC = () => {
 
       <div className="liked-section">
         {loadingLikes && <div className="liked-loading">Chargement…</div>}
+
+        {subs.length > 0 && (
+          <>
+            <div className="subs-grid">
+              {subs.map((u) => (
+                <ProfileCircleCard
+                  key={`sub-${u.id}`}
+                  name={u.name}
+                  image={u.image || undefined}
+                  onClick={() => navigate(`/profile/${u.id}`)}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
         {likedPlaylists.length > 0 && (
           <>

@@ -26,9 +26,27 @@ export const updateUserProfile = async (formData: FormData) => {
 };
 
 export const getLikesSummary = async (): Promise<{
+  profiles: never[];
   albums: { id: number; title: string; image: string | null }[];
   playlists: { id: number; title: string; image: string | null }[];
 }> => {
   const res = await axios.get(`${API_URL}/likes/summary`, getAuthHeader());
   return res.data;
+};
+
+export const subscribeToUser = async (userId: number) => {
+  const res = await axios.post(`${API_URL}/users/${userId}/subscribe`, {}, getAuthHeader());
+  window.dispatchEvent(new Event('likes:changed'));
+  return res.data;
+};
+
+export const unsubscribeFromUser = async (userId: number) => {
+  const res = await axios.delete(`${API_URL}/users/${userId}/subscribe`, getAuthHeader());
+  window.dispatchEvent(new Event('likes:changed'));
+  return res.data;
+};
+
+export const isSubscribedToUser = async (userId: number) => {
+  const res = await axios.get(`${API_URL}/users/${userId}/subscribe`, getAuthHeader());
+  return Boolean(res.data?.subscribed);
 };

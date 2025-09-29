@@ -53,6 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/favorites/{music}', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{music}', [FavoriteController::class, 'destroy']);
 
+    Route::post('/users/{id}/subscribe', [UserController::class, 'subscribe']);
+    Route::delete('/users/{id}/subscribe', [UserController::class, 'unsubscribe']);
+    Route::get('/users/{id}/subscribe', [UserController::class, 'isSubscribed']);
+
     Route::get('/likes/summary', [UserController::class, 'likesSummary']);
     Route::get('/search', [GlobalSearchController::class, 'search']);
 });
