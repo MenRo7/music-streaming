@@ -1,11 +1,14 @@
 import axios from 'axios';
 import { API_URL } from './api';
 
+const cleanToken = (t: string | null) => (t || '').replace(/^"+|"+$/g, '').trim();
+
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken');
+  const token = cleanToken(localStorage.getItem('authToken'));
   return {
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      Accept: 'application/json',
     },
   };
 };
@@ -21,19 +24,25 @@ export const getPlaylists = async () => {
 };
 
 export const createPlaylist = async (playlist: FormData) => {
-  const response = await axios.post(`${API_URL}/playlists`, playlist, getAuthHeaders());
+  const response = await axios.post(`${API_URL}/playlists`, playlist, {
+    ...getAuthHeaders(),
+    headers: {
+      ...getAuthHeaders().headers,
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 
 export const updatePlaylist = async (id: number, playlist: FormData) => {
-  const token = localStorage.getItem('authToken');
   playlist.append('_method', 'PUT');
   const response = await axios.post(`${API_URL}/playlists/${id}`, playlist, {
+    ...getAuthHeaders(),
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...getAuthHeaders().headers,
+      'Content-Type': 'multipart/form-data',
     },
   });
-
   return response.data;
 };
 

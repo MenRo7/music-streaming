@@ -23,6 +23,7 @@ const MusicQueue: React.FC = () => {
     removeFromQueue,
     playNowFromQueue,
     moveManual,
+    isHydrating,
   } = usePlayer();
 
   const [queuePlaylists, setQueuePlaylists] = useState<Record<string, number[]>>({});
@@ -117,6 +118,29 @@ const MusicQueue: React.FC = () => {
     setDragIndex(null);
     setOverIndex(null);
   };
+
+  if (isHydrating) {
+    return (
+      <aside className="music-queue" aria-label="File d'attente">
+        <div className="mq-header">
+          <div className="mq-title">
+            <FontAwesomeIcon icon={faList} className="mq-title-icon" />
+            <span>File d'attente</span>
+          </div>
+          <div className="mq-actions">
+            <button className="mq-btn mq-btn--icon mq-btn--danger" disabled>
+              <FontAwesomeIcon icon={faTrash} />
+            </button>
+          </div>
+        </div>
+
+        <div className="mq-empty">
+          <p>Chargement de la file…</p>
+          <small>Vérification des pistes supprimées…</small>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className="music-queue" aria-label="File d'attente">

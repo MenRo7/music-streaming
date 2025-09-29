@@ -243,6 +243,38 @@ class AlbumController extends Controller
         }
     }
 
+    public function like($id)
+    {
+        $album = Album::findOrFail($id);
+        $user  = Auth::user();
+
+        if (method_exists($user, 'likedAlbums')) {
+            $user->likedAlbums()->syncWithoutDetaching([$album->id]);
+        } elseif (method_exists($album, 'likedBy')) {
+            $album->likedBy()->syncWithoutDetaching([Auth::id()]);
+        } else {
+            return response()->json(['message' => 'Relation de like non définie.'], 500);
+        }
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function unlike($id)
+    {
+        $album = Album::findOrFail($id);
+        $user  = Auth::user();
+
+        if (method_exists($user, 'likedAlbums')) {
+            $user->likedAlbums()->detach($album->id);
+        } elseif (method_exists($album, 'likedBy')) {
+            $album->likedBy()->detach(Auth::id());
+        } else {
+            return response()->json(['message' => 'Relation de like non définie.'], 500);
+        }
+
+        return response()->json(['status' => 'ok']);
+    }
+
     private function formatAlbum(Album $album): array
     {
         $musics = $album->tracks->map(fn ($m) => $this->formatTrack($m));

@@ -207,6 +207,28 @@ class MusicController extends Controller
         return response()->json($musics);
     }
 
+    public function exists(Request $request)
+    {
+        $ids = collect($request->input('ids', []))
+            ->map(fn($v) => (int) $v)
+            ->filter(fn($v) => $v > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($ids)) {
+            return response()->json(['exists' => []]);
+        }
+
+        $exists = Music::whereIn('id', $ids)
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->values()
+            ->all();
+
+        return response()->json(['exists' => $exists]);
+    }
+
     private function publicUrl(?string $path): ?string
     {
         if (!$path) return null;

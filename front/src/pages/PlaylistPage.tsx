@@ -67,8 +67,6 @@ const PlaylistPage: React.FC = () => {
 
   const handleDeletePlaylist = async () => {
     if (!playlist || !isOwner) return;
-    const ok = window.confirm('Voulez-vous vraiment supprimer cette playlist ?');
-    if (!ok) return;
     try {
       await deletePlaylist(playlist.id);
       fetchPlaylists();

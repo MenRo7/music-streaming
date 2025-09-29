@@ -1,11 +1,17 @@
 import axios from 'axios';
 import { API_URL } from '../apis/api';
 
-const getAuthHeader = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-  },
-});
+const cleanToken = (t: string | null) => (t || '').replace(/^"+|"+$/g, '').trim();
+
+const getAuthHeader = () => {
+  const token = cleanToken(localStorage.getItem('authToken'));
+  return {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      Accept: 'application/json',
+    },
+  };
+};
 
 export const fetchUser = async () => {
   return axios.get(`${API_URL}/user`, getAuthHeader());
