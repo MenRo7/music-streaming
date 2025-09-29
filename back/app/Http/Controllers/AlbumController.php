@@ -18,10 +18,13 @@ class AlbumController extends Controller
                 'id'          => (int) $album->id,
                 'title'       => $album->title,
                 'type'        => $album->type,
-                'image'       => $album->image ? asset('storage/' . $album->image) : null,
+                'image'       => $album->image
+                    ? asset('storage/' . $album->image) . '?v=' . optional($album->updated_at)->timestamp
+                    : null,
                 'user_id'     => (int) $album->user_id,
                 'artist_name' => $album->artist_name,
                 'created_at'  => optional($album->created_at)?->format('d/m/Y'),
+                'updated_at'  => optional($album->updated_at)?->toDateTimeString(),
             ];
         });
 
@@ -86,6 +89,7 @@ class AlbumController extends Controller
                 $imagePath = Storage::disk('public')->put('music_images', $songData['image']);
                 $music->image = $imagePath;
             } elseif ($album->image) {
+                // hériter de l'image d'album
                 $music->image = $album->image;
             }
 
@@ -110,10 +114,13 @@ class AlbumController extends Controller
                     'id'          => (int) $album->id,
                     'title'       => $album->title,
                     'type'        => $album->type,
-                    'image'       => $album->image ? asset('storage/' . $album->image) : null,
+                    'image'       => $album->image
+                        ? asset('storage/' . $album->image) . '?v=' . optional($album->updated_at)->timestamp
+                        : null,
                     'user_id'     => (int) $album->user_id,
                     'artist_name' => $album->artist_name,
                     'created_at'  => optional($album->created_at)?->format('d/m/Y'),
+                    'updated_at'  => optional($album->updated_at)?->toDateTimeString(),
                 ];
             });
 
@@ -150,6 +157,7 @@ class AlbumController extends Controller
             $imagePath = $request->file('image')->store('album_images', 'public');
             $album->image = $imagePath;
 
+            // propager l'image vers toutes les pistes
             foreach ($album->tracks as $music) {
                 $music->image = $imagePath;
                 $music->save();
@@ -189,7 +197,6 @@ class AlbumController extends Controller
 
             foreach ($album->tracks as $music) {
                 $music->playlists()->detach();
-
                 if (method_exists($music, 'favoredBy')) {
                     $music->favoredBy()->detach();
                 }
@@ -240,10 +247,13 @@ class AlbumController extends Controller
             'id'          => (int) $album->id,
             'title'       => $album->title,
             'type'        => $album->type,
-            'image'       => $album->image ? asset('storage/' . $album->image) : null,
+            'image'       => $album->image
+                ? asset('storage/' . $album->image) . '?v=' . optional($album->updated_at)->timestamp
+                : null,
             'user_id'     => (int) $album->user_id,
             'artist_name' => optional($album->user)->name ?? $album->artist_name,
             'created_at'  => optional($album->created_at)?->format('d/m/Y'),
+            'updated_at'  => optional($album->updated_at)?->toDateTimeString(),
             'musics'      => $musics,
             'is_liked'    => $isLiked,
         ];
@@ -257,13 +267,16 @@ class AlbumController extends Controller
             'artist_name'  => optional($m->user)->name ?? $m->artist_name,
             'duration'     => $m->duration,
             'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
-            'image'        => $m->image ? asset('storage/' . $m->image) : null,
+            'image'        => $m->image
+                ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
+                : null,
             'playlist_ids' => $m->playlists
                 ->pluck('id')
                 ->map(fn($id) => (int) $id)
                 ->values()
                 ->all(),
             'date_added'   => optional($m->created_at)?->format('d/m/Y'),
+            'updated_at'   => optional($m->updated_at)?->toDateTimeString(),
         ];
     }
 

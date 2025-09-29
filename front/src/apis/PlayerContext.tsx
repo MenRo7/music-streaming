@@ -372,7 +372,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         try {
           localStorage.setItem(keyFor(userId), JSON.stringify(state));
         } catch (e) {
-          // eslint-disable-next-line no-console
           console.warn('Impossible de sauvegarder la queue', e);
         }
       }, 200),
@@ -441,49 +440,84 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return () => window.removeEventListener('auth:changed', onAuthChanged);
   }, [hardReset]);
 
-  const pruneByIds = useCallback((ids: number[]) => {
-    const bad = new Set(ids.map(Number).filter(Number.isFinite));
+  // --------- 🔄 NOUVEAU : écoute des MAJ/suppressions de pistes ---------
 
-    setQueueManual(q => q.filter(item => !bad.has(Number((item as any).id))));
-    setQueueAuto(q => q.filter(item => !bad.has(Number((item as any).id))));
-    setHistory(h => h.filter(item => !bad.has(Number((item as any).id))));
-
-    setCurrentItem(cur => {
-      if (cur && bad.has(Number((cur as any).id))) {
-        const manual = queueManualRef.current;
-        const auto = queueAutoRef.current;
-
-        const nextItem = manual[0] ?? auto[0] ?? null;
-        if (nextItem) {
-          if (manual[0]) setQueueManual(manual.slice(1));
-          else if (auto[0]) setQueueAuto(auto.slice(1));
-
-          applyCurrentToCompatFields(nextItem);
-          return nextItem;
-        } else {
-          setIsPlaying(false);
-          setAudioUrl('');
-          setTitle('');
-          setArtist('');
-          setAlbumImage('');
-          setCurrentTrackId(null);
-          return null;
-        }
-      }
-      return cur;
-    });
-  }, [applyCurrentToCompatFields]);
+  const mergeUpdate = useCallback((item: QueueItem, map: Map<number, Partial<Track>>): QueueItem => {
+    const u = map.get(item.id);
+    if (!u) return item;
+    const merged: QueueItem = {
+      ...item,
+      name: u.name ?? item.name,
+      artist: u.artist ?? item.artist,
+      album: u.album ?? item.album,
+      album_image: u.album_image ?? item.album_image,
+      audio: u.audio ?? item.audio,
+      duration: u.duration ?? item.duration,
+    };
+    return merged;
+  }, []);
 
   useEffect(() => {
-    const onPruned = (e: any) => {
-      const ids = e?.detail?.trackIds;
-      if (Array.isArray(ids) && ids.length > 0) {
-        pruneByIds(ids);
+    const onTracksUpdated = (e: any) => {
+      const updates: Partial<Track>[] = e?.detail?.tracks || [];
+      if (!Array.isArray(updates) || updates.length === 0) return;
+
+      // on mappe par id
+      const map = new Map<number, Partial<Track>>();
+      for (const t of updates) {
+        if (t && typeof t.id === 'number') {
+          map.set(t.id, t);
+        }
       }
+      if (map.size === 0) return;
+
+      setCurrentItem(ci => {
+        if (!ci) return ci;
+        const next = mergeUpdate(ci, map);
+        if (next !== ci && next.id === ci.id) {
+          // si l'item courant a changé → resynchroniser les champs "compat"
+          applyCurrentToCompatFields(next);
+        }
+        return next;
+      });
+      setQueueManual(list => list.map(it => mergeUpdate(it, map)));
+      setQueueAuto(list => list.map(it => mergeUpdate(it, map)));
+
+      // mettre aussi à jour la collection (lecture auto dès la source)
+      setCollection(cols => cols.map(c => {
+        const u = map.get(c.id);
+        return u ? { ...c,
+          name: u.name ?? c.name,
+          artist: u.artist ?? c.artist,
+          album: u.album ?? c.album,
+          album_image: u.album_image ?? c.album_image,
+          audio: u.audio ?? c.audio,
+          duration: u.duration ?? c.duration,
+        } : c;
+      }));
     };
-    window.addEventListener('library:pruned', onPruned);
-    return () => window.removeEventListener('library:pruned', onPruned);
-  }, [pruneByIds]);
+
+    const onTracksDeleted = (e: any) => {
+      const ids: number[] = e?.detail?.ids || [];
+      if (!Array.isArray(ids) || ids.length === 0) return;
+
+      setQueueManual(list => list.filter(it => !ids.includes(it.id)));
+      setQueueAuto(list => list.filter(it => !ids.includes(it.id)));
+      setHistory(list => list.filter(it => !ids.includes(it.id)));
+      setCurrentItem(ci => (ci && ids.includes(ci.id) ? null : ci));
+      // Si on supprime le courant, stoppe la lecture
+      setIsPlaying(prev => (currentItem && currentItem.id && ids.includes(currentItem.id) ? false : prev));
+    };
+
+    window.addEventListener('tracks:updated', onTracksUpdated);
+    window.addEventListener('tracks:deleted', onTracksDeleted);
+    return () => {
+      window.removeEventListener('tracks:updated', onTracksUpdated);
+      window.removeEventListener('tracks:deleted', onTracksDeleted);
+    };
+  }, [applyCurrentToCompatFields, mergeUpdate, currentItem]);
+
+  // ---------------------------------------------------------------------
 
   const value: PlayerContextType = useMemo(() => ({
     audioUrl, title, artist, albumImage, currentTrackId, isPlaying,

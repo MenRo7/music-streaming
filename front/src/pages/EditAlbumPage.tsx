@@ -25,10 +25,13 @@ type NewTrack = {
   audio: File | null;
 };
 
-const emitLibraryChanged = () => {
-  try {
-    window.dispatchEvent(new Event('library:changed'));
-  } catch {}
+const toDurationStr = (v?: string | number | null) => {
+  if (v == null) return undefined;
+  if (typeof v === 'string') return v;
+  const sec = Math.max(0, Math.floor(v));
+  const mm = Math.floor(sec / 60).toString().padStart(2, '0');
+  const ss = (sec % 60).toString().padStart(2, '0');
+  return `${mm}:${ss}`;
 };
 
 const EditAlbumPage: React.FC = () => {
@@ -43,7 +46,10 @@ const EditAlbumPage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const [tracks, setTracks] = useState<EditTrack[]>([]);
-  const [newTracks, setNewTracks] = useState<NewTrack[]>([{ title: '', audio: null }]);
+
+  const [newTracks, setNewTracks] = useState<NewTrack[]>([
+    { title: '', audio: null },
+  ]);
 
   const [savingAll, setSavingAll] = useState(false);
   const [deletingAlbum, setDeletingAlbum] = useState(false);
@@ -57,7 +63,7 @@ const EditAlbumPage: React.FC = () => {
       setTitle(a.title || '');
       setImageFile(null);
       setTracks(
-        (a.musics || []).map((t) => ({
+        (a.musics || []).map(t => ({
           ...t,
           _title: t.title,
           _audioFile: null,
@@ -72,9 +78,7 @@ const EditAlbumPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    void load();
-  }, [albumId]);
+  useEffect(() => { load(); }, [albumId]);
 
   const albumMetaChanged = useMemo(() => {
     if (!album) return false;
@@ -89,82 +93,83 @@ const EditAlbumPage: React.FC = () => {
   };
 
   const onTrackTitleChange = (tid: number, val: string) => {
-    setTracks((prev) => prev.map((t) => (t.id === tid ? { ...t, _title: val } : t)));
+    setTracks(prev => prev.map(t => t.id === tid ? { ...t, _title: val } : t));
   };
 
   const onTrackAudioChange = (tid: number, f: File | null) => {
-    setTracks((prev) => prev.map((t) => (t.id === tid ? { ...t, _audioFile: f } : t)));
+    setTracks(prev => prev.map(t => t.id === tid ? { ...t, _audioFile: f } : t));
   };
 
   const toggleDeleteTrack = (tid: number) => {
-    setTracks((prev) => prev.map((t) => (t.id === tid ? { ...t, _deleted: !t._deleted } : t)));
+    setTracks(prev => prev.map(t => t.id === tid ? { ...t, _deleted: !t._deleted } : t));
   };
 
   const addNewTrackRow = () => {
-    setNewTracks((prev) => [...prev, { title: '', audio: null }]);
+    setNewTracks(prev => [...prev, { title: '', audio: null }]);
   };
 
   const removeNewTrackRow = (idx: number) => {
-    setNewTracks((prev) => prev.filter((_, i) => i !== idx));
+    setNewTracks(prev => prev.filter((_, i) => i !== idx));
   };
 
   const onNewTrackTitle = (idx: number, v: string) => {
-    setNewTracks((prev) => prev.map((t, i) => (i === idx ? { ...t, title: v } : t)));
+    setNewTracks(prev => prev.map((t, i) => i === idx ? { ...t, title: v } : t));
   };
 
   const onNewTrackAudio = (idx: number, f: File | null) => {
-    setNewTracks((prev) => prev.map((t, i) => (i === idx ? { ...t, audio: f } : t)));
+    setNewTracks(prev => prev.map((t, i) => i === idx ? { ...t, audio: f } : t));
+  };
+
+  const emitTracksUpdatedFromAlbum = (a: Album) => {
+    const updates = (a.musics || []).map(m => ({
+      id: Number(m.id),
+      name: m.title,
+      artist: m.artist_name || a.artist_name || 'Inconnu',
+      album: a.title,
+      album_image: (a.image || m.image || '') || undefined,
+      audio: m.audio || '',
+      duration: toDurationStr(m.duration),
+    }));
+    window.dispatchEvent(new CustomEvent('tracks:updated', { detail: { tracks: updates } }));
   };
 
   const saveAll = async () => {
     try {
       setSavingAll(true);
 
-      let didChange = false;
-
       if (albumMetaChanged) {
         const fd = new FormData();
         fd.append('title', title);
         if (imageFile) fd.append('image', imageFile);
         await updateAlbum(albumId, fd);
-        didChange = true;
       }
 
-      const toDelete = tracks.filter((t) => t._deleted);
-      if (toDelete.length > 0) {
-        for (const t of toDelete) {
-          await deleteTrack(t.id);
-        }
-        didChange = true;
+      const toDelete = tracks.filter(t => t._deleted);
+      for (const t of toDelete) {
+        await deleteTrack(t.id);
       }
 
-      const toUpdate = tracks.filter(
-        (t) => !t._deleted && ((t._title && t._title !== t.title) || !!t._audioFile)
+      const toUpdate = tracks.filter(t =>
+        !t._deleted && ((t._title && t._title !== t.title) || !!t._audioFile)
       );
-      if (toUpdate.length > 0) {
-        for (const t of toUpdate) {
-          const fd = new FormData();
-          if (t._title && t._title !== t.title) fd.append('title', t._title);
-          if (t._audioFile) fd.append('audio', t._audioFile);
-          await updateTrack(t.id, fd);
-        }
-        didChange = true;
+      for (const t of toUpdate) {
+        const fd = new FormData();
+        if (t._title && t._title !== t.title) fd.append('title', t._title);
+        if (t._audioFile) fd.append('audio', t._audioFile);
+        await updateTrack(t.id, fd);
       }
 
-      const toAdd = newTracks.filter((nt) => nt.title.trim() && nt.audio);
-      if (toAdd.length > 0) {
-        for (const nt of toAdd) {
-          const fd = new FormData();
-          fd.append('title', nt.title.trim());
-          fd.append('audio', nt.audio as File);
-          await addTrackToAlbum(albumId, fd);
-        }
-        didChange = true;
+      const toAdd = newTracks.filter(nt => nt.title.trim() && nt.audio);
+      for (const nt of toAdd) {
+        const fd = new FormData();
+        fd.append('title', nt.title.trim());
+        fd.append('audio', nt.audio as File);
+        await addTrackToAlbum(albumId, fd);
       }
 
-      if (didChange) {
-        emitLibraryChanged();
-      }
+      // recharger l'album à jour, puis émettre un évènement pour rafraîchir la queue
+      const fresh = await getAlbumById(albumId);
+      emitTracksUpdatedFromAlbum(fresh);
 
       await load();
     } catch (e) {
@@ -177,8 +182,12 @@ const EditAlbumPage: React.FC = () => {
   const removeAlbum = async () => {
     try {
       setDeletingAlbum(true);
-      await deleteAlbum(albumId);
-      emitLibraryChanged();
+      const res = await deleteAlbum(albumId);
+      // si l’API renvoie les ids supprimés (voir controller) ⇒ purge queue
+      const ids: number[] = Array.isArray(res?.deleted_track_ids) ? res.deleted_track_ids : [];
+      if (ids.length) {
+        window.dispatchEvent(new CustomEvent('tracks:deleted', { detail: { ids } }));
+      }
       navigate('/my-music');
     } catch (e) {
       console.error(e);
@@ -190,9 +199,7 @@ const EditAlbumPage: React.FC = () => {
   if (loading) {
     return (
       <div className="import-page">
-        <div className="import-content">
-          <h2>Chargement…</h2>
-        </div>
+        <div className="import-content"><h2>Chargement…</h2></div>
       </div>
     );
   }
@@ -200,9 +207,7 @@ const EditAlbumPage: React.FC = () => {
   if (!album) {
     return (
       <div className="import-page">
-        <div className="import-content">
-          <h2>Album introuvable.</h2>
-        </div>
+        <div className="import-content"><h2>Album introuvable.</h2></div>
       </div>
     );
   }
@@ -220,7 +225,7 @@ const EditAlbumPage: React.FC = () => {
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={e => setTitle(e.target.value)}
               placeholder="Nom de l’album"
             />
           </div>
@@ -228,7 +233,7 @@ const EditAlbumPage: React.FC = () => {
           <div className="import-form">
             <label>Image de l’album</label>
             <input type="file" accept="image/*" onChange={onAlbumImageChange} />
-            <small style={{ opacity: 0.8 }}>
+            <small style={{opacity:.8}}>
               Cette image s’applique automatiquement à toutes les musiques de l’album.
             </small>
           </div>
@@ -237,7 +242,7 @@ const EditAlbumPage: React.FC = () => {
         <div className="form-section" style={{ marginTop: 24 }}>
           <h3>Titres</h3>
 
-          {(tracks || []).map((t) => {
+          {(tracks || []).map(t => {
             const hasAudio = Boolean(t.audio);
             const chosen = t._audioFile?.name;
             const audioLabel = hasAudio ? 'Modifier le fichier' : 'Choisir un fichier';
@@ -257,24 +262,27 @@ const EditAlbumPage: React.FC = () => {
                   type="text"
                   placeholder="Titre du morceau"
                   value={t._title ?? ''}
-                  onChange={(e) => onTrackTitleChange(t.id, e.target.value)}
+                  onChange={e => onTrackTitleChange(t.id, e.target.value)}
                   disabled={t._deleted}
                 />
 
-                <div className="import-form" style={{ margin: 0 }}>
+                <div className="import-form" style={{margin:0}}>
                   <label>{audioLabel}</label>
                   <input
                     type="file"
                     accept="audio/*"
-                    onChange={(e) => onTrackAudioChange(t.id, e.target.files?.[0] ?? null)}
+                    onChange={e => onTrackAudioChange(t.id, e.target.files?.[0] ?? null)}
                     disabled={t._deleted}
                   />
-                  <small style={{ opacity: 0.8, display: 'block', marginTop: 6 }}>
+                  <small style={{opacity:.8, display:'block', marginTop:6}}>
                     {audioInfo}
                   </small>
                 </div>
 
-                <button className="remove-btn" onClick={() => toggleDeleteTrack(t.id)}>
+                <button
+                  className="remove-btn"
+                  onClick={() => toggleDeleteTrack(t.id)}
+                >
                   {t._deleted ? 'Annuler la suppression' : 'Supprimer'}
                 </button>
               </div>
@@ -289,16 +297,16 @@ const EditAlbumPage: React.FC = () => {
                 type="text"
                 placeholder="Titre du morceau *"
                 value={nt.title}
-                onChange={(e) => onNewTrackTitle(idx, e.target.value)}
+                onChange={e => onNewTrackTitle(idx, e.target.value)}
               />
-              <div className="import-form" style={{ margin: 0 }}>
+              <div className="import-form" style={{margin:0}}>
                 <label>Choisir un fichier *</label>
                 <input
                   type="file"
                   accept="audio/*"
-                  onChange={(e) => onNewTrackAudio(idx, e.target.files?.[0] ?? null)}
+                  onChange={e => onNewTrackAudio(idx, e.target.files?.[0] ?? null)}
                 />
-                <small style={{ opacity: 0.8, display: 'block', marginTop: 6 }}>
+                <small style={{opacity:.8, display:'block', marginTop:6}}>
                   {nt.audio ? nt.audio.name : 'Aucun fichier'}
                 </small>
               </div>
@@ -323,7 +331,9 @@ const EditAlbumPage: React.FC = () => {
           <button className="remove-btn" onClick={removeAlbum} disabled={deletingAlbum}>
             {deletingAlbum ? 'Suppression…' : 'Supprimer l’album'}
           </button>
-          <button onClick={() => navigate(`/album/${albumId}`)}>← Retour à l’album</button>
+          <button onClick={() => navigate(`/album/${albumId}`)}>
+            ← Retour à l’album
+          </button>
         </div>
       </div>
     </div>
