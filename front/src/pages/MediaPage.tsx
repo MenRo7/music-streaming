@@ -130,7 +130,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
               icon={isLiked ? faHeartSolid : faHeartRegular}
               className={`control-icon heart-icon ${isLiked ? 'liked' : ''}`}
               onClick={onToggleLike}
-              title={isLiked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+              title={isLiked ? 'Supprimer des favoris' : 'Ajouter aux favoris'}
             />
           )}
 

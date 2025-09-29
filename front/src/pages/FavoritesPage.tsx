@@ -96,7 +96,7 @@ const FavoritesPage: React.FC = () => {
               onToggle: (playlistId, checked) => handleTogglePlaylist(playlistId, checked, song.id),
             },
             {
-              label: 'Retirer des favoris',
+              label: 'Supprimer des favoris',
               onClick: async () => {
                 await removeFavorite(song.id);
                 setSongs((prev) => prev.filter((s) => s.id !== song.id));

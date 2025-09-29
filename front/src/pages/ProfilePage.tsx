@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import {
@@ -11,7 +11,7 @@ import {
 
 import { getUserMusics, getUserAlbums, deleteMusic } from "../apis/MyMusicService";
 import { getPlaylists, addMusicToPlaylist, removeMusicFromPlaylist } from "../apis/PlaylistService";
-import { addFavorite } from "../apis/FavoritesService";
+import { addFavorite, removeFavorite, getFavorites } from "../apis/FavoritesService";
 import { usePlayer } from "../apis/PlayerContext";
 
 import EditProfileModal from "../components/EditProfileModal";
@@ -47,6 +47,9 @@ const ProfilePage: React.FC = () => {
   // abonnement
   const [subscribed, setSubscribed] = useState<boolean>(false);
   const [subPending, setSubPending] = useState<boolean>(false);
+
+  // --- Favoris (état local pour les IDs favoris) ---
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -132,6 +135,23 @@ const ProfilePage: React.FC = () => {
     void loadAll();
   }, [loadAll]);
 
+  // Charger les favoris au montage
+  useEffect(() => {
+    (async () => {
+      try {
+        const favs = await getFavorites();
+        const ids = new Set<number>(
+          (Array.isArray(favs) ? favs : [])
+            .map((m: any) => Number(m.id))
+            .filter(Number.isFinite)
+        );
+        setFavoriteIds(ids);
+      } catch (e) {
+        console.error("Erreur chargement favoris", e);
+      }
+    })();
+  }, []);
+
   const isSelf = useMemo(
     () => Boolean(viewer?.id) && Boolean(user?.id) && Number(viewer.id) === Number(user.id),
     [viewer, user]
@@ -178,13 +198,33 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const addToFavoritesLocal = async (id: number) => {
+    await addFavorite(id);
+    setFavoriteIds(prev => new Set(prev).add(Number(id)));
+  };
+  const removeFromFavoritesLocal = async (id: number) => {
+    await removeFavorite(id);
+    setFavoriteIds(prev => {
+      const s = new Set(prev);
+      s.delete(Number(id));
+      return s;
+    });
+  };
+  const isFavorite = (id: number) => favoriteIds.has(Number(id));
+
   const songActions = useCallback(
     (song: UISong) => {
       const base = [
         {
-          label: "Ajouter aux favoris",
-          onClick: () =>
-            addFavorite(song.id).catch((e) => console.error("Ajout aux favoris échoué", e)),
+          label: isFavorite(song.id) ? "Supprimer des favoris" : "Ajouter aux favoris",
+          onClick: async () => {
+            try {
+              if (isFavorite(song.id)) await removeFromFavoritesLocal(song.id);
+              else await addToFavoritesLocal(song.id);
+            } catch (e) {
+              console.error("Maj favoris échouée", e);
+            }
+          },
         },
         {
           label: "Ajouter à une playlist",
@@ -220,7 +260,7 @@ const ProfilePage: React.FC = () => {
 
       return base;
     },
-    [addToQueue, navigate, isSelf]
+    [addToQueue, navigate, isSelf, favoriteIds] // dépend des favoris pour rafraîchir le label
   );
 
   const hasAvatar = Boolean(user?.profile_image);

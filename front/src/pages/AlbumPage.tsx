@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import MediaPage from './MediaPage';
@@ -6,7 +6,7 @@ import { getAlbumById, Album, likeAlbum, unlikeAlbum } from '../apis/AlbumServic
 import { usePlayer, Track } from '../apis/PlayerContext';
 import { useUser } from '../apis/UserContext';
 
-import { addFavorite } from '../apis/FavoritesService';
+import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 
 const toDurationStr = (v?: string | number | null) => {
@@ -36,6 +36,9 @@ const AlbumPage: React.FC = () => {
     Boolean(currentUserId) &&
     Number(album!.user_id) === Number(currentUserId);
 
+  // --- Favoris (état local pour les IDs favoris) ---
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+
   const fetchAlbum = useCallback(async () => {
     if (!id) return;
     try {
@@ -55,6 +58,37 @@ const AlbumPage: React.FC = () => {
   useEffect(() => {
     fetchAlbum();
   }, [fetchAlbum]);
+
+  // Charger les favoris au montage
+  useEffect(() => {
+    (async () => {
+      try {
+        const favs = await getFavorites();
+        const ids = new Set<number>(
+          (Array.isArray(favs) ? favs : [])
+            .map((m: any) => Number(m.id))
+            .filter(Number.isFinite)
+        );
+        setFavoriteIds(ids);
+      } catch (e) {
+        console.error('Erreur chargement favoris', e);
+      }
+    })();
+  }, []);
+
+  const isFavorite = (songId: number) => favoriteIds.has(Number(songId));
+  const addToFavorites = async (songId: number) => {
+    await addFavorite(songId);
+    setFavoriteIds(prev => new Set(prev).add(Number(songId)));
+  };
+  const removeFromFavorites = async (songId: number) => {
+    await removeFavorite(songId);
+    setFavoriteIds(prev => {
+      const s = new Set(prev);
+      s.delete(Number(songId));
+      return s;
+    });
+  };
 
   const mediaSongs: (Track & { dateAdded?: string; playlistIds?: number[] })[] = useMemo(() => {
     if (!album?.musics) return [];
@@ -118,11 +152,15 @@ const AlbumPage: React.FC = () => {
         const baseline = Array.from(new Set(song.playlistIds ?? [])) as number[];
         return [
           {
-            label: 'Ajouter aux favoris',
-            onClick: () =>
-              addFavorite(song.id).catch((e) =>
-                console.error('Ajout aux favoris échoué', e)
-              ),
+            label: isFavorite(song.id) ? 'Supprimer des favoris' : 'Ajouter aux favoris',
+            onClick: async () => {
+              try {
+                if (isFavorite(song.id)) await removeFromFavorites(song.id);
+                else await addToFavorites(song.id);
+              } catch (e) {
+                console.error('Maj favoris échouée', e);
+              }
+            },
           },
           {
             label: 'Ajouter à une playlist',

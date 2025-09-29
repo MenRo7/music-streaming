@@ -11,7 +11,7 @@ import {
   unlikePlaylist,
 } from '../apis/PlaylistService';
 import { usePlaylists } from '../apis/PlaylistContext';
-import { addFavorite } from '../apis/FavoritesService';
+import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
 import { usePlayer } from '../apis/PlayerContext';
 import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
 import { useUser } from '../apis/UserContext';
@@ -27,6 +27,9 @@ const PlaylistPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [liked, setLiked] = useState(false);
 
+  // --- Favoris (état local pour les IDs favoris) ---
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+
   const fetchPlaylist = async () => {
     if (!id) return;
     try {
@@ -41,6 +44,36 @@ const PlaylistPage: React.FC = () => {
   useEffect(() => {
     fetchPlaylist();
   }, [id]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const favs = await getFavorites();
+        const ids = new Set<number>(
+          (Array.isArray(favs) ? favs : [])
+            .map((m: any) => Number(m.id))
+            .filter(Number.isFinite)
+        );
+        setFavoriteIds(ids);
+      } catch (e) {
+        console.error('Erreur chargement favoris', e);
+      }
+    })();
+  }, []);
+
+  const isFavorite = (songId: number) => favoriteIds.has(Number(songId));
+  const addToFavorites = async (songId: number) => {
+    await addFavorite(songId);
+    setFavoriteIds(prev => new Set(prev).add(Number(songId)));
+  };
+  const removeFromFavorites = async (songId: number) => {
+    await removeFavorite(songId);
+    setFavoriteIds(prev => {
+      const s = new Set(prev);
+      s.delete(Number(songId));
+      return s;
+    });
+  };
 
   const isOwner = useMemo(() => {
     if (!playlist || !viewer) return false;
@@ -121,9 +154,14 @@ const PlaylistPage: React.FC = () => {
 
         const base = [
           {
-            label: 'Ajouter aux favoris',
-            onClick: () => {
-              addFavorite(song.id).catch((e) => console.error('Ajout aux favoris échoué', e));
+            label: isFavorite(song.id) ? 'Supprimer des favoris' : 'Ajouter aux favoris',
+            onClick: async () => {
+              try {
+                if (isFavorite(song.id)) await removeFromFavorites(song.id);
+                else await addToFavorites(song.id);
+              } catch (e) {
+                console.error('Maj favoris échouée', e);
+              }
             },
           },
           {
