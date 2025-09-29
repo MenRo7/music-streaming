@@ -38,8 +38,6 @@ const TrackCard: React.FC<{
     </button>
   </div>
 );
-
-// Types
 interface LikedProfile {
   id: number;
   name: string;

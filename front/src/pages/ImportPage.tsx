@@ -48,9 +48,7 @@ const ImportPage = () => {
 
     try {
       await createMusic(formData);
-      // rafraîchir la lib côté UI si besoin
       window.dispatchEvent(new Event('library:changed'));
-      // 👉 redirection après import d'une musique
       navigate('/my-music');
     } catch (error) {
       console.error('Error adding music:', error);
@@ -77,9 +75,7 @@ const ImportPage = () => {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
       });
-      // rafraîchir la lib côté UI si besoin
       window.dispatchEvent(new Event('library:changed'));
-      // 👉 redirection après import d'un album
       navigate('/my-music');
     } catch (error) {
       console.error('Error adding album:', error);

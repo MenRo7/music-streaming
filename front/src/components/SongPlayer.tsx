@@ -37,7 +37,6 @@ const SongPlayer: React.FC = () => {
   const [selectedPlaylists, setSelectedPlaylists] = useState<number[]>([]);
   const [pending, setPending] = useState<Record<number, boolean>>({});
 
-  // 🔔 synchroniser si une autre vue change les playlists
   useEffect(() => {
     const onExternalUpdate = (e: Event) => {
       const ce = e as CustomEvent<any>;
@@ -239,9 +238,7 @@ const SongPlayer: React.FC = () => {
       ? (base.includes(pid) ? base : [...base, pid])
       : base.filter(id => id !== pid);
 
-    // Optimiste local
     setSelectedPlaylists(next);
-    // 🔔 notifier les autres
     window.dispatchEvent(
       new CustomEvent('track:playlist-updated', {
         detail: { trackId: Number(trackId), playlistIds: next.map(Number) },
@@ -253,7 +250,6 @@ const SongPlayer: React.FC = () => {
       if (checked) await addMusicToPlaylist(pid, trackId);
       else await removeMusicFromPlaylist(pid, trackId);
     } catch {
-      // rollback simple: inverser
       const rollback = checked
         ? next.filter(id => id !== pid)
         : (next.includes(pid) ? next : [...next, pid]);

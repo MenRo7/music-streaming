@@ -43,12 +43,8 @@ const ProfilePage: React.FC = () => {
   const [albums, setAlbums] = useState<any[]>([]);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // abonnement
   const [subscribed, setSubscribed] = useState<boolean>(false);
   const [subPending, setSubPending] = useState<boolean>(false);
-
-  // --- Favoris (état local pour les IDs favoris) ---
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
 
   const loadAll = useCallback(async () => {
@@ -135,7 +131,6 @@ const ProfilePage: React.FC = () => {
     void loadAll();
   }, [loadAll]);
 
-  // Charger les favoris au montage
   useEffect(() => {
     (async () => {
       try {
@@ -260,7 +255,7 @@ const ProfilePage: React.FC = () => {
 
       return base;
     },
-    [addToQueue, navigate, isSelf, favoriteIds] // dépend des favoris pour rafraîchir le label
+    [addToQueue, navigate, isSelf, favoriteIds]
   );
 
   const hasAvatar = Boolean(user?.profile_image);

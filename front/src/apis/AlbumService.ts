@@ -1,4 +1,3 @@
-// src/apis/AlbumService.ts
 import axios from './api';
 import { API_URL } from './api';
 

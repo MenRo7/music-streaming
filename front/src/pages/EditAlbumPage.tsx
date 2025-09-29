@@ -177,8 +177,6 @@ const EditAlbumPage: React.FC = () => {
       const fresh = await getAlbumById(albumId);
       emitTracksUpdatedFromAlbum(fresh);
       window.dispatchEvent(new Event('library:changed'));
-
-      // 👉 redirection vers la page album après modifications
       navigate(`/album/${albumId}`);
     } catch (e) {
       console.error(e);

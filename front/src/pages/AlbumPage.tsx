@@ -36,7 +36,6 @@ const AlbumPage: React.FC = () => {
     Boolean(currentUserId) &&
     Number(album!.user_id) === Number(currentUserId);
 
-  // --- Favoris (état local pour les IDs favoris) ---
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
 
   const fetchAlbum = useCallback(async () => {
@@ -59,7 +58,6 @@ const AlbumPage: React.FC = () => {
     fetchAlbum();
   }, [fetchAlbum]);
 
-  // Charger les favoris au montage
   useEffect(() => {
     (async () => {
       try {

@@ -51,8 +51,6 @@ const SongList = <T extends UISong>({
   onArtistClick,
 }: SongListProps<T>) => {
   const { playSong, currentTrackId, isPlaying } = usePlayer();
-
-  // Override local par song.id (reste inchangé si aucune action locale)
   const [overridePlaylists, setOverridePlaylists] = useState<Record<number, number[]>>({});
 
   useEffect(() => {
@@ -85,7 +83,6 @@ const SongList = <T extends UISong>({
         ? (base.includes(playlistId) ? base : [...base, playlistId])
         : base.filter(id => id !== playlistId);
 
-      // 🔔 informer les autres composants
       window.dispatchEvent(
         new CustomEvent('track:playlist-updated', {
           detail: { trackId: Number(song.id), playlistIds: next.map(Number) },

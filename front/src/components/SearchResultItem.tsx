@@ -14,7 +14,7 @@ const DEFAULT_IMAGE = '/default-playlist-image.png';
 
 const SearchResultItem: React.FC<SearchResultItemProps> = ({ image, label, isRounded, onClick, children }) => {
   return (
-    <li className="search-result-item" onClick={onClick}>  {/* Ajout de onClick sur l'élément */}
+    <li className="search-result-item" onClick={onClick}>
       {image && (
         <img
           src={image || DEFAULT_IMAGE}

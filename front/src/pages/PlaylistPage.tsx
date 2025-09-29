@@ -26,8 +26,6 @@ const PlaylistPage: React.FC = () => {
   const [playlist, setPlaylist] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [liked, setLiked] = useState(false);
-
-  // --- Favoris (état local pour les IDs favoris) ---
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
 
   const fetchPlaylist = async () => {

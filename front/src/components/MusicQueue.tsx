@@ -33,7 +33,6 @@ const MusicQueue: React.FC = () => {
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    // Synchronise si un autre composant met à jour les playlists d'un track
     const onExternalUpdate = (e: Event) => {
       const ce = e as CustomEvent<any>;
       const { trackId, playlistIds } = ce.detail || {};
@@ -97,7 +96,6 @@ const MusicQueue: React.FC = () => {
         ? (cur.includes(pid) ? cur : [...cur, pid])
         : cur.filter(id => id !== pid);
 
-      // 🔔 informer les autres composants (SongList, SongPlayer…)
       window.dispatchEvent(
         new CustomEvent('track:playlist-updated', {
           detail: { trackId: Number(trackId), playlistIds: next.map(Number) },
@@ -118,7 +116,6 @@ const MusicQueue: React.FC = () => {
           ? cur.filter(id => id !== pid)
           : (cur.includes(pid) ? cur : [...cur, pid]);
 
-        // rollback + notifier (pour rester cohérent partout)
         window.dispatchEvent(
           new CustomEvent('track:playlist-updated', {
             detail: { trackId: Number(trackId), playlistIds: rollback.map(Number) },
@@ -134,9 +131,6 @@ const MusicQueue: React.FC = () => {
       });
     }
   };
-
-  // ... le reste du composant est identique (drag & drop, rendu, etc.)
-  // -------------- Rendu inchangé en-dessous ----------------
 
   const handleDragStart = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
     if (isInteractive(e.target as HTMLElement)) { e.preventDefault(); return; }
