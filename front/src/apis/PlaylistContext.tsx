@@ -67,12 +67,20 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       void fetchPlaylists();
     };
 
+    const onLibChanged = () => {
+      void fetchPlaylists();
+    };
+
     window.addEventListener('user:loaded', onUserLoaded);
     window.addEventListener('auth:changed', onAuthChanged);
+    window.addEventListener('library:changed', onLibChanged);
+    window.addEventListener('playlists:changed', onLibChanged);
 
     return () => {
       window.removeEventListener('user:loaded', onUserLoaded);
       window.removeEventListener('auth:changed', onAuthChanged);
+      window.removeEventListener('library:changed', onLibChanged);
+      window.removeEventListener('playlists:changed', onLibChanged);
     };
   }, [fetchPlaylists]);
 

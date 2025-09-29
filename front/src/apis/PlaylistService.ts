@@ -19,8 +19,9 @@ export const getPlaylistById = async (id: number) => {
 };
 
 export const getPlaylists = async () => {
-  if (getAuthHeaders()) return [];
-  const { data } = await axios.get(`${API_URL}/playlists`, getAuthHeaders());
+  const headers = getAuthHeaders();
+  if (!headers.headers.Authorization) return [];
+  const { data } = await axios.get(`${API_URL}/playlists`, headers);
   return data;
 };
 
@@ -32,6 +33,8 @@ export const createPlaylist = async (playlist: FormData) => {
       'Content-Type': 'multipart/form-data',
     },
   });
+  window.dispatchEvent(new Event('library:changed'));
+  window.dispatchEvent(new Event('playlists:changed'));
   return response.data;
 };
 
@@ -44,11 +47,15 @@ export const updatePlaylist = async (id: number, playlist: FormData) => {
       'Content-Type': 'multipart/form-data',
     },
   });
+  window.dispatchEvent(new Event('library:changed'));
+  window.dispatchEvent(new Event('playlists:changed'));
   return response.data;
 };
 
 export const deletePlaylist = async (id: number) => {
   const response = await axios.delete(`${API_URL}/playlists/${id}`, getAuthHeaders());
+  window.dispatchEvent(new Event('library:changed'));
+  window.dispatchEvent(new Event('playlists:changed'));
   return response.data;
 };
 
