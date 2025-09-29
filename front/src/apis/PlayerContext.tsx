@@ -517,8 +517,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
   }, [applyCurrentToCompatFields, mergeUpdate, currentItem]);
 
-  // ---------------------------------------------------------------------
-
   const value: PlayerContextType = useMemo(() => ({
     audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
     playSong, setIsPlaying,

@@ -5,7 +5,7 @@ import { usePlaylists } from '../apis/PlaylistContext';
 import { getLikesSummary } from '../apis/UserService';
 
 import PlaylistCard from './PlaylistCard';
-import ProfileCircleCard from './PrrofileCircleCard';
+import ProfileCircleCard from './ProfileCircleCard';
 
 import CreateEditPlaylistModal from './CreateEditPlaylistModal';
 
@@ -134,7 +134,7 @@ const Sidebar: React.FC = () => {
                   key={`sub-${u.id}`}
                   name={u.name}
                   image={u.image || undefined}
-                  onClick={() => navigate(`/profile/${u.id}`)}
+                  onClick={() => navigate(`/profile?user=${u.id}`)}
                 />
               ))}
             </div>

@@ -144,7 +144,7 @@ const AlbumPage: React.FC = () => {
       }}
       onAlbumClick={() => navigate(`/album/${id}`)}
       onArtistClick={() => {
-        if (album.user_id) navigate(`/profile/${album.user_id}`);
+        if (album.user_id) navigate(`/profile?user=${album.user_id}`);
       }}
     />
   );

@@ -309,9 +309,9 @@ const ProfilePage: React.FC = () => {
             }}
             onArtistClick={(song) => {
               const s: any = song;
-              if (s.artist_user_id) navigate(`/profile/${s.artist_user_id}`);
+              if (s.artist_user_id) navigate(`/profile?user=${s.artist_user_id}`);
               else if (isSelf) navigate(`/profile`);
-              else if (user?.id) navigate(`/profile/${user.id}`);
+              else if (user?.id) navigate(`/profile?user=${user.id}`);
             }}
           />
         </div>
