@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { API_URL } from '../apis/api';
 import { createMusic } from '../apis/MusicService';
+import { useNavigate } from 'react-router-dom';
 
 import '../styles/ImportPage.css';
 
@@ -20,6 +21,8 @@ const ImportPage = () => {
   const [musicImage, setMusicImage] = useState<File | null>(null);
   const [importType, setImportType] = useState<'music' | 'album'>('music');
 
+  const navigate = useNavigate();
+
   const addSong = () => {
     setSongs([...songs, { title: '', file: null }]);
   };
@@ -36,19 +39,27 @@ const ImportPage = () => {
   };
 
   const submitMusic = async () => {
+    if (!musicTitle.trim() || !musicFile) return;
+
     const formData = new FormData();
     formData.append('title', musicTitle);
-    formData.append('audio', musicFile!);
+    formData.append('audio', musicFile);
     if (musicImage) formData.append('image', musicImage);
 
     try {
-      await createMusic(formData); 
+      await createMusic(formData);
+      // rafraîchir la lib côté UI si besoin
+      window.dispatchEvent(new Event('library:changed'));
+      // 👉 redirection après import d'une musique
+      navigate('/my-music');
     } catch (error) {
       console.error('Error adding music:', error);
     }
   };
 
   const submitAlbum = async () => {
+    if (!albumName.trim()) return;
+
     const formData = new FormData();
     formData.append('title', albumName);
     formData.append('type', albumType);
@@ -62,8 +73,14 @@ const ImportPage = () => {
 
     try {
       await axios.post(`${API_URL}/album`, formData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
       });
+      // rafraîchir la lib côté UI si besoin
+      window.dispatchEvent(new Event('library:changed'));
+      // 👉 redirection après import d'un album
+      navigate('/my-music');
     } catch (error) {
       console.error('Error adding album:', error);
     }
@@ -78,8 +95,8 @@ const ImportPage = () => {
           <h3>Choisissez le type d'importation</h3>
           <div className="import-form">
             <label>Sélectionnez le type</label>
-            <select 
-              value={importType} 
+            <select
+              value={importType}
               onChange={(e) => setImportType(e.target.value as 'music' | 'album')}
             >
               <option value="music">Musique</option>

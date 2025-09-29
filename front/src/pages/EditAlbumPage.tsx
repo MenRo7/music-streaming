@@ -176,8 +176,10 @@ const EditAlbumPage: React.FC = () => {
 
       const fresh = await getAlbumById(albumId);
       emitTracksUpdatedFromAlbum(fresh);
+      window.dispatchEvent(new Event('library:changed'));
 
-      await load();
+      // 👉 redirection vers la page album après modifications
+      navigate(`/album/${albumId}`);
     } catch (e) {
       console.error(e);
     } finally {
@@ -189,7 +191,6 @@ const EditAlbumPage: React.FC = () => {
     try {
       setDeletingAlbum(true);
       const res = await deleteAlbum(albumId);
-      // si l’API renvoie les ids supprimés (voir controller) ⇒ purge queue
       const ids: number[] = Array.isArray(res?.deleted_track_ids) ? res.deleted_track_ids : [];
       if (ids.length) {
         window.dispatchEvent(new CustomEvent('tracks:deleted', { detail: { ids } }));
