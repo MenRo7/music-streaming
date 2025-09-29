@@ -37,6 +37,21 @@ const SongPlayer: React.FC = () => {
   const [selectedPlaylists, setSelectedPlaylists] = useState<number[]>([]);
   const [pending, setPending] = useState<Record<number, boolean>>({});
 
+  // 🔔 synchroniser si une autre vue change les playlists
+  useEffect(() => {
+    const onExternalUpdate = (e: Event) => {
+      const ce = e as CustomEvent<any>;
+      const { trackId, playlistIds } = ce.detail || {};
+      const curId = Number((currentItem as any)?.id);
+      if (!Number.isFinite(trackId) || !Number.isFinite(curId)) return;
+      if (Number(trackId) !== curId) return;
+      setSelectedPlaylists((playlistIds || []).map(Number));
+      setPending({});
+    };
+    window.addEventListener('track:playlist-updated', onExternalUpdate as EventListener);
+    return () => window.removeEventListener('track:playlist-updated', onExternalUpdate as EventListener);
+  }, [currentItem?.qid]);
+
   const getExistingIds = (): number[] => {
     if (!currentItem) return [];
     const anyItem = currentItem as any;
@@ -218,26 +233,37 @@ const SongPlayer: React.FC = () => {
     const pid = Number(playlistId);
     if (!Number.isFinite(trackId) || !Number.isFinite(pid)) return;
 
-    const base = selectedPlaylists.length ? selectedPlaylists : getExistingIds();
+    const base = (selectedPlaylists.length ? selectedPlaylists : getExistingIds()).map(Number);
 
-    setSelectedPlaylists(prev => {
-      const cur = prev.length ? prev : base;
-      return checked
-        ? (cur.includes(pid) ? cur : [...cur, pid])
-        : cur.filter(id => id !== pid);
-    });
+    const next = checked
+      ? (base.includes(pid) ? base : [...base, pid])
+      : base.filter(id => id !== pid);
+
+    // Optimiste local
+    setSelectedPlaylists(next);
+    // 🔔 notifier les autres
+    window.dispatchEvent(
+      new CustomEvent('track:playlist-updated', {
+        detail: { trackId: Number(trackId), playlistIds: next.map(Number) },
+      })
+    );
+
     setPending(p => ({ ...p, [pid]: true }));
-
     try {
       if (checked) await addMusicToPlaylist(pid, trackId);
       else await removeMusicFromPlaylist(pid, trackId);
     } catch {
-      setSelectedPlaylists(prev => {
-        const cur = prev.length ? prev : base;
-        return checked
-          ? cur.filter(id => id !== pid)
-          : (cur.includes(pid) ? cur : [...cur, pid]);
-      });
+      // rollback simple: inverser
+      const rollback = checked
+        ? next.filter(id => id !== pid)
+        : (next.includes(pid) ? next : [...next, pid]);
+
+      setSelectedPlaylists(rollback);
+      window.dispatchEvent(
+        new CustomEvent('track:playlist-updated', {
+          detail: { trackId: Number(trackId), playlistIds: rollback.map(Number) },
+        })
+      );
     } finally {
       setPending(p => {
         const { [pid]: _, ...rest } = p;
@@ -308,8 +334,8 @@ const SongPlayer: React.FC = () => {
             max={100}
             value={progressPercent}
             step={0.1}
-            onMouseDown={onSeekStart}
-            onTouchStart={onSeekStart}
+            onMouseDown={() => setIsSeeking(true)}
+            onTouchStart={() => setIsSeeking(true)}
             onChange={onSeekChange}
             onMouseUp={onSeekEnd}
             onTouchEnd={onSeekEnd}

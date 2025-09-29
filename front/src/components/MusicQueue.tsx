@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList, faTrash, faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
@@ -31,6 +31,34 @@ const MusicQueue: React.FC = () => {
 
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Synchronise si un autre composant met à jour les playlists d'un track
+    const onExternalUpdate = (e: Event) => {
+      const ce = e as CustomEvent<any>;
+      const { trackId, playlistIds } = ce.detail || {};
+      if (!Number.isFinite(trackId)) return;
+
+      const mapUpdates: Record<string, number[]> = {};
+      if (currentItem && Number((currentItem as any).id) === Number(trackId)) {
+        mapUpdates[currentItem.qid] = (playlistIds || []).map(Number);
+      }
+      queueManual.forEach((t) => {
+        if (Number((t as any).id) === Number(trackId)) mapUpdates[t.qid] = (playlistIds || []).map(Number);
+      });
+      queueAuto.forEach((t) => {
+        if (Number((t as any).id) === Number(trackId)) mapUpdates[t.qid] = (playlistIds || []).map(Number);
+      });
+
+      if (Object.keys(mapUpdates).length) {
+        setQueuePlaylists((prev) => ({ ...prev, ...mapUpdates }));
+      }
+    };
+
+    window.addEventListener('track:playlist-updated', onExternalUpdate as EventListener);
+    return () => window.removeEventListener('track:playlist-updated', onExternalUpdate as EventListener);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentItem?.qid, queueManual.length, queueAuto.length]);
 
   const isInteractive = (el: HTMLElement | null): boolean =>
     !!el?.closest('button, [role="button"], a, input, textarea, select, .mq-cover-play, .dropdown-wrapper');
@@ -68,6 +96,14 @@ const MusicQueue: React.FC = () => {
       const next = checked
         ? (cur.includes(pid) ? cur : [...cur, pid])
         : cur.filter(id => id !== pid);
+
+      // 🔔 informer les autres composants (SongList, SongPlayer…)
+      window.dispatchEvent(
+        new CustomEvent('track:playlist-updated', {
+          detail: { trackId: Number(trackId), playlistIds: next.map(Number) },
+        })
+      );
+
       return { ...prev, [qid]: next };
     });
 
@@ -81,6 +117,14 @@ const MusicQueue: React.FC = () => {
         const rollback = checked
           ? cur.filter(id => id !== pid)
           : (cur.includes(pid) ? cur : [...cur, pid]);
+
+        // rollback + notifier (pour rester cohérent partout)
+        window.dispatchEvent(
+          new CustomEvent('track:playlist-updated', {
+            detail: { trackId: Number(trackId), playlistIds: rollback.map(Number) },
+          })
+        );
+
         return { ...prev, [qid]: rollback };
       });
     } finally {
@@ -90,6 +134,9 @@ const MusicQueue: React.FC = () => {
       });
     }
   };
+
+  // ... le reste du composant est identique (drag & drop, rendu, etc.)
+  // -------------- Rendu inchangé en-dessous ----------------
 
   const handleDragStart = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
     if (isInteractive(e.target as HTMLElement)) { e.preventDefault(); return; }
@@ -234,8 +281,8 @@ const MusicQueue: React.FC = () => {
                     className={`mq-item draggable ${overIndex === idx ? 'drag-over' : ''}`}
                     draggable
                     onDragStart={(e) => handleDragStart(e, idx)}
-                    onDragEnter={(e) => handleDragEnter(e, idx)}
-                    onDragOver={handleDragOver}
+                    onDragEnter={(e) => setOverIndex(idx)}
+                    onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => handleDrop(e, idx)}
                     onDragEnd={handleDragEnd}
                     title="Ajouté manuellement"
