@@ -482,8 +482,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       });
       setQueueManual(list => list.map(it => mergeUpdate(it, map)));
       setQueueAuto(list => list.map(it => mergeUpdate(it, map)));
-
-      // mettre aussi à jour la collection (lecture auto dès la source)
       setCollection(cols => cols.map(c => {
         const u = map.get(c.id);
         return u ? { ...c,
@@ -498,15 +496,19 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const onTracksDeleted = (e: any) => {
-      const ids: number[] = e?.detail?.ids || [];
+      const ids: number[] = (e?.detail?.ids || []).map(Number).filter(Number.isFinite);
       if (!Array.isArray(ids) || ids.length === 0) return;
 
       setQueueManual(list => list.filter(it => !ids.includes(it.id)));
       setQueueAuto(list => list.filter(it => !ids.includes(it.id)));
       setHistory(list => list.filter(it => !ids.includes(it.id)));
-      setCurrentItem(ci => (ci && ids.includes(ci.id) ? null : ci));
-      // Si on supprime le courant, stoppe la lecture
-      setIsPlaying(prev => (currentItem && currentItem.id && ids.includes(currentItem.id) ? false : prev));
+      setCurrentItem(ci => {
+        if (ci && ids.includes(ci.id)) {
+          setIsPlaying(false);
+          return null;
+        }
+        return ci;
+      });
     };
 
     window.addEventListener('tracks:updated', onTracksUpdated);

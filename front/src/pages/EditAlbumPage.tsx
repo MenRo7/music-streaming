@@ -145,8 +145,15 @@ const EditAlbumPage: React.FC = () => {
       }
 
       const toDelete = tracks.filter(t => t._deleted);
+      const deletedIds: number[] = [];
       for (const t of toDelete) {
-        await deleteTrack(t.id);
+        try {
+          await deleteTrack(t.id);
+          deletedIds.push(Number(t.id));
+        } catch {}
+      }
+      if (deletedIds.length) {
+        window.dispatchEvent(new CustomEvent('tracks:deleted', { detail: { ids: deletedIds } }));
       }
 
       const toUpdate = tracks.filter(t =>
@@ -167,7 +174,6 @@ const EditAlbumPage: React.FC = () => {
         await addTrackToAlbum(albumId, fd);
       }
 
-      // recharger l'album à jour, puis émettre un évènement pour rafraîchir la queue
       const fresh = await getAlbumById(albumId);
       emitTracksUpdatedFromAlbum(fresh);
 

@@ -106,8 +106,12 @@ export const deleteTrack = async (trackId: number) => {
   if (!res.ok) throw new Error('Erreur suppression titre');
   const data = await res.json();
 
-  const ids: number[] = Array.isArray(data?.deleted_track_ids) ? data.deleted_track_ids : [];
+  const ids: number[] = Array.isArray(data?.deleted_track_ids) && data.deleted_track_ids.length
+    ? data.deleted_track_ids.map((n: any) => Number(n)).filter(Number.isFinite)
+    : [Number(trackId)];
+
   if (ids.length > 0) {
+    window.dispatchEvent(new CustomEvent('tracks:deleted', { detail: { ids } }));
     window.dispatchEvent(new CustomEvent('library:pruned', { detail: { trackIds: ids } }));
   }
   window.dispatchEvent(new Event('library:changed'));
