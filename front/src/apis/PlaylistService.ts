@@ -19,8 +19,9 @@ export const getPlaylistById = async (id: number) => {
 };
 
 export const getPlaylists = async () => {
-  const response = await axios.get(`${API_URL}/playlists`, getAuthHeaders());
-  return response.data;
+  if (getAuthHeaders()) return [];
+  const { data } = await axios.get(`${API_URL}/playlists`, getAuthHeaders());
+  return data;
 };
 
 export const createPlaylist = async (playlist: FormData) => {
