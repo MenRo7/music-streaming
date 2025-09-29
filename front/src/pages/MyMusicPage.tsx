@@ -76,7 +76,6 @@ const MyMusicPage: React.FC = () => {
           showArtist
           showDateAdded
           showDuration={false}
-          onArtistClick={() => navigate('/profile')}
           getActions={(song) => [
             {
               label: 'Ajouter aux favoris',

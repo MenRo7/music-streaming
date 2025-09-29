@@ -142,7 +142,6 @@ const AlbumPage: React.FC = () => {
           { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
         ];
       }}
-      onAlbumClick={() => navigate(`/album/${id}`)}
       onArtistClick={() => {
         if (album.user_id) navigate(`/profile?user=${album.user_id}`);
       }}

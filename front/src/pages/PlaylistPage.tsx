@@ -159,7 +159,7 @@ const PlaylistPage: React.FC = () => {
       }}
       onArtistClick={(song) => {
         const s: any = song;
-        if (s.artist_user_id) navigate(`/profile/${s.artist_user_id}`);
+        if (s.artist_user_id) navigate(`/profile?user=${s.artist_user_id}`);
       }}
     />
   );

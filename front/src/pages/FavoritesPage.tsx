@@ -83,7 +83,7 @@ const FavoritesPage: React.FC = () => {
           }}
           onArtistClick={(song) => {
             const s: any = song;
-            if (s.artist_user_id) navigate(`/profile/${s.artist_user_id}`);
+            if (s.artist_user_id) navigate(`/profile?user=${s.artist_user_id}`);
           }}
           getActions={(song) => [
             { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
