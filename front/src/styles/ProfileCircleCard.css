@@ -1,0 +1,35 @@
+.profile-circle {
+  width: 92px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.profile-circle__img,
+.profile-circle__placeholder {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #333;
+  display: grid;
+  place-items: center;
+  color: #cfc7ff;
+  font-weight: 700;
+  font-size: 20px;
+  border: 2px solid #5e2d91;
+  box-shadow: 0 0 0 2px rgba(94,45,145,0.2);
+}
+
+.profile-circle__name {
+  text-align: center;
+  font-size: 12px;
+  color: #eee;
+  max-width: 84px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

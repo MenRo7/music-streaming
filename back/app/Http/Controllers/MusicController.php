@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Music;
+use App\Models\Album;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 
 class MusicController extends Controller
 {
@@ -19,9 +22,7 @@ class MusicController extends Controller
                     'name'            => $m->title,
                     'artist'          => optional($m->user)->name ?? $m->artist_name,
                     'album'           => optional($m->album)->title ?? 'Inconnu',
-                    'album_image'     => $m->image
-                        ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
-                        : null,
+                    'album_image'     => $this->publicUrl($m->image),
                     'audio'           => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
                     'playlist_ids'    => $m->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
                     'album_id'        => $m->album_id ? (int) $m->album_id : null,
@@ -34,62 +35,68 @@ class MusicController extends Controller
 
     public function show($id)
     {
-        $music = Music::with(['user:id,name', 'album:id,title', 'playlists:id'])->find($id);
+        $m = Music::with(['user:id,name', 'album:id,title', 'playlists:id'])->find($id);
 
-        if (!$music) {
+        if (!$m) {
             return response()->json(['message' => 'Musique non trouvée'], 404);
         }
 
         return response()->json([
-            'id'              => (int) $music->id,
-            'name'            => $music->title,
-            'artist'          => optional($music->user)->name ?? $music->artist_name,
-            'album'           => optional($music->album)->title ?? 'Inconnu',
-            'album_image'     => $music->image
-                ? asset('storage/' . $music->image) . '?v=' . optional($music->updated_at)->timestamp
-                : null,
-            'audio'           => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
-            'playlist_ids'    => $music->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
-            'album_id'        => $music->album_id ? (int) $music->album_id : null,
-            'artist_user_id'  => $music->user_id ? (int) $music->user_id : null,
+            'id'              => (int) $m->id,
+            'name'            => $m->title,
+            'artist'          => optional($m->user)->name ?? $m->artist_name,
+            'album'           => optional($m->album)->title ?? 'Inconnu',
+            'album_image'     => $this->publicUrl($m->image),
+            'audio'           => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+            'playlist_ids'    => $m->playlists->pluck('id')->map(fn($id)=>(int)$id)->values()->all(),
+            'album_id'        => $m->album_id ? (int) $m->album_id : null,
+            'artist_user_id'  => $m->user_id ? (int) $m->user_id : null,
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'audio' => 'required|mimes:mp3,wav,flac',
-            'image' => 'nullable|image',
-            'album_id' => 'nullable|integer|exists:albums,id',
+            'title'    => 'required|string|max:255',
+            'audio'    => 'required|file|mimes:mp3,wav,flac',
+            'image'    => 'sometimes|nullable|image',
+            'album_id' => 'sometimes|nullable|integer|exists:albums,id',
         ]);
 
         $user = Auth::user();
+        $album = $request->filled('album_id') ? Album::find($request->integer('album_id')) : null;
 
         $music = new Music();
-        $music->title = $request->title;
+        $music->title       = $request->string('title');
         $music->artist_name = $user->name;
-        $music->user_id = $user->id;
-        if ($request->filled('album_id')) {
-            $music->album_id = (int) $request->album_id;
+        $music->user_id     = $user->id;
+        if ($album) {
+            $music->album_id = $album->id;
         }
 
         if ($request->hasFile('audio')) {
-            $audioPath = $request->file('audio')->store('musics', 'public');
-            $music->audio = $audioPath;
+            $music->audio = $this->storePublicFile($request->file('audio'), 'musics');
         }
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('music_images', 'public');
-            $music->image = $imagePath;
+            $music->image = $this->storePublicFile($request->file('image'), 'music_images');
+        } elseif ($album && $album->image) {
+            $music->image = $album->image;
         }
 
         $music->save();
 
         return response()->json([
             'message' => 'Musique ajoutée avec succès',
-            'music'   => $music,
-        ]);
+            'music'   => [
+                'id'             => (int) $music->id,
+                'name'           => $music->title,
+                'artist'         => $music->artist_name,
+                'album_id'       => $music->album_id ? (int) $music->album_id : null,
+                'album_image'    => $this->publicUrl($music->image),
+                'audio'          => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
+            ],
+        ], 201);
     }
 
     public function update(Request $request, $id)
@@ -97,13 +104,14 @@ class MusicController extends Controller
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'audio' => 'sometimes|file|mimes:mp3,wav,flac',
+            'image' => 'sometimes|nullable|image',
         ]);
 
-        $music = Music::with(['playlists', 'favoredBy'])->find($id);
+        $music = Music::with(['playlists:id', 'favoredBy:id', 'album:id,image'])->find($id);
         if (!$music) {
             return response()->json(['message' => 'Musique non trouvée'], 404);
         }
-        if ((int)$music->user_id !== (int)Auth::id()) {
+        if ((int) $music->user_id !== (int) Auth::id()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -112,52 +120,71 @@ class MusicController extends Controller
         }
 
         if ($request->hasFile('audio')) {
-            if ($music->audio) {
+            if ($music->audio && Storage::disk('public')->exists($music->audio)) {
                 Storage::disk('public')->delete($music->audio);
             }
-            $audioPath = $request->file('audio')->store('musics', 'public');
-            $music->audio = $audioPath;
+            $music->audio = $this->storePublicFile($request->file('audio'), 'musics');
         }
 
-        $music->save();
+        if ($request->hasFile('image')) {
+            $old = $music->image;
+            $music->image = $this->storePublicFile($request->file('image'), 'music_images');
+            $music->save();
+            $this->deleteImageIfOrphan($old, $music->id, $music->album_id);
+        } else {
+            $music->save();
+        }
 
         return response()->json([
             'message' => 'Musique mise à jour',
-            'music'   => $music,
+            'music'   => [
+                'id'             => (int) $music->id,
+                'name'           => $music->title,
+                'artist'         => $music->artist_name,
+                'album_id'       => $music->album_id ? (int) $music->album_id : null,
+                'album_image'    => $this->publicUrl($music->image),
+                'audio'          => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
+            ],
         ]);
     }
 
     public function destroy($id)
     {
-        $music = Music::with(['playlists', 'favoredBy'])->find($id);
+        $music = Music::with(['playlists:id', 'favoredBy:id'])->find($id);
 
         if (!$music) {
-                       return response()->json(['message' => 'Musique non trouvée'], 404);
+            return response()->json(['message' => 'Musique non trouvée'], 404);
         }
-        if ((int)$music->user_id !== (int)Auth::id()) {
+        if ((int) $music->user_id !== (int) Auth::id()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
         $music->playlists()->detach();
-        $music->favoredBy()->detach();
+        if (method_exists($music, 'favoredBy')) {
+            $music->favoredBy()->detach();
+        }
 
-        if ($music->audio) {
-            Storage::disk('public')->delete($music->audio);
-        }
-        if ($music->image) {
-            Storage::disk('public')->delete($music->image);
-        }
+        $oldAudio = $music->audio;
+        $oldImage = $music->image;
+        $albumId  = $music->album_id;
+        $deletedId = (int) $music->id;
 
         $music->delete();
 
-        return response()->json(['status' => 'ok']);
+        if ($oldAudio && Storage::disk('public')->exists($oldAudio)) {
+            Storage::disk('public')->delete($oldAudio);
+        }
+        $this->deleteImageIfOrphan($oldImage, $deletedId, $albumId);
+
+        return response()->json([
+            'status'            => 'ok',
+            'deleted_track_ids' => [$deletedId],
+        ]);
     }
 
     public function myMusic()
     {
-        $user = Auth::user();
-
-        $musics = Music::where('user_id', $user->id)
+        $musics = Music::where('user_id', Auth::id())
             ->with(['user:id,name', 'album:id,title', 'playlists:id'])
             ->orderByDesc('created_at')
             ->get()
@@ -167,22 +194,82 @@ class MusicController extends Controller
                     'name'            => $m->title,
                     'artist'          => optional($m->user)->name ?? $m->artist_name,
                     'album'           => optional($m->album)->title ?? 'Inconnu',
-                    'album_image'     => $m->image
-                        ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
-                        : null,
+                    'album_image'     => $this->publicUrl($m->image),
                     'audio'           => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
                     'duration'        => $m->duration,
                     'date_added'      => optional($m->created_at)?->toDateString(),
-                    'playlist_ids'    => $m->playlists
-                        ->pluck('id')
-                        ->map(fn($id) => (int) $id)
-                        ->values()
-                        ->all(),
+                    'playlist_ids'    => $m->playlists->pluck('id')->map(fn($id) => (int)$id)->values()->all(),
                     'album_id'        => $m->album_id ? (int) $m->album_id : null,
                     'artist_user_id'  => $m->user_id ? (int) $m->user_id : null,
                 ];
             });
 
         return response()->json($musics);
+    }
+
+    public function exists(Request $request)
+    {
+        $ids = collect($request->input('ids', []))
+            ->map(fn($v) => (int) $v)
+            ->filter(fn($v) => $v > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($ids)) {
+            return response()->json(['exists' => []]);
+        }
+
+        $exists = Music::whereIn('id', $ids)
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->values()
+            ->all();
+
+        return response()->json(['exists' => $exists]);
+    }
+
+    private function publicUrl(?string $path): ?string
+    {
+        if (!$path) return null;
+        $clean = str_replace('\\', '/', $path);
+        return asset('storage/' . ltrim($clean, '/'));
+    }
+
+    private function storePublicFile(UploadedFile $file, string $dir): string
+    {
+        $ext = strtolower($file->getClientOriginalExtension() ?: '');
+        if ($ext === '') {
+            $mime = strtolower($file->getMimeType() ?: '');
+            $ext = str_contains($mime, 'png') ? 'png'
+                : (str_contains($mime, 'jpeg') || str_contains($mime, 'jpg') ? 'jpg'
+                : (str_contains($mime, 'gif') ? 'gif'
+                : (str_contains($mime, 'webp') ? 'webp'
+                : (str_contains($mime, 'svg') ? 'svg'
+                : (str_contains($mime, 'mp3') ? 'mp3'
+                : (str_contains($mime, 'wav') ? 'wav'
+                : (str_contains($mime, 'flac') ? 'flac' : 'bin')))))));
+        }
+
+        $basename = Str::random(40) . '.' . $ext;
+        Storage::disk('public')->putFileAs($dir, $file, $basename);
+        return $dir . '/' . $basename;
+    }
+
+    private function deleteImageIfOrphan(?string $path, ?int $ignoreMusicId = null, ?int $ignoreAlbumId = null): void
+    {
+        if (!$path) return;
+
+        $stillUsedByMusic = Music::where('image', $path)
+            ->when($ignoreMusicId, fn($q) => $q->where('id', '!=', $ignoreMusicId))
+            ->exists();
+
+        $stillUsedByAlbum = Album::where('image', $path)
+            ->when($ignoreAlbumId, fn($q) => $q->where('id', '!=', $ignoreAlbumId))
+            ->exists();
+
+        if (!$stillUsedByMusic && !$stillUsedByAlbum && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

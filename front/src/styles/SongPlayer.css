@@ -101,6 +101,11 @@
   color: #5e2d91;
 }
 
+/* état actif en violet */
+.player-icon.is-active {
+  color: #5e2d91;
+}
+
 .progress-container {
   display: flex;
   align-items: center;

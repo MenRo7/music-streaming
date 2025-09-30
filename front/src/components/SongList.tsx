@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
@@ -53,6 +53,17 @@ const SongList = <T extends UISong>({
   const { playSong, currentTrackId, isPlaying } = usePlayer();
   const [overridePlaylists, setOverridePlaylists] = useState<Record<number, number[]>>({});
 
+  useEffect(() => {
+    const onExternalUpdate = (e: Event) => {
+      const ce = e as CustomEvent<any>;
+      const { trackId, playlistIds } = ce.detail || {};
+      if (!Number.isFinite(trackId)) return;
+      setOverridePlaylists((prev) => ({ ...prev, [Number(trackId)]: (playlistIds || []).map(Number) }));
+    };
+    window.addEventListener('track:playlist-updated', onExternalUpdate as EventListener);
+    return () => window.removeEventListener('track:playlist-updated', onExternalUpdate as EventListener);
+  }, []);
+
   const handlePlaySong = (song: T) => {
     if (!song.audio) return;
     playSong(
@@ -71,7 +82,14 @@ const SongList = <T extends UISong>({
       const next = checked
         ? (base.includes(playlistId) ? base : [...base, playlistId])
         : base.filter(id => id !== playlistId);
-      return { ...prev, [song.id]: next };
+
+      window.dispatchEvent(
+        new CustomEvent('track:playlist-updated', {
+          detail: { trackId: Number(song.id), playlistIds: next.map(Number) },
+        })
+      );
+
+      return { ...prev, [song.id]: next.map(Number) };
     });
   };
 

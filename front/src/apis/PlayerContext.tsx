@@ -9,6 +9,7 @@ import React, {
   ReactNode,
 } from 'react';
 import debounce from 'lodash.debounce';
+import { checkTracksExist } from '../apis/MusicService';
 
 export type Track = {
   id: number;
@@ -33,7 +34,7 @@ type QueueItem = Track & {
   from?: SourceRef;
 };
 
-type RepeatMode = 'off' | 'all' | 'one';
+type RepeatMode = 'off' | 'one';
 
 type PlaySongOpts = {
   playlistIds?: Array<number | string>;
@@ -46,7 +47,6 @@ export interface PlayerContextType {
   albumImage: string;
   currentTrackId: number | null;
   isPlaying: boolean;
-
   playSong: (
     url: string,
     title: string,
@@ -55,8 +55,8 @@ export interface PlayerContextType {
     trackId?: number,
     opts?: PlaySongOpts
   ) => void;
+  playFromList: (tracks: Track[], startTrackId?: number) => void;
   setIsPlaying: (playing: boolean) => void;
-
   currentItem: QueueItem | null;
   upNext: QueueItem[];
   queueManual: QueueItem[];
@@ -64,18 +64,17 @@ export interface PlayerContextType {
   shuffle: boolean;
   repeat: RepeatMode;
   source: SourceRef;
-
   setCollectionContext: (src: Exclude<SourceRef, { type: 'none' }>, tracks: Track[]) => void;
   addToQueue: (track: Track) => void;
   clearQueue: (keepCurrent?: boolean) => void;
   removeFromQueue: (qid: string) => void;
   moveManual: (from: number, to: number) => void;
   playNowFromQueue: (qid: string) => void;
-
   next: () => void;
   prev: () => void;
   toggleShuffle: () => void;
   cycleRepeat: () => void;
+  isHydrating: boolean;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -83,7 +82,7 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 const uid = () => Math.random().toString(36).slice(2, 10);
 const shuffleArray = <T,>(arr: T[]) => {
   const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
+  for (let i = a.length - 1; i > 0; i++) {
     const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
@@ -111,32 +110,23 @@ type PersistedState = {
   queueAuto: QueueItem[];
   history: QueueItem[];
   shuffle: boolean;
-  repeat: RepeatMode;
+  repeat: any;
   source: SourceRef;
   collection: Track[];
 };
 
 const STORAGE_PREFIX = 'player:queue:v1';
-
 const getUserId = (): number | null => {
   const raw = localStorage.getItem('currentUserId');
   if (!raw) return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 };
-
 const keyFor = (userId: number) => `${STORAGE_PREFIX}:${userId}`;
-
 const safeParse = <T,>(s: string | null): T | null => {
   if (!s) return null;
-  try {
-    return JSON.parse(s) as T;
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(s) as T; } catch { return null; }
 };
-
-// ----------------------------------------
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [audioUrl, setAudioUrl] = useState('');
@@ -155,6 +145,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const [source, setSource] = useState<SourceRef>({ type: 'none' });
   const [collection, setCollection] = useState<Track[]>([]);
+  const [isHydrating, setIsHydrating] = useState<boolean>(true);
 
   const sourceRef = useRef(source);
   const collectionRef = useRef(collection);
@@ -165,6 +156,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const queueAutoRef = useRef<QueueItem[]>(queueAuto);
   useEffect(() => { queueManualRef.current = queueManual; }, [queueManual]);
   useEffect(() => { queueAutoRef.current = queueAuto; }, [queueAuto]);
+
+  const currentItemRef = useRef<QueueItem | null>(currentItem);
+  useEffect(() => { currentItemRef.current = currentItem; }, [currentItem]);
 
   const upNext = useMemo(() => [...queueManual, ...queueAuto], [queueManual, queueAuto]);
 
@@ -178,15 +172,28 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   const rebuildAutoFromIndex = useCallback(
-    (tracks: Track[], startIndex: number, src: SourceRef) => {
+    (
+      tracks: Track[],
+      startIndex: number,
+      src: SourceRef,
+      opts?: { forceShuffle?: boolean }
+    ) => {
+      const useShuf = opts?.forceShuffle ?? shuffle;
+
       const now = tracks[startIndex];
       const before = tracks.slice(0, startIndex);
-      let tail = tracks.slice(startIndex + 1);
-      tail = shuffle ? shuffleArray(tail) : tail;
+
+      let tail: Track[];
+      if (useShuf) {
+        const pool = tracks.filter((_, i) => i !== startIndex);
+        tail = shuffleArray(pool);
+      } else {
+        tail = tracks.slice(startIndex + 1);
+      }
 
       const nowItem: QueueItem = { ...now, qid: uid(), origin: 'auto', from: src };
       setCurrentItem(nowItem);
-      setHistory(before.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
+      setHistory(useShuf ? [] : before.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
       setQueueAuto(tail.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
       applyCurrentToCompatFields(now);
     },
@@ -223,6 +230,20 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     applyCurrentToCompatFields(t);
   }, [applyCurrentToCompatFields, rebuildAutoFromIndex]);
 
+  const playFromList = useCallback<PlayerContextType['playFromList']>((tracks, startTrackId) => {
+    const list = Array.isArray(tracks) ? tracks.slice() : [];
+    if (list.length === 0) return;
+
+    const idx = startTrackId != null
+      ? Math.max(0, list.findIndex(t => Number(t.id) === Number(startTrackId)))
+      : 0;
+
+    const virtualSrc: SourceRef = { type: 'playlist', id: 0 };
+    setSource(virtualSrc);
+    setCollection(list);
+    rebuildAutoFromIndex(list, idx >= 0 ? idx : 0, virtualSrc);
+  }, [rebuildAutoFromIndex]);
+
   const addToQueue = useCallback<PlayerContextType['addToQueue']>((track) => {
     setQueueManual(q => [...q, { ...track, qid: uid(), origin: 'manual', from: sourceRef.current }]);
   }, []);
@@ -247,9 +268,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const clearQueue = useCallback<PlayerContextType['clearQueue']>((keepCurrent = true) => {
     setQueueManual([]);
     setQueueAuto([]);
-    if (!keepCurrent) {
-      hardReset();
-    }
+    if (!keepCurrent) hardReset();
   }, [hardReset]);
 
   const removeFromQueue = useCallback<PlayerContextType['removeFromQueue']>((qid) => {
@@ -281,54 +300,42 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     setCurrentItem(prev => {
       if (prev) setHistory(h => [...h, prev]);
+      applyCurrentToCompatFields(item);
       return item;
     });
-
-    applyCurrentToCompatFields(item);
   }, [applyCurrentToCompatFields]);
 
   const next = useCallback(() => {
-    setCurrentItem((cur) => {
-      if (!cur) return cur;
+    const cur = currentItemRef.current;
+    if (!cur) return;
 
-      if (repeat === 'one') {
-        setIsPlaying(true);
-        return cur;
-      }
+    setHistory(h => [...h, cur]);
 
-      setHistory((h) => [...h, cur]);
+    const manual = queueManualRef.current || [];
+    const auto = queueAutoRef.current || [];
 
-      const manual = queueManualRef.current;
-      const auto = queueAutoRef.current;
+    let nextItem: QueueItem | undefined;
+    let nextManual = manual;
+    let nextAuto = auto;
 
-      let nextItem: QueueItem | undefined;
-      let nextManual = manual;
-      let nextAuto = auto;
+    if (manual.length > 0) {
+      nextItem = manual[0];
+      nextManual = manual.slice(1);
+    } else if (auto.length > 0) {
+      nextItem = auto[0];
+      nextAuto = auto.slice(1);
+    }
 
-      if (manual.length > 0) {
-        nextItem = manual[0];
-        nextManual = manual.slice(1);
-      } else if (auto.length > 0) {
-        nextItem = auto[0];
-        nextAuto = auto.slice(1);
-      }
+    if (nextItem) {
+      setQueueManual(nextManual);
+      setQueueAuto(nextAuto);
+      setCurrentItem(nextItem);
+      applyCurrentToCompatFields(nextItem);
+      return;
+    }
 
-      if (nextItem) {
-        setQueueManual(nextManual);
-        setQueueAuto(nextAuto);
-        applyCurrentToCompatFields(nextItem);
-        return nextItem;
-      }
-
-      if (repeat === 'all' && sourceRef.current.type !== 'none' && collectionRef.current.length > 0) {
-        rebuildAutoFromIndex(collectionRef.current, 0, sourceRef.current);
-        return cur;
-      }
-
-      setIsPlaying(false);
-      return cur;
-    });
-  }, [applyCurrentToCompatFields, rebuildAutoFromIndex, repeat]);
+    setIsPlaying(false);
+  }, [applyCurrentToCompatFields]);
 
   const prev = useCallback(() => {
     setHistory((h) => {
@@ -339,11 +346,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       setCurrentItem((cur) => {
         if (cur) {
-          if (cur.origin === 'manual') {
-            setQueueManual((m) => [cur, ...m]);
-          } else {
-            setQueueAuto((a) => [cur, ...a]);
-          }
+          if (cur.origin === 'manual') setQueueManual((m) => [cur, ...m]);
+          else setQueueAuto((a) => [cur, ...a]);
         }
         applyCurrentToCompatFields(last);
         return last;
@@ -356,26 +360,34 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const toggleShuffle = useCallback(() => {
     setShuffle(s => {
       const ns = !s;
+
+      const cur = currentItemRef.current;
+      const src = sourceRef.current;
+      const cols = collectionRef.current;
+
+      if (src.type !== 'none' && cols.length > 0 && cur) {
+        const idx = cols.findIndex(t => t.id === cur.id);
+        if (idx >= 0) {
+          rebuildAutoFromIndex(cols, idx, src, { forceShuffle: ns });
+          return ns;
+        }
+      }
+
       setQueueAuto(a => (ns ? shuffleArray(a) : a));
       return ns;
     });
-  }, []);
+  }, [rebuildAutoFromIndex]);
 
   const cycleRepeat = useCallback(() => {
-    setRepeat(r => (r === 'off' ? 'all' : r === 'all' ? 'one' : 'off'));
+    setRepeat((r: RepeatMode) => (r === 'off' ? 'one' : 'off'));
   }, []);
 
   const debouncedSave = useMemo(
-    () =>
-      debounce((state: PersistedState, userId: number | null) => {
-        if (!userId) return;
-        try {
-          localStorage.setItem(keyFor(userId), JSON.stringify(state));
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.warn('Impossible de sauvegarder la queue', e);
-        }
-      }, 200),
+    () => debounce((state: PersistedState, userId: number | null) => {
+      if (!userId) return;
+      try { localStorage.setItem(keyFor(userId), JSON.stringify(state)); }
+      catch (e) { console.warn('Impossible de sauvegarder la queue', e); }
+    }, 200),
     []
   );
 
@@ -392,67 +404,216 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     debouncedSave,
   ]);
 
-  const restoreForUser = useCallback((userId: number | null) => {
+  const hydrateForUser = useCallback(async (userId: number | null) => {
+    setIsHydrating(true);
+
     if (!userId) {
       hardReset();
+      setIsHydrating(false);
       return;
     }
+
     const raw = localStorage.getItem(keyFor(userId));
     const data = safeParse<PersistedState>(raw);
-    if (!data) return;
 
-    setAudioUrl(data.audioUrl || '');
-    setTitle(data.title || '');
-    setArtist(data.artist || '');
-    setAlbumImage(data.albumImage || '');
-    setCurrentTrackId(data.currentTrackId ?? null);
-    setIsPlaying(Boolean(data.isPlaying));
+    if (!data) { setIsHydrating(false); return; }
 
-    setCurrentItem(data.currentItem || null);
-    setQueueManual(Array.isArray(data.queueManual) ? data.queueManual : []);
-    setQueueAuto(Array.isArray(data.queueAuto) ? data.queueAuto : []);
-    setHistory(Array.isArray(data.history) ? data.history : []);
-    setShuffle(Boolean(data.shuffle));
-    setRepeat(data.repeat || 'off');
-    setSource(data.source || { type: 'none' });
-    setCollection(Array.isArray(data.collection) ? data.collection : []);
+    const ids = new Set<number>();
+    if (data.currentItem?.id) ids.add(data.currentItem.id);
+    (data.queueManual || []).forEach(i => ids.add(i.id));
+    (data.queueAuto || []).forEach(i => ids.add(i.id));
+    (data.history || []).forEach(i => ids.add(i.id));
+    (data.collection || []).forEach(t => ids.add(t.id));
+
+    let existingSet = new Set<number>();
+    try {
+      const existing = await checkTracksExist([...ids]);
+      existingSet = new Set(existing.map(Number));
+    } catch (_e) {
+      existingSet = new Set([...ids]);
+    }
+
+    const filterList = <T extends { id: number }>(list: T[]) =>
+      (Array.isArray(list) ? list : []).filter(it => existingSet.has(it.id));
+
+    const filteredCurrent = data.currentItem && existingSet.has(data.currentItem.id)
+      ? data.currentItem
+      : null;
+
+    const sanitizedRepeat: RepeatMode = data.repeat === 'one' ? 'one' : 'off';
+
+    const sanitized = {
+      ...data,
+      currentItem: filteredCurrent,
+      isPlaying: filteredCurrent ? data.isPlaying : false,
+      currentTrackId: filteredCurrent ? filteredCurrent.id : null,
+      queueManual: filterList(data.queueManual),
+      queueAuto: filterList(data.queueAuto),
+      history: filterList(data.history),
+      collection: filterList(data.collection),
+      repeat: sanitizedRepeat,
+    };
+
+    setAudioUrl(sanitized.audioUrl || '');
+    setTitle(sanitized.title || '');
+    setArtist(sanitized.artist || '');
+    setAlbumImage(sanitized.albumImage || '');
+    setCurrentTrackId(sanitized.currentTrackId ?? null);
+    setIsPlaying(Boolean(sanitized.isPlaying));
+
+    setCurrentItem(sanitized.currentItem || null);
+    setQueueManual(Array.isArray(sanitized.queueManual) ? sanitized.queueManual : []);
+    setQueueAuto(Array.isArray(sanitized.queueAuto) ? sanitized.queueAuto : []);
+    setHistory(Array.isArray(sanitized.history) ? sanitized.history : []);
+    setShuffle(Boolean(sanitized.shuffle));
+    setRepeat(sanitized.repeat as RepeatMode);
+    setSource(sanitized.source || { type: 'none' });
+    setCollection(Array.isArray(sanitized.collection) ? sanitized.collection : []);
+
+    try { localStorage.setItem(keyFor(userId), JSON.stringify(sanitized)); } catch {}
+
+    setIsHydrating(false);
   }, [hardReset]);
+
+  const sanitizeFromServer = useCallback(async () => {
+    try {
+      const ids = new Set<number>();
+      if (currentItem?.id) ids.add(currentItem.id);
+      queueManualRef.current.forEach(i => ids.add(i.id));
+      queueAutoRef.current.forEach(i => ids.add(i.id));
+      history.forEach(i => ids.add(i.id));
+      collectionRef.current.forEach(t => ids.add(t.id));
+      if (ids.size === 0) return;
+
+      const existing = await checkTracksExist([...ids]);
+      const existingSet = new Set(existing);
+      const missing = [...ids].filter(id => !existingSet.has(id));
+      if (missing.length) {
+        window.dispatchEvent(new CustomEvent('tracks:deleted', { detail: { ids: missing } }));
+      }
+    } catch (e) {
+      console.warn('sanitizeFromServer failed', e);
+    }
+  }, [currentItem, history]);
 
   useEffect(() => {
     const uid = getUserId();
-    if (uid) restoreForUser(uid);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    hydrateForUser(uid);
+  }, [hydrateForUser]);
 
   useEffect(() => {
     const onUserLoaded = (e: any) => {
       const uid = e?.detail?.userId ?? null;
-      restoreForUser(uid);
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      hydrateForUser(uid);
     };
     window.addEventListener('user:loaded', onUserLoaded);
     return () => window.removeEventListener('user:loaded', onUserLoaded);
-  }, [restoreForUser]);
+  }, [hydrateForUser]);
 
   useEffect(() => {
-    const onAuthChanged = () => {
-      hardReset();
-    };
+    const onAuthChanged = () => { hardReset(); };
     window.addEventListener('auth:changed', onAuthChanged);
     return () => window.removeEventListener('auth:changed', onAuthChanged);
   }, [hardReset]);
 
+  useEffect(() => {
+    const onFocus = () => { sanitizeFromServer(); };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [sanitizeFromServer]);
+
+  useEffect(() => {
+    const onLibraryChanged = () => { sanitizeFromServer(); };
+    window.addEventListener('library:changed', onLibraryChanged);
+    return () => window.removeEventListener('library:changed', onLibraryChanged);
+  }, [sanitizeFromServer]);
+
+  const mergeUpdate = useCallback((item: QueueItem, map: Map<number, Partial<Track>>): QueueItem => {
+    const u = map.get(item.id);
+    if (!u) return item;
+    const merged: QueueItem = {
+      ...item,
+      name: u.name ?? item.name,
+      artist: u.artist ?? item.artist,
+      album: u.album ?? item.album,
+      album_image: u.album_image ?? item.album_image,
+      audio: u.audio ?? item.audio,
+      duration: u.duration ?? item.duration,
+    };
+    return merged;
+  }, []);
+
+  useEffect(() => {
+    const onTracksUpdated = (e: any) => {
+      const updates: Partial<Track>[] = e?.detail?.tracks || [];
+      if (!Array.isArray(updates) || updates.length === 0) return;
+
+      const map = new Map<number, Partial<Track>>();
+      for (const t of updates) if (t && typeof t.id === 'number') map.set(t.id, t);
+      if (map.size === 0) return;
+
+      setCurrentItem(ci => {
+        if (!ci) return ci;
+        const next = mergeUpdate(ci, map);
+        if (next !== ci && next.id === ci.id) applyCurrentToCompatFields(next);
+        return next;
+      });
+      setQueueManual(list => list.map(it => mergeUpdate(it, map)));
+      setQueueAuto(list => list.map(it => mergeUpdate(it, map)));
+      setCollection(cols => cols.map(c => {
+        const u = map.get(c.id);
+        return u ? { ...c,
+          name: u.name ?? c.name,
+          artist: u.artist ?? c.artist,
+          album: u.album ?? c.album,
+          album_image: u.album_image ?? c.album_image,
+          audio: u.audio ?? c.audio,
+          duration: u.duration ?? c.duration,
+        } : c;
+      }));
+    };
+
+    const onTracksDeleted = (e: any) => {
+      const ids: number[] = (e?.detail?.ids || []).map(Number).filter(Number.isFinite);
+      if (!Array.isArray(ids) || ids.length === 0) return;
+
+      setQueueManual(list => list.filter(it => !ids.includes(it.id)));
+      setQueueAuto(list => list.filter(it => !ids.includes(it.id)));
+      setHistory(list => list.filter(it => !ids.includes(it.id)));
+      setCurrentItem(ci => {
+        if (ci && ids.includes(ci.id)) {
+          setIsPlaying(false);
+          return null;
+        }
+        return ci;
+      });
+    };
+
+    window.addEventListener('tracks:updated', onTracksUpdated);
+    window.addEventListener('tracks:deleted', onTracksDeleted);
+    return () => {
+      window.removeEventListener('tracks:updated', onTracksUpdated);
+      window.removeEventListener('tracks:deleted', onTracksDeleted);
+    };
+  }, [applyCurrentToCompatFields, mergeUpdate, currentItem]);
+
   const value: PlayerContextType = useMemo(() => ({
     audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
-    playSong, setIsPlaying,
+    playSong, playFromList,
+    setIsPlaying,
     currentItem, upNext, queueManual, queueAuto, shuffle, repeat, source,
     setCollectionContext, addToQueue, clearQueue, removeFromQueue, moveManual, playNowFromQueue,
     next, prev, toggleShuffle, cycleRepeat,
+    isHydrating,
   }), [
     audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
     currentItem, upNext, queueManual, queueAuto, shuffle, repeat, source,
-    playSong,
+    playSong, playFromList,
     setCollectionContext, addToQueue, clearQueue, removeFromQueue, moveManual, playNowFromQueue,
     next, prev, toggleShuffle, cycleRepeat,
+    isHydrating,
   ]);
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;

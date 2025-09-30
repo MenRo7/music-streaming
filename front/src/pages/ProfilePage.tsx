@@ -1,10 +1,17 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { fetchUser, fetchUserSummary } from "../apis/UserService";
+import {
+  fetchUser,
+  fetchUserSummary,
+  isSubscribedToUser,
+  subscribeToUser,
+  unsubscribeFromUser,
+} from "../apis/UserService";
+
 import { getUserMusics, getUserAlbums, deleteMusic } from "../apis/MyMusicService";
 import { getPlaylists, addMusicToPlaylist, removeMusicFromPlaylist } from "../apis/PlaylistService";
-import { addFavorite } from "../apis/FavoritesService";
+import { addFavorite, removeFavorite, getFavorites } from "../apis/FavoritesService";
 import { usePlayer } from "../apis/PlayerContext";
 
 import EditProfileModal from "../components/EditProfileModal";
@@ -36,6 +43,9 @@ const ProfilePage: React.FC = () => {
   const [albums, setAlbums] = useState<any[]>([]);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscribed, setSubscribed] = useState<boolean>(false);
+  const [subPending, setSubPending] = useState<boolean>(false);
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -75,6 +85,7 @@ const ProfilePage: React.FC = () => {
         setSongs(formattedSongs);
         setAlbums(myAlbums || []);
         setPlaylists(myPlaylists || []);
+        setSubscribed(false)
       } else {
         const summaryRes = await fetchUserSummary(targetId!);
         const summary = summaryRes.data;
@@ -102,6 +113,13 @@ const ProfilePage: React.FC = () => {
         setSongs(formattedSongs);
         setAlbums(summary.albums || []);
         setPlaylists(summary.playlists || []);
+
+        try {
+          const isSub = await isSubscribedToUser(Number(summary.user.id));
+          setSubscribed(isSub);
+        } catch {
+          setSubscribed(false);
+        }
       }
     } catch (e) {
       console.error("Erreur chargement profil:", e);
@@ -113,6 +131,22 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const favs = await getFavorites();
+        const ids = new Set<number>(
+          (Array.isArray(favs) ? favs : [])
+            .map((m: any) => Number(m.id))
+            .filter(Number.isFinite)
+        );
+        setFavoriteIds(ids);
+      } catch (e) {
+        console.error("Erreur chargement favoris", e);
+      }
+    })();
+  }, []);
 
   const isSelf = useMemo(
     () => Boolean(viewer?.id) && Boolean(user?.id) && Number(viewer.id) === Number(user.id),
@@ -141,13 +175,58 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const onToggleSubscribe = async () => {
+    if (!user?.id || isSelf || subPending) return;
+    setSubPending(true);
+    try {
+      if (subscribed) {
+        await unsubscribeFromUser(Number(user.id));
+        setSubscribed(false);
+      } else {
+        await subscribeToUser(Number(user.id));
+        setSubscribed(true);
+      }
+      window.dispatchEvent(new Event("subscriptions:changed"));
+    } catch (e) {
+      console.error("Erreur abonnement/désabonnement:", e);
+    } finally {
+      setSubPending(false);
+    }
+  };
+
+  const addToFavoritesLocal = async (id: number) => {
+    await addFavorite(id);
+    setFavoriteIds(prev => new Set(prev).add(Number(id)));
+  };
+  const removeFromFavoritesLocal = async (id: number) => {
+    await removeFavorite(id);
+    setFavoriteIds(prev => {
+      const s = new Set(prev);
+      s.delete(Number(id));
+      return s;
+    });
+  };
+  const isFavorite = (id: number) => favoriteIds.has(Number(id));
+
   const songActions = useCallback(
     (song: UISong) => {
+      const s: any = song;
+      const viewItems = s?.album_id
+        ? [{ label: "Voir l'album", onClick: () => navigate(`/album/${s.album_id}`) }]
+        : [];
+
       const base = [
+        ...viewItems,
         {
-          label: "Ajouter aux favoris",
-          onClick: () =>
-            addFavorite(song.id).catch((e) => console.error("Ajout aux favoris échoué", e)),
+          label: isFavorite(song.id) ? "Supprimer des favoris" : "Ajouter aux favoris",
+          onClick: async () => {
+            try {
+              if (isFavorite(song.id)) await removeFromFavoritesLocal(song.id);
+              else await addToFavoritesLocal(song.id);
+            } catch (e) {
+              console.error("Maj favoris échouée", e);
+            }
+          },
         },
         {
           label: "Ajouter à une playlist",
@@ -183,7 +262,7 @@ const ProfilePage: React.FC = () => {
 
       return base;
     },
-    [addToQueue, navigate, isSelf]
+    [addToQueue, navigate, isSelf, favoriteIds]
   );
 
   const hasAvatar = Boolean(user?.profile_image);
@@ -215,10 +294,22 @@ const ProfilePage: React.FC = () => {
             src={hasAvatar ? user.profile_image : "/placeholder-avatar.png"}
             alt="User Profile"
           />
-          <div className="profile-info">
+
+          <div className="profile-info" style={{ flex: 1 }}>
             <h1>{user?.name ?? "Profil"}</h1>
             {isSelf && <p>{user?.email}</p>}
           </div>
+
+          {!isSelf && (
+            <button
+              className={`subscribe-btn ${subscribed ? "is-subscribed" : ""}`}
+              onClick={onToggleSubscribe}
+              disabled={subPending}
+              title={subscribed ? "Se désabonner" : "S’abonner"}
+            >
+              {subscribed ? "Abonné" : "S’abonner +"}
+            </button>
+          )}
 
           {isSelf && (
             <DropdownMenu
@@ -257,12 +348,6 @@ const ProfilePage: React.FC = () => {
             onAlbumClick={(song) => {
               const s: any = song;
               if (s.album_id) navigate(`/album/${s.album_id}`);
-            }}
-            onArtistClick={(song) => {
-              const s: any = song;
-              if (s.artist_user_id) navigate(`/profile/${s.artist_user_id}`);
-              else if (isSelf) navigate(`/profile`);
-              else if (user?.id) navigate(`/profile/${user.id}`);
             }}
           />
         </div>

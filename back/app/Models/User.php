@@ -71,4 +71,14 @@ class User extends Authenticatable
         return $this->belongsToMany(\App\Models\Playlist::class, 'playlist_likes')
             ->withTimestamps();
     }
+
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'user_follows', 'follower_id', 'followed_id')->withTimestamps();
+    }
+
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'user_follows', 'followed_id', 'follower_id')->withTimestamps();
+    }
 }

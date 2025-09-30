@@ -205,6 +205,47 @@
   transform: scale(1.05);
 }
 
+.subscribe-btn {
+  appearance: none;
+  border: 2px solid #5e2d91;
+  background: transparent;
+  color: #f3f0ff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color .2s ease, color .2s ease, box-shadow .2s ease, transform .05s ease;
+  margin-left: auto;
+}
+
+.subscribe-btn:hover {
+  background-color: rgba(94, 45, 145, 0.2);
+  box-shadow: 0 0 0 3px rgba(94, 45, 145, 0.25);
+}
+
+.subscribe-btn:active {
+  transform: translateY(1px);
+}
+
+.subscribe-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+  box-shadow: none;
+}
+
+.subscribe-btn.is-subscribed {
+  background-color: #5e2d91;
+  color: #ffffff;
+  border-color: #5e2d91;
+}
+
+.subscribe-btn.is-subscribed:hover {
+  background-color: #6b32aa;
+  border-color: #6b32aa;
+  box-shadow: 0 0 0 3px rgba(94, 45, 145, 0.25);
+}
+
 @media (max-width: 1024px) {
   .artist-card,
   .album-card,
@@ -226,6 +267,9 @@
   }
   .profile-menu-icon {
     align-self: flex-end;
+  }
+  .subscribe-btn {
+    margin-left: 0;
   }
 }
 
