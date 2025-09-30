@@ -40,6 +40,8 @@ const MyMusicPage: React.FC = () => {
           dateAdded: m.date_added ? new Date(m.date_added).toLocaleDateString() : '',
           duration: m.duration ?? undefined,
           playlistIds: toNumberArray(m.playlist_ids || []),
+          ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
+          ...(m.artist_user_id != null ? { artist_user_id: Number(m.artist_user_id) } : {}),
         }));
 
         setMusics(formattedSongs);
@@ -76,39 +78,48 @@ const MyMusicPage: React.FC = () => {
           showArtist
           showDateAdded
           showDuration={false}
-          getActions={(song) => [
-            {
-              label: 'Ajouter aux favoris',
-              onClick: () => {
-                addFavorite(song.id).catch((e) => console.error('Ajout aux favoris échoué', e));
+          getActions={(song) => {
+            const s: any = song;
+            const viewItems = [
+              ...(s.album_id ? [{ label: "Voir l'album", onClick: () => navigate(`/album/${s.album_id}`) }] : []),
+              ...(s.artist_user_id ? [{ label: "Voir l'artiste", onClick: () => navigate(`/profile?user=${s.artist_user_id}`) }] : []),
+            ];
+
+            return [
+              ...viewItems,
+              {
+                label: 'Ajouter aux favoris',
+                onClick: () => {
+                  addFavorite(song.id).catch((e) => console.error('Ajout aux favoris échoué', e));
+                },
               },
-            },
-            {
-              label: 'Ajouter à une playlist',
-              onClick: () => {},
-              withPlaylistMenu: true,
-              songId: song.id,
-              existingPlaylistIds: song.playlistIds ?? [],
-              onToggle: (playlistId: number, checked: boolean) =>
-                handleTogglePlaylist(playlistId, checked, song.id),
-            },
-            { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
-            {
-              label: 'Modifier la musique',
-              onClick: () => navigate(`/edit-music/${song.id}`),
-            },
-            {
-              label: 'Supprimer',
-              onClick: async () => {
-                try {
-                  await deleteMusic(song.id);
-                  setMusics((prev) => prev.filter((m) => m.id !== song.id));
-                } catch {
-                  alert('Erreur lors de la suppression');
-                }
+              {
+                label: 'Ajouter à une playlist',
+                onClick: () => {},
+                withPlaylistMenu: true,
+                songId: song.id,
+                existingPlaylistIds: song.playlistIds ?? [],
+                onToggle: (playlistId: number, checked: boolean) =>
+                  handleTogglePlaylist(playlistId, checked, song.id),
               },
-            },
-          ]}
+              { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+              {
+                label: 'Modifier la musique',
+                onClick: () => navigate(`/edit-music/${song.id}`),
+              },
+              {
+                label: 'Supprimer',
+                onClick: async () => {
+                  try {
+                    await deleteMusic(song.id);
+                    setMusics((prev) => prev.filter((m) => m.id !== song.id));
+                  } catch {
+                    alert('Erreur lors de la suppression');
+                  }
+                },
+              },
+            ];
+          }}
         />
 
         <h2 style={{ marginTop: '40px' }}>Mes Albums</h2>

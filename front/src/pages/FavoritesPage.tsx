@@ -85,24 +85,33 @@ const FavoritesPage: React.FC = () => {
             const s: any = song;
             if (s.artist_user_id) navigate(`/profile?user=${s.artist_user_id}`);
           }}
-          getActions={(song) => [
-            { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
-            {
-              label: 'Ajouter à une playlist',
-              onClick: () => {},
-              withPlaylistMenu: true,
-              songId: song.id,
-              existingPlaylistIds: song.playlistIds ?? [],
-              onToggle: (playlistId, checked) => handleTogglePlaylist(playlistId, checked, song.id),
-            },
-            {
-              label: 'Supprimer des favoris',
-              onClick: async () => {
-                await removeFavorite(song.id);
-                setSongs((prev) => prev.filter((s) => s.id !== song.id));
+          getActions={(song) => {
+            const s: any = song;
+            const viewItems = [
+              ...(s.album_id ? [{ label: "Voir l'album", onClick: () => navigate(`/album/${s.album_id}`) }] : []),
+              ...(s.artist_user_id ? [{ label: "Voir l'artiste", onClick: () => navigate(`/profile?user=${s.artist_user_id}`) }] : []),
+            ];
+
+            return [
+              ...viewItems,
+              { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+              {
+                label: 'Ajouter à une playlist',
+                onClick: () => {},
+                withPlaylistMenu: true,
+                songId: song.id,
+                existingPlaylistIds: song.playlistIds ?? [],
+                onToggle: (playlistId, checked) => handleTogglePlaylist(playlistId, checked, song.id),
               },
-            },
-          ]}
+              {
+                label: 'Supprimer des favoris',
+                onClick: async () => {
+                  await removeFavorite(song.id);
+                  setSongs((prev) => prev.filter((s2) => s2.id !== song.id));
+                },
+              },
+            ];
+          }}
         />
       </div>
     </div>

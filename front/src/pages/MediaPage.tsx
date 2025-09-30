@@ -8,6 +8,8 @@ import {
   faHeart as faHeartSolid,
 } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
+import { useLocation } from 'react-router-dom';
+
 import DropdownMenu from '../components/DropdownMenu';
 import SongList, { UISong } from '../components/SongList';
 import { usePlayer, Track } from '../apis/PlayerContext';
@@ -58,6 +60,9 @@ const MediaPage: React.FC<MediaPageProps> = ({
   onArtistClick,
 }) => {
   const { setCollectionContext, toggleShuffle, playSong } = usePlayer();
+  const location = useLocation();
+  const isAlbumPage = location.pathname.startsWith('/album');
+  const isProfilePage = location.pathname.startsWith('/profile');
 
   const tracks = useMemo<Track[]>(
     () =>
@@ -110,6 +115,22 @@ const MediaPage: React.FC<MediaPageProps> = ({
     onPlayAll();
   };
 
+  // Compose actions: préfixer "Voir l'album" / "Voir l'artiste" selon la page
+  const composedGetActions = (song: UISong) => {
+    const base = (getActions ? getActions(song as any) : []) ?? [];
+    const s: any = song;
+    const extras: { label: string; onClick: () => void }[] = [];
+
+    if (!isAlbumPage && onAlbumClick && s?.album_id) {
+      extras.push({ label: "Voir l'album", onClick: () => onAlbumClick(song) });
+    }
+    if (!isProfilePage && onArtistClick && s?.artist_user_id) {
+      extras.push({ label: "Voir l'artiste", onClick: () => onArtistClick(song) });
+    }
+
+    return [...extras, ...base];
+  };
+
   return (
     <div className="media-content">
       <div className="media-page">
@@ -152,7 +173,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
           showArtist
           showDateAdded
           showDuration={false}
-          getActions={getActions as any}
+          getActions={composedGetActions as any}
           onAlbumClick={onAlbumClick}
           onArtistClick={onArtistClick}
         />

@@ -115,7 +115,8 @@ const ProfilePage: React.FC = () => {
         setPlaylists(summary.playlists || []);
 
         try {
-          const isSub = await isSubscribedToUser(Number(summary.user.id));          setSubscribed(isSub);
+          const isSub = await isSubscribedToUser(Number(summary.user.id));
+          setSubscribed(isSub);
         } catch {
           setSubscribed(false);
         }
@@ -209,7 +210,13 @@ const ProfilePage: React.FC = () => {
 
   const songActions = useCallback(
     (song: UISong) => {
+      const s: any = song;
+      const viewItems = s?.album_id
+        ? [{ label: "Voir l'album", onClick: () => navigate(`/album/${s.album_id}`) }]
+        : [];
+
       const base = [
+        ...viewItems,
         {
           label: isFavorite(song.id) ? "Supprimer des favoris" : "Ajouter aux favoris",
           onClick: async () => {

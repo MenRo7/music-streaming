@@ -100,6 +100,7 @@ const AlbumPage: React.FC = () => {
       duration: toDurationStr(m.duration),
       playlistIds: (m.playlist_ids || []) as number[],
       dateAdded: album.created_at || '',
+      ...(album.user_id ? { artist_user_id: Number(album.user_id) } : {}),
     }));
   }, [album]);
 
