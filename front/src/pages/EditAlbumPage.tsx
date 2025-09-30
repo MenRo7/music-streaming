@@ -25,6 +25,15 @@ type NewTrack = {
   audio: File | null;
 };
 
+const toDurationStr = (v?: string | number | null) => {
+  if (v == null) return undefined;
+  if (typeof v === 'string') return v;
+  const sec = Math.max(0, Math.floor(v));
+  const mm = Math.floor(sec / 60).toString().padStart(2, '0');
+  const ss = (sec % 60).toString().padStart(2, '0');
+  return `${mm}:${ss}`;
+};
+
 const EditAlbumPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const albumId = Number(id);
@@ -111,6 +120,19 @@ const EditAlbumPage: React.FC = () => {
     setNewTracks(prev => prev.map((t, i) => i === idx ? { ...t, audio: f } : t));
   };
 
+  const emitTracksUpdatedFromAlbum = (a: Album) => {
+    const updates = (a.musics || []).map(m => ({
+      id: Number(m.id),
+      name: m.title,
+      artist: m.artist_name || a.artist_name || 'Inconnu',
+      album: a.title,
+      album_image: (a.image || m.image || '') || undefined,
+      audio: m.audio || '',
+      duration: toDurationStr(m.duration),
+    }));
+    window.dispatchEvent(new CustomEvent('tracks:updated', { detail: { tracks: updates } }));
+  };
+
   const saveAll = async () => {
     try {
       setSavingAll(true);
@@ -123,8 +145,15 @@ const EditAlbumPage: React.FC = () => {
       }
 
       const toDelete = tracks.filter(t => t._deleted);
+      const deletedIds: number[] = [];
       for (const t of toDelete) {
-        await deleteTrack(t.id);
+        try {
+          await deleteTrack(t.id);
+          deletedIds.push(Number(t.id));
+        } catch {}
+      }
+      if (deletedIds.length) {
+        window.dispatchEvent(new CustomEvent('tracks:deleted', { detail: { ids: deletedIds } }));
       }
 
       const toUpdate = tracks.filter(t =>
@@ -145,7 +174,10 @@ const EditAlbumPage: React.FC = () => {
         await addTrackToAlbum(albumId, fd);
       }
 
-      await load();
+      const fresh = await getAlbumById(albumId);
+      emitTracksUpdatedFromAlbum(fresh);
+      window.dispatchEvent(new Event('library:changed'));
+      navigate(`/album/${albumId}`);
     } catch (e) {
       console.error(e);
     } finally {
@@ -156,7 +188,11 @@ const EditAlbumPage: React.FC = () => {
   const removeAlbum = async () => {
     try {
       setDeletingAlbum(true);
-      await deleteAlbum(albumId);
+      const res = await deleteAlbum(albumId);
+      const ids: number[] = Array.isArray(res?.deleted_track_ids) ? res.deleted_track_ids : [];
+      if (ids.length) {
+        window.dispatchEvent(new CustomEvent('tracks:deleted', { detail: { ids } }));
+      }
       navigate('/my-music');
     } catch (e) {
       console.error(e);

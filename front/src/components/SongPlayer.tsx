@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlay, faPause, faStepBackward, faStepForward, faRedo, faListUl,
-  faVolumeUp, faPlus, faShuffle,
+  faVolumeUp, faPlus, faShuffle, faVolumeMute,
 } from '@fortawesome/free-solid-svg-icons';
 
 import DropdownMenu from '../components/DropdownMenu';
@@ -18,7 +18,7 @@ const DEFAULT_IMAGE = '/default-playlist-image.png';
 const SongPlayer: React.FC = () => {
   const {
     audioUrl, title, artist, albumImage, isPlaying, setIsPlaying,
-    next, prev, toggleShuffle, cycleRepeat, repeat,
+    next, prev, toggleShuffle, cycleRepeat, repeat, shuffle,
     currentItem, addToQueue, currentTrackId,
   } = usePlayer();
 
@@ -37,6 +37,44 @@ const SongPlayer: React.FC = () => {
   const [selectedPlaylists, setSelectedPlaylists] = useState<number[]>([]);
   const [pending, setPending] = useState<Record<number, boolean>>({});
 
+  const [isMuted, setIsMuted] = useState(false);
+  const lastVolumeRef = useRef(100);
+  const [isQueueOpen, setIsQueueOpen] = useState(true);
+
+  if (!audioRef.current) {
+    const a = new Audio();
+    a.preload = 'metadata';
+    a.crossOrigin = 'anonymous';
+    audioRef.current = a;
+  }
+
+  // refs pour callbacks
+  const nextRef = useRef(next);
+  useEffect(() => { nextRef.current = next; }, [next]);
+
+  const repeatRef = useRef(repeat);
+  useEffect(() => {
+    repeatRef.current = repeat;
+    const a = audioRef.current;
+    if (a) a.loop = (repeat === 'one'); // boucle native quand repeat actif
+  }, [repeat]);
+
+  const lastUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const onExternalUpdate = (e: Event) => {
+      const ce = e as CustomEvent<any>;
+      const { trackId, playlistIds } = ce.detail || {};
+      const curId = Number((currentItem as any)?.id);
+      if (!Number.isFinite(trackId) || !Number.isFinite(curId)) return;
+      if (Number(trackId) !== curId) return;
+      setSelectedPlaylists((playlistIds || []).map(Number));
+      setPending({});
+    };
+    window.addEventListener('track:playlist-updated', onExternalUpdate as EventListener);
+    return () => window.removeEventListener('track:playlist-updated', onExternalUpdate as EventListener);
+  }, [currentItem?.qid]);
+
   const getExistingIds = (): number[] => {
     if (!currentItem) return [];
     const anyItem = currentItem as any;
@@ -47,19 +85,6 @@ const SongPlayer: React.FC = () => {
     setSelectedPlaylists(getExistingIds());
     setPending({});
   }, [currentItem?.qid]);
-
-  if (!audioRef.current) {
-    const a = new Audio();
-    a.preload = 'metadata';
-    a.crossOrigin = 'anonymous';
-    audioRef.current = a;
-  }
-  const nextRef = useRef(next);
-  const repeatRef = useRef(repeat);
-  useEffect(() => { nextRef.current = next; }, [next]);
-  useEffect(() => { repeatRef.current = repeat; }, [repeat]);
-
-  const lastUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume / 100;
@@ -78,6 +103,8 @@ const SongPlayer: React.FC = () => {
       setProgressSec(0);
       setDuration(0);
       setSliderPct(0);
+      // s'assurer que loop est bien conforme au repeat courant
+      audio.loop = (repeatRef.current === 'one');
     }
 
     const updateProgress = () => {
@@ -98,13 +125,17 @@ const SongPlayer: React.FC = () => {
     };
 
     const onEnded = () => {
-      const rep = repeatRef.current;
-      if (rep === 'one') {
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-      } else {
-        nextRef.current();
+      // Si repeat actif, on laisse la boucle native (audio.loop) faire son job.
+      // Par sécurité, si une implémentation déclenche quand même 'ended',
+      // on relance instantanément et on ne passe PAS au titre suivant.
+      if (audio.loop || repeatRef.current === 'one') {
+        if (!audio.loop) {
+          audio.currentTime = 0;
+          audio.play().catch(() => {});
+        }
+        return;
       }
+      nextRef.current();
     };
 
     audio.addEventListener('timeupdate', updateProgress);
@@ -170,12 +201,38 @@ const SongPlayer: React.FC = () => {
     const audio = audioRef.current!;
     audio.volume = vol / 100;
     setVolume(vol);
+    if (vol > 0 && isMuted) setIsMuted(false);
+    if (vol > 0) lastVolumeRef.current = vol;
   };
+
   const handleVolumeMouseMove = (e: React.MouseEvent<HTMLInputElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
     const x = Math.max(0, Math.min(1, percent)) * rect.width;
     setVolumeTooltipX(x);
+  };
+
+  const toggleMute = () => {
+    if (!audioRef.current) return;
+    if (isMuted) {
+      const v = lastVolumeRef.current > 0 ? lastVolumeRef.current : 100;
+      setVolume(v);
+      audioRef.current.volume = v / 100;
+      setIsMuted(false);
+    } else {
+      lastVolumeRef.current = volume;
+      setVolume(0);
+      audioRef.current.volume = 0;
+      setIsMuted(true);
+    }
+  };
+
+  const toggleQueue = () => {
+    setIsQueueOpen(v => {
+      const nv = !v;
+      window.dispatchEvent(new CustomEvent('queue:toggle', { detail: { open: nv } }));
+      return nv;
+    });
   };
 
   const formatTime = (time: number) => {
@@ -218,26 +275,34 @@ const SongPlayer: React.FC = () => {
     const pid = Number(playlistId);
     if (!Number.isFinite(trackId) || !Number.isFinite(pid)) return;
 
-    const base = selectedPlaylists.length ? selectedPlaylists : getExistingIds();
+    const base = (selectedPlaylists.length ? selectedPlaylists : getExistingIds()).map(Number);
 
-    setSelectedPlaylists(prev => {
-      const cur = prev.length ? prev : base;
-      return checked
-        ? (cur.includes(pid) ? cur : [...cur, pid])
-        : cur.filter(id => id !== pid);
-    });
+    const next = checked
+      ? (base.includes(pid) ? base : [...base, pid])
+      : base.filter(id => id !== pid);
+
+    setSelectedPlaylists(next);
+    window.dispatchEvent(
+      new CustomEvent('track:playlist-updated', {
+        detail: { trackId: Number(trackId), playlistIds: next.map(Number) },
+      })
+    );
+
     setPending(p => ({ ...p, [pid]: true }));
-
     try {
       if (checked) await addMusicToPlaylist(pid, trackId);
       else await removeMusicFromPlaylist(pid, trackId);
     } catch {
-      setSelectedPlaylists(prev => {
-        const cur = prev.length ? prev : base;
-        return checked
-          ? cur.filter(id => id !== pid)
-          : (cur.includes(pid) ? cur : [...cur, pid]);
-      });
+      const rollback = checked
+        ? next.filter(id => id !== pid)
+        : (next.includes(pid) ? next : [...next, pid]);
+
+      setSelectedPlaylists(rollback);
+      window.dispatchEvent(
+        new CustomEvent('track:playlist-updated', {
+          detail: { trackId: Number(trackId), playlistIds: rollback.map(Number) },
+        })
+      );
     } finally {
       setPending(p => {
         const { [pid]: _, ...rest } = p;
@@ -293,11 +358,23 @@ const SongPlayer: React.FC = () => {
 
       <div className="player-center">
         <div className="controls-icons">
-          <FontAwesomeIcon icon={faShuffle} className="player-icon" title="Lecture aléatoire" onClick={toggleShuffle} />
+          <FontAwesomeIcon
+            icon={faShuffle}
+            className={`player-icon ${shuffle ? 'is-active' : ''}`}
+            title="Lecture aléatoire"
+            onClick={toggleShuffle}
+          />
           <FontAwesomeIcon icon={faStepBackward} className="player-icon" title="Piste précédente" onClick={onPrevClick} />
           <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} className="player-icon main-control" onClick={togglePlay} title={isPlaying ? 'Pause' : 'Lecture'} />
           <FontAwesomeIcon icon={faStepForward} className="player-icon" title="Piste suivante" onClick={next} />
-          <FontAwesomeIcon icon={faRedo} className="player-icon" title="Répéter (off → all → one)" onClick={cycleRepeat} />
+
+          {/* Repeat: off ↔ one (actif = violet), pas de badge "1" */}
+          <FontAwesomeIcon
+            icon={faRedo}
+            className={`player-icon ${repeat === 'one' ? 'is-active' : ''}`}
+            title={repeat === 'one' ? 'Répéter ce titre' : 'Répéter: désactivé'}
+            onClick={cycleRepeat}
+          />
         </div>
 
         <div className="progress-container">
@@ -308,8 +385,8 @@ const SongPlayer: React.FC = () => {
             max={100}
             value={progressPercent}
             step={0.1}
-            onMouseDown={onSeekStart}
-            onTouchStart={onSeekStart}
+            onMouseDown={() => setIsSeeking(true)}
+            onTouchStart={() => setIsSeeking(true)}
             onChange={onSeekChange}
             onMouseUp={onSeekEnd}
             onTouchEnd={onSeekEnd}
@@ -321,8 +398,19 @@ const SongPlayer: React.FC = () => {
       </div>
 
       <div className="player-right">
-        <FontAwesomeIcon icon={faListUl} className="player-icon" />
-        <FontAwesomeIcon icon={faVolumeUp} className="player-icon" />
+        <FontAwesomeIcon
+          icon={faListUl}
+          className={`player-icon ${isQueueOpen ? 'is-active' : ''}`}
+          title={isQueueOpen ? 'Masquer la file' : 'Afficher la file'}
+          onClick={toggleQueue}
+        />
+
+        <FontAwesomeIcon
+          icon={isMuted || volume === 0 ? faVolumeMute : faVolumeUp}
+          className={`player-icon ${isMuted || volume === 0 ? 'is-active' : ''}`}
+          title={isMuted || volume === 0 ? 'Activer le son' : 'Couper le son'}
+          onClick={toggleMute}
+        />
 
         <div
           className="volume-wrapper"

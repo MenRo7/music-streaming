@@ -24,13 +24,12 @@ class PlaylistController extends Controller
 
     public function show($id)
     {
-        // charger les musiques + relations nécessaires avec les colonnes utiles
         $playlist = Playlist::with([
             'musics' => function ($q) {
                 $q->with([
-                    'user:id,name',                  // pour récupérer l'id + nom de l’artiste (user)
-                    'album:id,title,image',         // pour récupérer l'id + titre (+ image si besoin)
-                    'playlists:id',                 // pour les menus de cases à cocher
+                    'user:id,name',
+                    'album:id,title,image',
+                    'playlists:id',
                 ]);
             }
         ])->find($id);

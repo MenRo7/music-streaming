@@ -24,7 +24,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/music/{id}', [MusicController::class, 'show']);
     Route::put('/music/{id}', [MusicController::class, 'update']);
     Route::delete('/music/{id}', [MusicController::class, 'destroy']);
-    
+    Route::post('/music/exists', [MusicController::class, 'exists']);
+
     Route::get('/my-albums', [AlbumController::class, 'myAlbums']);
     Route::post('/album', [AlbumController::class, 'store']);
     Route::get('/album', [AlbumController::class, 'index']);
@@ -52,6 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/favorites/{music}', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{music}', [FavoriteController::class, 'destroy']);
+
+    Route::post('/users/{id}/subscribe', [UserController::class, 'subscribe']);
+    Route::delete('/users/{id}/subscribe', [UserController::class, 'unsubscribe']);
+    Route::get('/users/{id}/subscribe', [UserController::class, 'isSubscribed']);
 
     Route::get('/likes/summary', [UserController::class, 'likesSummary']);
     Route::get('/search', [GlobalSearchController::class, 'search']);

@@ -175,10 +175,54 @@ class UserController extends Controller
                     'image' => $p->image ? asset('storage/' . $p->image) : null,
                 ];
             });
+        
+        $profiles = $user->following()
+            ->select('users.id', 'users.name', 'users.profile_image', 'users.updated_at')
+            ->get()
+            ->map(function ($u) {
+                return [
+                    'id'    => (int) $u->id,
+                    'name'  => $u->name,
+                    'image' => $u->profile_image ? asset('storage/' . $u->profile_image) . '?v=' . optional($u->updated_at)->timestamp : null,
+                ];
+            });
 
         return response()->json([
             'albums' => $albums,
             'playlists' => $playlists,
+            'profiles'  => $profiles,
         ]);
+    }
+
+    public function subscribe($id)
+    {
+        $viewer = Auth::user();
+        if ((int)$viewer->id === (int)$id) {
+            return response()->json(['message' => 'Impossible de vous abonner à vous-même'], 422);
+        }
+        $target = \App\Models\User::find($id);
+        if (!$target) {
+            return response()->json(['message' => 'Utilisateur non trouvé'], 404);
+        }
+        $viewer->following()->syncWithoutDetaching([$target->id]);
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function unsubscribe($id)
+    {
+        $viewer = Auth::user();
+        $target = \App\Models\User::find($id);
+        if (!$target) {
+            return response()->json(['message' => 'Utilisateur non trouvé'], 404);
+        }
+        $viewer->following()->detach($target->id);
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function isSubscribed($id)
+    {
+        $viewer = Auth::user();
+        $exists = $viewer->following()->where('users.id', $id)->exists();
+        return response()->json(['subscribed' => $exists]);
     }
 }
