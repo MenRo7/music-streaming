@@ -67,7 +67,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
   onArtistClick,
   headerMenuItems = [],
 }) => {
-  const { setCollectionContext, toggleShuffle, playSong } = usePlayer();
+  const { setCollectionContext, toggleShuffle, playSong, playFromList } = usePlayer();
   const location = useLocation();
   const isAlbumPage = location.pathname.startsWith('/album');
   const isProfilePage = location.pathname.startsWith('/profile');
@@ -89,44 +89,44 @@ const MediaPage: React.FC<MediaPageProps> = ({
 
   const normalizedSongs: UISong[] = useMemo(
     () =>
-      songs.map((s) =>
-        ({
-          id: Number(s.id),
-          name: s.name,
-          artist: s.artist,
-          album: s.album,
-          album_image: s.album_image,
-          audio: s.audio,
-          dateAdded: s.dateAdded,
-          duration: s.duration,
-          playlistIds: toNumberArray(s.playlistIds ?? []),
-          ...(s as any).album_id != null ? { album_id: (s as any).album_id } : {},
-          ...(s as any).artist_user_id != null ? { artist_user_id: (s as any).artist_user_id } : {},
-        } as any)
+      songs.map(
+        (s) =>
+          ({
+            id: Number(s.id),
+            name: s.name,
+            artist: s.artist,
+            album: s.album,
+            album_image: s.album_image,
+            audio: s.audio,
+            dateAdded: s.dateAdded,
+            duration: s.duration,
+            playlistIds: toNumberArray(s.playlistIds ?? []),
+            ...(s as any).album_id != null ? { album_id: (s as any).album_id } : {},
+            ...(s as any).artist_user_id != null ? { artist_user_id: (s as any).artist_user_id } : {},
+          } as any)
       ),
     [songs]
   );
 
   useEffect(() => {
     if (collectionType === 'favorites') {
-      setCollectionContext({ type: 'playlist', id: -1 }, tracks);
+      setCollectionContext({ type: 'playlist', id: 0 }, tracks);
       return;
     }
-
-    if (
-      (collectionType === 'playlist' || collectionType === 'album') &&
-      collectionId != null
-    ) {
-      setCollectionContext(
-        { type: collectionType, id: Number(collectionId) },
-        tracks
-      );
+    if ((collectionType === 'playlist' || collectionType === 'album') && collectionId != null) {
+      setCollectionContext({ type: collectionType, id: Number(collectionId) }, tracks);
     }
   }, [collectionType, collectionId, tracks, setCollectionContext]);
 
   const onPlayAll = () => {
     const first = normalizedSongs[0];
-    if (first) playSong(first.audio, first.name, first.artist, first.album_image || '', first.id);
+    if (!first) return;
+
+    if (collectionType === 'favorites') {
+      playFromList(tracks, first.id);
+    } else {
+      playSong(first.audio, first.name, first.artist, first.album_image || '', first.id);
+    }
   };
 
   const onShuffleAll = () => {
@@ -149,8 +149,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
     return [...extras, ...base];
   };
 
-  const hasHeaderMenu =
-    headerMenuItems.length > 0 || Boolean(onEdit) || Boolean(onDelete);
+  const hasHeaderMenu = headerMenuItems.length > 0 || Boolean(onEdit) || Boolean(onDelete);
 
   const combinedHeaderMenu: MenuItem[] = [
     ...headerMenuItems,

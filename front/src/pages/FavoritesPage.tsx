@@ -112,30 +112,27 @@ const FavoritesPage: React.FC = () => {
         const s: any = song;
         if (s.artist_user_id) navigate(`/profile?user=${s.artist_user_id}`);
       }}
-      getActions={(song) => {
-        const s: any = song;
-        return [
-          { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song as any) },
-          {
-            label: 'Ajouter à une playlist',
-            onClick: () => {},
-            withPlaylistMenu: true,
-            songId: (song as any).id,
-            existingPlaylistIds: (song as any).playlistIds ?? [],
-            onToggle: (playlistId: number, checked: boolean) =>
-              checked
-                ? addMusicToPlaylist(playlistId, (song as any).id)
-                : removeMusicFromPlaylist(playlistId, (song as any).id),
+      getActions={(song) => [
+        { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song as any) },
+        {
+          label: 'Ajouter à une playlist',
+          onClick: () => {},
+          withPlaylistMenu: true,
+          songId: (song as any).id,
+          existingPlaylistIds: (song as any).playlistIds ?? [],
+          onToggle: (playlistId: number, checked: boolean) =>
+            checked
+              ? addMusicToPlaylist(playlistId, (song as any).id)
+              : removeMusicFromPlaylist(playlistId, (song as any).id),
+        },
+        {
+          label: 'Supprimer des favoris',
+          onClick: async () => {
+            await removeFavorite((song as any).id);
+            setSongs((prev) => prev.filter((s2) => s2.id !== (song as any).id));
           },
-          {
-            label: 'Supprimer des favoris',
-            onClick: async () => {
-              await removeFavorite((song as any).id);
-              setSongs((prev) => prev.filter((s2) => s2.id !== (song as any).id));
-            },
-          },
-        ];
-      }}
+        },
+      ]}
     />
   );
 };

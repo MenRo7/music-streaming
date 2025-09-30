@@ -34,7 +34,6 @@ type QueueItem = Track & {
   from?: SourceRef;
 };
 
-/** Repeat: uniquement 'off' | 'one' (repeat track) */
 type RepeatMode = 'off' | 'one';
 
 type PlaySongOpts = {
@@ -48,7 +47,6 @@ export interface PlayerContextType {
   albumImage: string;
   currentTrackId: number | null;
   isPlaying: boolean;
-
   playSong: (
     url: string,
     title: string,
@@ -57,6 +55,7 @@ export interface PlayerContextType {
     trackId?: number,
     opts?: PlaySongOpts
   ) => void;
+  playFromList: (tracks: Track[], startTrackId?: number) => void;
   setIsPlaying: (playing: boolean) => void;
   currentItem: QueueItem | null;
   upNext: QueueItem[];
@@ -83,7 +82,7 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 const uid = () => Math.random().toString(36).slice(2, 10);
 const shuffleArray = <T,>(arr: T[]) => {
   const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
+  for (let i = a.length - 1; i > 0; i++) {
     const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
@@ -111,7 +110,7 @@ type PersistedState = {
   queueAuto: QueueItem[];
   history: QueueItem[];
   shuffle: boolean;
-  repeat: any; // on migre vers 'off' | 'one'
+  repeat: any;
   source: SourceRef;
   collection: Track[];
 };
@@ -231,6 +230,20 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     applyCurrentToCompatFields(t);
   }, [applyCurrentToCompatFields, rebuildAutoFromIndex]);
 
+  const playFromList = useCallback<PlayerContextType['playFromList']>((tracks, startTrackId) => {
+    const list = Array.isArray(tracks) ? tracks.slice() : [];
+    if (list.length === 0) return;
+
+    const idx = startTrackId != null
+      ? Math.max(0, list.findIndex(t => Number(t.id) === Number(startTrackId)))
+      : 0;
+
+    const virtualSrc: SourceRef = { type: 'playlist', id: 0 };
+    setSource(virtualSrc);
+    setCollection(list);
+    rebuildAutoFromIndex(list, idx >= 0 ? idx : 0, virtualSrc);
+  }, [rebuildAutoFromIndex]);
+
   const addToQueue = useCallback<PlayerContextType['addToQueue']>((track) => {
     setQueueManual(q => [...q, { ...track, qid: uid(), origin: 'manual', from: sourceRef.current }]);
   }, []);
@@ -292,8 +305,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
   }, [applyCurrentToCompatFields]);
 
-  /** NEXT sans logique repeat:one (repeat géré par l’audio.loop côté SongPlayer).
-      Si l’utilisateur clique “Suivant” on passe bien au suivant même si repeat est actif. */
   const next = useCallback(() => {
     const cur = currentItemRef.current;
     if (!cur) return;
@@ -323,7 +334,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return;
     }
 
-    // plus rien à lire → stop
     setIsPlaying(false);
   }, [applyCurrentToCompatFields]);
 
@@ -368,7 +378,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
   }, [rebuildAutoFromIndex]);
 
-  /** off ↔ one */
   const cycleRepeat = useCallback(() => {
     setRepeat((r: RepeatMode) => (r === 'off' ? 'one' : 'off'));
   }, []);
@@ -431,7 +440,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       ? data.currentItem
       : null;
 
-    // Migration: seule valeur valide persistée = 'one'. Tout le reste = 'off'
     const sanitizedRepeat: RepeatMode = data.repeat === 'one' ? 'one' : 'off';
 
     const sanitized = {
@@ -593,7 +601,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const value: PlayerContextType = useMemo(() => ({
     audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
-    playSong, setIsPlaying,
+    playSong, playFromList,
+    setIsPlaying,
     currentItem, upNext, queueManual, queueAuto, shuffle, repeat, source,
     setCollectionContext, addToQueue, clearQueue, removeFromQueue, moveManual, playNowFromQueue,
     next, prev, toggleShuffle, cycleRepeat,
@@ -601,7 +610,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }), [
     audioUrl, title, artist, albumImage, currentTrackId, isPlaying,
     currentItem, upNext, queueManual, queueAuto, shuffle, repeat, source,
-    playSong,
+    playSong, playFromList,
     setCollectionContext, addToQueue, clearQueue, removeFromQueue, moveManual, playNowFromQueue,
     next, prev, toggleShuffle, cycleRepeat,
     isHydrating,

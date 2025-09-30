@@ -7,7 +7,12 @@ import { usePlayer } from '../apis/PlayerContext';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import '../styles/MusicQueue.css';
 
-type WithPlaylistIds = { playlistIds?: number[] | (number | string)[] };
+type WithPlaylistIds = {
+  playlistIds?: number[] | (number | string)[];
+  playlist_ids?: number[] | (number | string)[];
+  playlists?: number[] | (number | string)[];
+};
+
 const DEFAULT_IMAGE = '/default-playlist-image.png';
 
 const toNumberArray = (arr: any[]): number[] =>
@@ -37,7 +42,7 @@ const MusicQueue: React.FC = () => {
     const onToggle = (e: Event) => {
       const ce = e as CustomEvent<{ open?: boolean }>;
       if (typeof ce.detail?.open === 'boolean') setIsOpen(ce.detail.open);
-      else setIsOpen(v => !v);
+      else setIsOpen((v) => !v);
     };
     window.addEventListener('queue:toggle', onToggle as EventListener);
     return () => window.removeEventListener('queue:toggle', onToggle as EventListener);
@@ -54,10 +59,14 @@ const MusicQueue: React.FC = () => {
         mapUpdates[currentItem.qid] = (playlistIds || []).map(Number);
       }
       queueManual.forEach((t) => {
-        if (Number((t as any).id) === Number(trackId)) mapUpdates[t.qid] = (playlistIds || []).map(Number);
+        if (Number((t as any).id) === Number(trackId)) {
+          mapUpdates[t.qid] = (playlistIds || []).map(Number);
+        }
       });
       queueAuto.forEach((t) => {
-        if (Number((t as any).id) === Number(trackId)) mapUpdates[t.qid] = (playlistIds || []).map(Number);
+        if (Number((t as any).id) === Number(trackId)) {
+          mapUpdates[t.qid] = (playlistIds || []).map(Number);
+        }
       });
 
       if (Object.keys(mapUpdates).length) {
@@ -67,20 +76,29 @@ const MusicQueue: React.FC = () => {
 
     window.addEventListener('track:playlist-updated', onExternalUpdate as EventListener);
     return () => window.removeEventListener('track:playlist-updated', onExternalUpdate as EventListener);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentItem?.qid, queueManual.length, queueAuto.length]);
 
   const isInteractive = (el: HTMLElement | null): boolean =>
     !!el?.closest('button, [role="button"], a, input, textarea, select, .mq-cover-play, .dropdown-wrapper');
 
+  // ✅ robuste : respecte override [] et lit plusieurs clés
   const getExistingIds = (t: unknown, qid: string): number[] => {
-    const override = queuePlaylists[qid];
-    if (override) return toNumberArray(override);
+    if (Object.prototype.hasOwnProperty.call(queuePlaylists, qid)) {
+      return toNumberArray(queuePlaylists[qid]);
+    }
 
     if (t && typeof t === 'object') {
-      const ids = (t as WithPlaylistIds).playlistIds;
-      if (Array.isArray(ids)) return toNumberArray(ids);
+      const anyT = t as WithPlaylistIds;
+      const candidates = [
+        anyT.playlistIds,
+        anyT.playlist_ids,
+        anyT.playlists,
+      ];
+      for (const c of candidates) {
+        if (Array.isArray(c)) return toNumberArray(c);
+      }
     }
+
     return [];
   };
 
@@ -99,13 +117,13 @@ const MusicQueue: React.FC = () => {
     const key = `${qid}:${pid}`;
     if (pending[key]) return;
 
-    setPending(p => ({ ...p, [key]: true }));
+    setPending((p) => ({ ...p, [key]: true }));
 
-    setQueuePlaylists(prev => {
+    setQueuePlaylists((prev) => {
       const cur = toNumberArray(prev[qid] ?? baseIds);
       const next = checked
-        ? (cur.includes(pid) ? cur : [...cur, pid])
-        : cur.filter(id => id !== pid);
+        ? cur.includes(pid) ? cur : [...cur, pid]
+        : cur.filter((id) => id !== pid);
 
       window.dispatchEvent(
         new CustomEvent('track:playlist-updated', {
@@ -121,11 +139,11 @@ const MusicQueue: React.FC = () => {
       else await removeMusicFromPlaylist(pid, trackId);
     } catch (err) {
       console.error('Erreur maj playlist', { err, qid, trackId, pid, checked });
-      setQueuePlaylists(prev => {
+      setQueuePlaylists((prev) => {
         const cur = toNumberArray(prev[qid] ?? baseIds);
         const rollback = checked
-          ? cur.filter(id => id !== pid)
-          : (cur.includes(pid) ? cur : [...cur, pid]);
+          ? cur.filter((id) => id !== pid)
+          : cur.includes(pid) ? cur : [...cur, pid];
 
         window.dispatchEvent(
           new CustomEvent('track:playlist-updated', {
@@ -136,7 +154,7 @@ const MusicQueue: React.FC = () => {
         return { ...prev, [qid]: rollback };
       });
     } finally {
-      setPending(p => {
+      setPending((p) => {
         const { [key]: _, ...rest } = p;
         return rest;
       });
@@ -144,19 +162,16 @@ const MusicQueue: React.FC = () => {
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
-    if (isInteractive(e.target as HTMLElement)) { e.preventDefault(); return; }
+    if (isInteractive(e.target as HTMLElement)) {
+      e.preventDefault();
+      return;
+    }
     setDragIndex(idx);
     (e.currentTarget as HTMLElement).classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', String(idx));
   };
 
-  const handleDragEnter = (_e: React.DragEvent<HTMLLIElement>, idx: number) => {
-    setOverIndex(idx);
-  };
-  const handleDragOver = (e: React.DragEvent<HTMLLIElement>) => {
-    e.preventDefault();
-  };
   const handleDrop = (e: React.DragEvent<HTMLLIElement>, idx: number) => {
     e.preventDefault();
     if (dragIndex !== null && dragIndex !== idx) {
@@ -165,6 +180,7 @@ const MusicQueue: React.FC = () => {
     setDragIndex(null);
     setOverIndex(null);
   };
+
   const handleDragEnd = (e: React.DragEvent<HTMLLIElement>) => {
     (e.currentTarget as HTMLElement).classList.remove('dragging');
     setDragIndex(null);
@@ -194,7 +210,6 @@ const MusicQueue: React.FC = () => {
     );
   }
 
-  // NEW: masquer complètement la file si fermée
   if (!isOpen) return null;
 
   return (
@@ -235,7 +250,9 @@ const MusicQueue: React.FC = () => {
                       src={currentItem.album_image}
                       alt=""
                       className="mq-cover"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE;
+                      }}
                     />
                   ) : (
                     <div className="mq-cover mq-cover--placeholder" aria-hidden />
@@ -271,6 +288,7 @@ const MusicQueue: React.FC = () => {
             </ul>
           )}
 
+          {/* File d’attente manuelle */}
           <div className="mq-section">
             <div className="mq-section-head">
               <span>Ajoutés à la file d'attente</span>
@@ -279,8 +297,7 @@ const MusicQueue: React.FC = () => {
             <ul className="mq-list">
               {queueManual.map((t, idx) => {
                 const existingIdsRaw = getExistingIds(t, t.qid);
-                const normalized = Array.from(new Set(existingIdsRaw.map(Number)))
-                  .filter((n) => Number.isFinite(n)) as number[];
+                const normalized = Array.from(new Set(existingIdsRaw.map(Number))).filter(Number.isFinite) as number[];
                 const idsKey = normalized.slice().sort((a, b) => a - b).join('_');
 
                 return (
@@ -289,7 +306,7 @@ const MusicQueue: React.FC = () => {
                     className={`mq-item draggable ${overIndex === idx ? 'drag-over' : ''}`}
                     draggable
                     onDragStart={(e) => handleDragStart(e, idx)}
-                    onDragEnter={(e) => setOverIndex(idx)}
+                    onDragEnter={() => setOverIndex(idx)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => handleDrop(e, idx)}
                     onDragEnd={handleDragEnd}
@@ -302,7 +319,9 @@ const MusicQueue: React.FC = () => {
                           src={t.album_image}
                           alt=""
                           className="mq-cover"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE;
+                          }}
                         />
                       ) : (
                         <div className="mq-cover mq-cover--placeholder" aria-hidden />
@@ -370,6 +389,7 @@ const MusicQueue: React.FC = () => {
             </ul>
           </div>
 
+          {/* File automatique */}
           <div className="mq-section">
             <div className="mq-section-head">
               <span>À lire à la suite</span>
@@ -378,17 +398,11 @@ const MusicQueue: React.FC = () => {
             <ul className="mq-list">
               {queueAuto.map((t) => {
                 const existingIdsRaw = getExistingIds(t, t.qid);
-                const normalized = Array.from(new Set(existingIdsRaw.map(Number)))
-                  .filter((n) => Number.isFinite(n)) as number[];
+                const normalized = Array.from(new Set(existingIdsRaw.map(Number))).filter(Number.isFinite) as number[];
                 const idsKey = normalized.slice().sort((a, b) => a - b).join('_');
 
                 return (
-                  <li
-                    key={t.qid}
-                    className="mq-item"
-                    draggable={false}
-                    title="Ajouté automatiquement"
-                  >
+                  <li key={t.qid} className="mq-item" draggable={false} title="Ajouté automatiquement">
                     <div className="mq-cover-wrap">
                       {t.album_image ? (
                         <img
@@ -396,7 +410,9 @@ const MusicQueue: React.FC = () => {
                           src={t.album_image}
                           alt=""
                           className="mq-cover"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE;
+                          }}
                         />
                       ) : (
                         <div className="mq-cover mq-cover--placeholder" aria-hidden />
