@@ -14,27 +14,27 @@
   overflow-y: auto;
   overflow-x: hidden;
   max-height: calc(100vh - 75px);
+
+  --pill-py: 0.5rem;
+  --pill-px: 1.2rem;
+  --half-overlap: 12px;
 }
 
 .sidebar::-webkit-scrollbar {
   width: 10px;
 }
-
 .sidebar::-webkit-scrollbar-thumb {
   background-color: #1e1e1e;
   border-radius: 10px;
   transition: background-color 0.3s ease;
 }
-
 .sidebar::-webkit-scrollbar-thumb:hover {
   background-color: #d1b3ff;
 }
-
 .sidebar::-webkit-scrollbar-track {
   background-color: #252525;
   border-radius: 10px;
 }
-
 .sidebar::-webkit-scrollbar-corner {
   background-color: transparent;
 }
@@ -49,13 +49,21 @@
   margin-top: 0;
   flex-wrap: wrap;
   list-style-type: none;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.pill-with-addon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
 .link-button {
   background-color: #4f4c52;
   color: #fff;
   border: none;
-  padding: 0.5rem 1.2rem;
+  padding: var(--pill-py) var(--pill-px);
   border-radius: 20px;
   font-size: 1rem;
   cursor: pointer;
@@ -63,16 +71,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
+  white-space: nowrap;
 }
-
 .link-button:hover {
   background-color: #d1b3ff;
   color: #5e2d91;
 }
-
 .link-button.active {
   background-color: #fff;
   color: #000;
+}
+
+.half-pill {
+  margin-left: calc(-1 * var(--half-overlap));
+  padding-top: var(--pill-py);
+  padding-bottom: var(--pill-py);
+  padding-left: calc(var(--pill-px) - 0.35rem);
+  padding-right: calc(var(--pill-px) - 0.35rem);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  box-shadow: 4px 0 0 rgba(0,0,0,0.08) inset;
+  z-index: 1;
+  font-size: inherit;
+}
+
+.create-button {
+  background-color: #5e2d91;
+}
+.create-button:hover {
+  background-color: #d1b3ff;
+  color: #5e2d91;
 }
 
 .playlist-grid {
@@ -83,18 +112,16 @@
 }
 
 .reset-filters {
-  position: absolute;
-  top: 25px;
-  left: 15px;
+  margin-left: auto;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 .filter-clear-icon {
   color: #fff;
   font-size: 1.5rem;
-  display: flex;
 }
-
 .reset-filters:hover .filter-clear-icon {
   color: #5e2d91;
 }
@@ -130,12 +157,10 @@
   align-items: center;
   justify-content: center;
 }
-
 .profile-circle-card:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 14px rgba(0,0,0,.3);
 }
-
 .profile-circle-img,
 .profile-circle-placeholder {
   width: 100%;
@@ -143,7 +168,6 @@
   object-fit: cover;
   border-radius: 50%;
 }
-
 .profile-circle-placeholder {
   display: flex;
   align-items: center;
@@ -153,7 +177,6 @@
   font-weight: 700;
   font-size: 3rem;
 }
-
 .profile-circle-name {
   position: absolute;
   bottom: 0;
@@ -172,63 +195,42 @@
 }
 
 @media (max-width: 1200px) {
-  .sidebar {
-    width: 200px;
-  }
-
-  .playlist-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .subs-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .pill-container {
-    width: 90px;
-    margin-left: 10px;
-    padding: 0;
-  }
-
-  .profile-circle-card {
-    margin: 0 auto;
-  }
+  .sidebar { width: 200px; }
+  .playlist-grid { grid-template-columns: 1fr; }
+  .subs-grid { grid-template-columns: 1fr; }
+  .pill-container { width: 90px; margin-left: 10px; padding: 0; }
+  .profile-circle-card { margin: 0 auto; }
+  .sidebar { --half-overlap: 10px; }
 }
 
 @media (max-width: 625px) {
   .sidebar {
     width: 110px;
     overflow-x: hidden;
+    --pill-py: 0.45rem;
+    --pill-px: 1rem;
+    --half-overlap: 10px;
   }
 
-  .playlist-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .subs-grid {
-    grid-template-columns: 1fr;
-  }
+  .playlist-grid { grid-template-columns: 1fr; }
+  .subs-grid { grid-template-columns: 1fr; }
 
   .link-button {
     font-size: 0.9rem;
-    padding: 0.45rem 1rem;
+    padding: var(--pill-py) var(--pill-px);
   }
 
-  .profile-circle-card {
-    width: 90px;
-    height: 90px;
-  }
-
-  .profile-circle-placeholder {
-    font-size: 1.6rem;
-  }
-
-  .profile-circle-name {
-    font-size: 0.75rem;
-  }
+  .profile-circle-card { width: 90px; height: 90px; }
+  .profile-circle-placeholder { font-size: 1.6rem; }
+  .profile-circle-name { font-size: 0.75rem; }
 
   .sidebar-section-separator {
     margin: 12px 4px 4px;
     padding-top: 8px;
   }
+}
+
+.empty-hint {
+  padding: 8px 12px;
+  color: #bfbfbf;
 }
