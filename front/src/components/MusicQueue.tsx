@@ -32,6 +32,17 @@ const MusicQueue: React.FC = () => {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
+  const [isOpen, setIsOpen] = useState(true);
+  useEffect(() => {
+    const onToggle = (e: Event) => {
+      const ce = e as CustomEvent<{ open?: boolean }>;
+      if (typeof ce.detail?.open === 'boolean') setIsOpen(ce.detail.open);
+      else setIsOpen(v => !v);
+    };
+    window.addEventListener('queue:toggle', onToggle as EventListener);
+    return () => window.removeEventListener('queue:toggle', onToggle as EventListener);
+  }, []);
+
   useEffect(() => {
     const onExternalUpdate = (e: Event) => {
       const ce = e as CustomEvent<any>;
@@ -182,6 +193,9 @@ const MusicQueue: React.FC = () => {
       </aside>
     );
   }
+
+  // NEW: masquer complètement la file si fermée
+  if (!isOpen) return null;
 
   return (
     <aside className="music-queue" aria-label="File d'attente">

@@ -34,7 +34,8 @@ type QueueItem = Track & {
   from?: SourceRef;
 };
 
-type RepeatMode = 'off' | 'all' | 'one';
+/** Repeat: uniquement 'off' | 'one' (repeat track) */
+type RepeatMode = 'off' | 'one';
 
 type PlaySongOpts = {
   playlistIds?: Array<number | string>;
@@ -110,29 +111,22 @@ type PersistedState = {
   queueAuto: QueueItem[];
   history: QueueItem[];
   shuffle: boolean;
-  repeat: RepeatMode;
+  repeat: any; // on migre vers 'off' | 'one'
   source: SourceRef;
   collection: Track[];
 };
 
 const STORAGE_PREFIX = 'player:queue:v1';
-
 const getUserId = (): number | null => {
   const raw = localStorage.getItem('currentUserId');
   if (!raw) return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 };
-
 const keyFor = (userId: number) => `${STORAGE_PREFIX}:${userId}`;
-
 const safeParse = <T,>(s: string | null): T | null => {
   if (!s) return null;
-  try {
-    return JSON.parse(s) as T;
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(s) as T; } catch { return null; }
 };
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -164,6 +158,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => { queueManualRef.current = queueManual; }, [queueManual]);
   useEffect(() => { queueAutoRef.current = queueAuto; }, [queueAuto]);
 
+  const currentItemRef = useRef<QueueItem | null>(currentItem);
+  useEffect(() => { currentItemRef.current = currentItem; }, [currentItem]);
+
   const upNext = useMemo(() => [...queueManual, ...queueAuto], [queueManual, queueAuto]);
 
   const applyCurrentToCompatFields = useCallback((t: Track) => {
@@ -176,15 +173,28 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   const rebuildAutoFromIndex = useCallback(
-    (tracks: Track[], startIndex: number, src: SourceRef) => {
+    (
+      tracks: Track[],
+      startIndex: number,
+      src: SourceRef,
+      opts?: { forceShuffle?: boolean }
+    ) => {
+      const useShuf = opts?.forceShuffle ?? shuffle;
+
       const now = tracks[startIndex];
       const before = tracks.slice(0, startIndex);
-      let tail = tracks.slice(startIndex + 1);
-      tail = shuffle ? shuffleArray(tail) : tail;
+
+      let tail: Track[];
+      if (useShuf) {
+        const pool = tracks.filter((_, i) => i !== startIndex);
+        tail = shuffleArray(pool);
+      } else {
+        tail = tracks.slice(startIndex + 1);
+      }
 
       const nowItem: QueueItem = { ...now, qid: uid(), origin: 'auto', from: src };
       setCurrentItem(nowItem);
-      setHistory(before.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
+      setHistory(useShuf ? [] : before.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
       setQueueAuto(tail.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
       applyCurrentToCompatFields(now);
     },
@@ -245,9 +255,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const clearQueue = useCallback<PlayerContextType['clearQueue']>((keepCurrent = true) => {
     setQueueManual([]);
     setQueueAuto([]);
-    if (!keepCurrent) {
-      hardReset();
-    }
+    if (!keepCurrent) hardReset();
   }, [hardReset]);
 
   const removeFromQueue = useCallback<PlayerContextType['removeFromQueue']>((qid) => {
@@ -284,48 +292,40 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
   }, [applyCurrentToCompatFields]);
 
+  /** NEXT sans logique repeat:one (repeat géré par l’audio.loop côté SongPlayer).
+      Si l’utilisateur clique “Suivant” on passe bien au suivant même si repeat est actif. */
   const next = useCallback(() => {
-    setCurrentItem((cur) => {
-      if (!cur) return cur;
+    const cur = currentItemRef.current;
+    if (!cur) return;
 
-      if (repeat === 'one') {
-        setIsPlaying(true);
-        return cur;
-      }
+    setHistory(h => [...h, cur]);
 
-      setHistory((h) => [...h, cur]);
+    const manual = queueManualRef.current || [];
+    const auto = queueAutoRef.current || [];
 
-      const manual = queueManualRef.current;
-      const auto = queueAutoRef.current;
+    let nextItem: QueueItem | undefined;
+    let nextManual = manual;
+    let nextAuto = auto;
 
-      let nextItem: QueueItem | undefined;
-      let nextManual = manual;
-      let nextAuto = auto;
+    if (manual.length > 0) {
+      nextItem = manual[0];
+      nextManual = manual.slice(1);
+    } else if (auto.length > 0) {
+      nextItem = auto[0];
+      nextAuto = auto.slice(1);
+    }
 
-      if (manual.length > 0) {
-        nextItem = manual[0];
-        nextManual = manual.slice(1);
-      } else if (auto.length > 0) {
-        nextItem = auto[0];
-        nextAuto = auto.slice(1);
-      }
+    if (nextItem) {
+      setQueueManual(nextManual);
+      setQueueAuto(nextAuto);
+      setCurrentItem(nextItem);
+      applyCurrentToCompatFields(nextItem);
+      return;
+    }
 
-      if (nextItem) {
-        setQueueManual(nextManual);
-        setQueueAuto(nextAuto);
-        applyCurrentToCompatFields(nextItem);
-        return nextItem;
-      }
-
-      if (repeat === 'all' && sourceRef.current.type !== 'none' && collectionRef.current.length > 0) {
-        rebuildAutoFromIndex(collectionRef.current, 0, sourceRef.current);
-        return cur;
-      }
-
-      setIsPlaying(false);
-      return cur;
-    });
-  }, [applyCurrentToCompatFields, rebuildAutoFromIndex, repeat]);
+    // plus rien à lire → stop
+    setIsPlaying(false);
+  }, [applyCurrentToCompatFields]);
 
   const prev = useCallback(() => {
     setHistory((h) => {
@@ -336,11 +336,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       setCurrentItem((cur) => {
         if (cur) {
-          if (cur.origin === 'manual') {
-            setQueueManual((m) => [cur, ...m]);
-          } else {
-            setQueueAuto((a) => [cur, ...a]);
-          }
+          if (cur.origin === 'manual') setQueueManual((m) => [cur, ...m]);
+          else setQueueAuto((a) => [cur, ...a]);
         }
         applyCurrentToCompatFields(last);
         return last;
@@ -353,25 +350,35 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const toggleShuffle = useCallback(() => {
     setShuffle(s => {
       const ns = !s;
+
+      const cur = currentItemRef.current;
+      const src = sourceRef.current;
+      const cols = collectionRef.current;
+
+      if (src.type !== 'none' && cols.length > 0 && cur) {
+        const idx = cols.findIndex(t => t.id === cur.id);
+        if (idx >= 0) {
+          rebuildAutoFromIndex(cols, idx, src, { forceShuffle: ns });
+          return ns;
+        }
+      }
+
       setQueueAuto(a => (ns ? shuffleArray(a) : a));
       return ns;
     });
-  }, []);
+  }, [rebuildAutoFromIndex]);
 
+  /** off ↔ one */
   const cycleRepeat = useCallback(() => {
-    setRepeat(r => (r === 'off' ? 'all' : r === 'all' ? 'one' : 'off'));
+    setRepeat((r: RepeatMode) => (r === 'off' ? 'one' : 'off'));
   }, []);
 
   const debouncedSave = useMemo(
-    () =>
-      debounce((state: PersistedState, userId: number | null) => {
-        if (!userId) return;
-        try {
-          localStorage.setItem(keyFor(userId), JSON.stringify(state));
-        } catch (e) {
-          console.warn('Impossible de sauvegarder la queue', e);
-        }
-      }, 200),
+    () => debounce((state: PersistedState, userId: number | null) => {
+      if (!userId) return;
+      try { localStorage.setItem(keyFor(userId), JSON.stringify(state)); }
+      catch (e) { console.warn('Impossible de sauvegarder la queue', e); }
+    }, 200),
     []
   );
 
@@ -400,10 +407,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const raw = localStorage.getItem(keyFor(userId));
     const data = safeParse<PersistedState>(raw);
 
-    if (!data) {
-      setIsHydrating(false);
-      return;
-    }
+    if (!data) { setIsHydrating(false); return; }
 
     const ids = new Set<number>();
     if (data.currentItem?.id) ids.add(data.currentItem.id);
@@ -427,7 +431,10 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       ? data.currentItem
       : null;
 
-    const sanitized: PersistedState = {
+    // Migration: seule valeur valide persistée = 'one'. Tout le reste = 'off'
+    const sanitizedRepeat: RepeatMode = data.repeat === 'one' ? 'one' : 'off';
+
+    const sanitized = {
       ...data,
       currentItem: filteredCurrent,
       isPlaying: filteredCurrent ? data.isPlaying : false,
@@ -436,6 +443,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       queueAuto: filterList(data.queueAuto),
       history: filterList(data.history),
       collection: filterList(data.collection),
+      repeat: sanitizedRepeat,
     };
 
     setAudioUrl(sanitized.audioUrl || '');
@@ -450,13 +458,11 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setQueueAuto(Array.isArray(sanitized.queueAuto) ? sanitized.queueAuto : []);
     setHistory(Array.isArray(sanitized.history) ? sanitized.history : []);
     setShuffle(Boolean(sanitized.shuffle));
-    setRepeat(sanitized.repeat || 'off');
+    setRepeat(sanitized.repeat as RepeatMode);
     setSource(sanitized.source || { type: 'none' });
     setCollection(Array.isArray(sanitized.collection) ? sanitized.collection : []);
 
-    try {
-      localStorage.setItem(keyFor(userId), JSON.stringify(sanitized));
-    } catch {}
+    try { localStorage.setItem(keyFor(userId), JSON.stringify(sanitized)); } catch {}
 
     setIsHydrating(false);
   }, [hardReset]);
@@ -469,7 +475,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       queueAutoRef.current.forEach(i => ids.add(i.id));
       history.forEach(i => ids.add(i.id));
       collectionRef.current.forEach(t => ids.add(t.id));
-
       if (ids.size === 0) return;
 
       const existing = await checkTracksExist([...ids]);
@@ -500,9 +505,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [hydrateForUser]);
 
   useEffect(() => {
-    const onAuthChanged = () => {
-      hardReset();
-    };
+    const onAuthChanged = () => { hardReset(); };
     window.addEventListener('auth:changed', onAuthChanged);
     return () => window.removeEventListener('auth:changed', onAuthChanged);
   }, [hardReset]);
@@ -540,19 +543,13 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       if (!Array.isArray(updates) || updates.length === 0) return;
 
       const map = new Map<number, Partial<Track>>();
-      for (const t of updates) {
-        if (t && typeof t.id === 'number') {
-          map.set(t.id, t);
-        }
-      }
+      for (const t of updates) if (t && typeof t.id === 'number') map.set(t.id, t);
       if (map.size === 0) return;
 
       setCurrentItem(ci => {
         if (!ci) return ci;
         const next = mergeUpdate(ci, map);
-        if (next !== ci && next.id === ci.id) {
-          applyCurrentToCompatFields(next);
-        }
+        if (next !== ci && next.id === ci.id) applyCurrentToCompatFields(next);
         return next;
       });
       setQueueManual(list => list.map(it => mergeUpdate(it, map)));
