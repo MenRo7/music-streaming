@@ -8,6 +8,7 @@ import { useUser } from '../apis/UserContext';
 
 import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
+import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 
 const toDurationStr = (v?: string | number | null) => {
   if (v == null) return undefined;
@@ -88,21 +89,22 @@ const AlbumPage: React.FC = () => {
     });
   };
 
-  const mediaSongs: (Track & { dateAdded?: string; playlistIds?: number[] })[] = useMemo(() => {
-    if (!album?.musics) return [];
-    return album.musics.map((m) => ({
-      id: m.id,
-      name: m.title,
-      artist: m.artist_name || album.artist_name || 'Inconnu',
-      album: album.title,
-      album_image: album.image || undefined,
-      audio: m.audio || '',
-      duration: toDurationStr(m.duration),
-      playlistIds: (m.playlist_ids || []) as number[],
-      dateAdded: album.created_at || '',
-      ...(album.user_id ? { artist_user_id: Number(album.user_id) } : {}),
-    }));
-  }, [album]);
+  const mediaSongs: (Track & { dateAdded?: string; playlistIds?: number[]; artist_user_id?: number })[] =
+    useMemo(() => {
+      if (!album?.musics) return [];
+      return album.musics.map((m) => ({
+        id: m.id,
+        name: m.title,
+        artist: m.artist_name || album.artist_name || 'Inconnu',
+        album: album.title,
+        album_image: album.image || undefined,
+        audio: m.audio || '',
+        duration: toDurationStr(m.duration),
+        playlistIds: (m.playlist_ids || []) as number[],
+        dateAdded: album.created_at || '',
+        ...(album.user_id ? { artist_user_id: Number(album.user_id) } : {}),
+      }));
+    }, [album]);
 
   const toggleLike = async () => {
     try {
@@ -113,6 +115,52 @@ const AlbumPage: React.FC = () => {
       console.error('Erreur like/unlike album', e);
     }
   };
+
+  const headerMenuItems = useMemo(() => {
+    const songs = mediaSongs;
+    if (!songs.length) return [];
+
+    const addAllToQueue = () => songs.forEach((s) => addToQueue(s));
+
+    const onToggleBulkPlaylist = async (playlistId: number, checked: boolean) => {
+      try {
+        if (checked) {
+          await Promise.allSettled(
+            songs.map((s) => addMusicToPlaylist(Number(playlistId), Number(s.id)))
+          );
+        } else {
+          await Promise.allSettled(
+            songs.map((s) => removeMusicFromPlaylist(Number(playlistId), Number(s.id)))
+          );
+        }
+      } catch (e) {
+        console.error('Maj bulk playlist échouée', e);
+      }
+    };
+
+    const addAllToFavorites = async () => {
+      try {
+        await Promise.allSettled(songs.map((s) => addFavorite(Number(s.id))));
+      } catch (e) {
+        console.error('Ajout bulk favoris échoué', e);
+      }
+    };
+
+    return [
+      { label: 'Ajouter à la file d’attente', onClick: addAllToQueue },
+      {
+        label: 'Ajouter à une playlist',
+        onClick: () => {},
+        submenuContent: (
+          <PlaylistCheckboxMenu
+            existingPlaylistIds={[]}
+            onToggle={(pid, checked) => onToggleBulkPlaylist(Number(pid), checked)}
+          />
+        ),
+      },
+      { label: 'Ajouter aux favoris', onClick: addAllToFavorites },
+    ];
+  }, [mediaSongs, addToQueue]);
 
   if (loading) {
     return (
@@ -147,6 +195,7 @@ const AlbumPage: React.FC = () => {
       onEdit={canEdit ? () => navigate(`/album/${id}/edit`) : undefined}
       isLiked={!canEdit ? liked : undefined}
       onToggleLike={!canEdit ? toggleLike : undefined}
+      headerMenuItems={headerMenuItems}
       getActions={(song) => {
         const baseline = Array.from(new Set(song.playlistIds ?? [])) as number[];
         return [

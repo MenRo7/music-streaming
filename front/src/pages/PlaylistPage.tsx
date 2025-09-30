@@ -15,6 +15,7 @@ import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesServ
 import { usePlayer } from '../apis/PlayerContext';
 import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
 import { useUser } from '../apis/UserContext';
+import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 
 const PlaylistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -123,6 +124,52 @@ const PlaylistPage: React.FC = () => {
     }
   };
 
+  const headerMenuItems = useMemo(() => {
+    const songs = (playlist?.songs || []) as Array<{ id: number }>;
+    if (!songs.length) return [];
+
+    const addAllToQueue = () => songs.forEach((s) => addToQueue(s as any));
+
+    const onToggleBulkPlaylist = async (playlistId: number, checked: boolean) => {
+      try {
+        if (checked) {
+          await Promise.allSettled(
+            songs.map((s) => addMusicToPlaylist(Number(playlistId), Number(s.id)))
+          );
+        } else {
+          await Promise.allSettled(
+            songs.map((s) => removeMusicFromPlaylist(Number(playlistId), Number(s.id)))
+          );
+        }
+      } catch (e) {
+        console.error('Maj bulk playlist échouée', e);
+      }
+    };
+
+    const addAllToFavorites = async () => {
+      try {
+        await Promise.allSettled(songs.map((s) => addFavorite(Number(s.id))));
+      } catch (e) {
+        console.error('Ajout bulk favoris échoué', e);
+      }
+    };
+
+    return [
+      { label: 'Ajouter à la file d’attente', onClick: addAllToQueue },
+      {
+        label: 'Ajouter à une playlist',
+        onClick: () => {},
+        submenuContent: (
+          <PlaylistCheckboxMenu
+            existingPlaylistIds={[]}
+            onToggle={(pid, checked) => onToggleBulkPlaylist(Number(pid), checked)}
+          />
+        ),
+      },
+      { label: 'Ajouter aux favoris', onClick: addAllToFavorites },
+    ];
+  }, [playlist?.songs, addToQueue]);
+
   return (
     <MediaPage
       title={playlist?.title}
@@ -135,6 +182,7 @@ const PlaylistPage: React.FC = () => {
       onDelete={isOwner ? handleDeletePlaylist : undefined}
       isLiked={!isOwner ? liked : undefined}
       onToggleLike={!isOwner ? toggleLike : undefined}
+      headerMenuItems={headerMenuItems}
       renderModal={
         isOwner ? (
           <CreateEditPlaylistModal

@@ -22,13 +22,19 @@ interface MediaSong extends Track {
   artist_user_id?: number;
 }
 
+type MenuItem = {
+  label: string;
+  onClick: () => void;
+  submenuContent?: React.ReactNode;
+};
+
 interface MediaPageProps {
   title: string;
   artist?: string;
   image: string;
   songs: MediaSong[];
   isPlaylist?: boolean;
-  collectionType?: 'playlist' | 'album';
+  collectionType?: 'playlist' | 'album' | 'favorites';
   collectionId?: number | string;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -38,6 +44,7 @@ interface MediaPageProps {
   onToggleLike?: () => void;
   onAlbumClick?: (song: UISong) => void;
   onArtistClick?: (song: UISong) => void;
+  headerMenuItems?: MenuItem[];
 }
 
 const toNumberArray = (arr: any[]): number[] =>
@@ -58,6 +65,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
   onToggleLike,
   onAlbumClick,
   onArtistClick,
+  headerMenuItems = [],
 }) => {
   const { setCollectionContext, toggleShuffle, playSong } = usePlayer();
   const location = useLocation();
@@ -100,8 +108,14 @@ const MediaPage: React.FC<MediaPageProps> = ({
   );
 
   useEffect(() => {
-    if (collectionType && collectionId != null) {
-      setCollectionContext({ type: collectionType, id: Number(collectionId) }, tracks);
+    if (
+      (collectionType === 'playlist' || collectionType === 'album') &&
+      collectionId != null
+    ) {
+      setCollectionContext(
+        { type: collectionType, id: Number(collectionId) },
+        tracks
+      );
     }
   }, [collectionType, collectionId, tracks, setCollectionContext]);
 
@@ -115,7 +129,6 @@ const MediaPage: React.FC<MediaPageProps> = ({
     onPlayAll();
   };
 
-  // Compose actions: préfixer "Voir l'album" / "Voir l'artiste" selon la page
   const composedGetActions = (song: UISong) => {
     const base = (getActions ? getActions(song as any) : []) ?? [];
     const s: any = song;
@@ -130,6 +143,15 @@ const MediaPage: React.FC<MediaPageProps> = ({
 
     return [...extras, ...base];
   };
+
+  const hasHeaderMenu =
+    headerMenuItems.length > 0 || Boolean(onEdit) || Boolean(onDelete);
+
+  const combinedHeaderMenu: MenuItem[] = [
+    ...headerMenuItems,
+    ...(onEdit ? [{ label: 'Modifier', onClick: onEdit }] : []),
+    ...(onDelete ? [{ label: 'Supprimer', onClick: onDelete }] : []),
+  ];
 
   return (
     <div className="media-content">
@@ -155,15 +177,13 @@ const MediaPage: React.FC<MediaPageProps> = ({
             />
           )}
 
-          {(onEdit || onDelete) && (
+          {hasHeaderMenu && (
             <DropdownMenu
-              items={[
-                ...(onEdit ? [{ label: 'Modifier', onClick: onEdit }] : []),
-                ...(onDelete ? [{ label: 'Supprimer', onClick: onDelete }] : []),
-              ]}
+              items={combinedHeaderMenu}
               trigger={<FontAwesomeIcon icon={faEllipsisH} className="control-icon" />}
             />
           )}
+
           <FontAwesomeIcon icon={faBars} className="control-icon burger-menu" />
         </div>
 
