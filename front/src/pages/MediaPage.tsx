@@ -108,6 +108,11 @@ const MediaPage: React.FC<MediaPageProps> = ({
   );
 
   useEffect(() => {
+    if (collectionType === 'favorites') {
+      setCollectionContext({ type: 'playlist', id: -1 }, tracks);
+      return;
+    }
+
     if (
       (collectionType === 'playlist' || collectionType === 'album') &&
       collectionId != null
