@@ -191,4 +191,57 @@ class AuthController extends Controller
             'roles' => $request->user()->getRoleNames(),
         ]);
     }
+
+    public function forgotPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $data['email'])->first();
+        if ($user) {
+            $user->password_reset_code = $this->generateCode();
+            $user->password_reset_expires_at = now()->addMinutes(10);
+            $user->save();
+
+            Mail::to($user->email)->send(
+                new OneTimeCodeMail($user->password_reset_code, 'Réinitialisation du mot de passe')
+            );
+        }
+
+        return response()->json([
+            'message' => 'Si un compte existe pour cet e-mail, un code a été envoyé.'
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email'    => 'required|email',
+            'code'     => 'required|string|size:6',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::where('email', $data['email'])->firstOrFail();
+
+        if (
+            !$user->password_reset_code ||
+            !$user->password_reset_expires_at ||
+            now()->greaterThan($user->password_reset_expires_at) ||
+            strtoupper($data['code']) !== $user->password_reset_code
+        ) {
+            throw ValidationException::withMessages(['code' => ['Invalid or expired code']]);
+        }
+
+        $user->password = Hash::make($data['password']);
+        $user->password_reset_code = null;
+        $user->password_reset_expires_at = null;
+
+        $user->tokens()->delete();
+
+        $user->save();
+
+        return response()->json(['message' => 'Password updated successfully']);
+    }
+
 }

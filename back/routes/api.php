@@ -18,6 +18,8 @@ Route::middleware('throttle:6,1')->group(function () {
     Route::post('/resend-email-code', [AuthController::class, 'resendEmailCode']);
     Route::post('/login/verify', [AuthController::class, 'verify2fa']);
     Route::post('/login/resend', [AuthController::class, 'resend2fa']);
+    Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
+    Route::post('/password/reset',  [AuthController::class, 'resetPassword']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {

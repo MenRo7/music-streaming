@@ -28,6 +28,8 @@ class User extends Authenticatable
         'email_verification_expires_at',
         'two_factor_code',
         'two_factor_expires_at',
+        'password_reset_code',
+        'password_reset_expires_at',
     ];
 
     /**
@@ -52,6 +54,7 @@ class User extends Authenticatable
             'email_verification_expires_at' => 'datetime',
             'two_factor_expires_at' => 'datetime',
             'password' => 'hashed',
+            'password_reset_expires_at' => 'datetime',
         ];
     }
 
