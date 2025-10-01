@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AuthController;
@@ -14,9 +13,15 @@ use App\Http\Controllers\FavoriteController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::middleware('throttle:6,1')->group(function () {
+    Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+    Route::post('/resend-email-code', [AuthController::class, 'resendEmailCode']);
+    Route::post('/login/verify', [AuthController::class, 'verify2fa']);
+    Route::post('/login/resend', [AuthController::class, 'resend2fa']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/user', [AuthController::class, 'user']);
 
     Route::get('/my-musics', [MusicController::class, 'myMusic']);
     Route::post('/music', [MusicController::class, 'store']);

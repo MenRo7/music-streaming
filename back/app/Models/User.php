@@ -24,6 +24,10 @@ class User extends Authenticatable
         'email',
         'password',
         'profile_image',
+        'email_verification_code',
+        'email_verification_expires_at',
+        'two_factor_code',
+        'two_factor_expires_at',
     ];
 
     /**
@@ -45,6 +49,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_verification_expires_at' => 'datetime',
+            'two_factor_expires_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
