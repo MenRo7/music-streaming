@@ -9,6 +9,7 @@ use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\MusicController;
 use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\DonationController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -67,6 +68,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/likes/summary', [UserController::class, 'likesSummary']);
     Route::get('/search', [GlobalSearchController::class, 'search']);
+    Route::post('/users/{id}/donate/checkout', [DonationController::class, 'createCheckoutSession']);
+
 });
 
 Route::get('/search', [GlobalSearchController::class, 'search']);
+Route::post('/stripe/webhook', [DonationController::class, 'webhook']);

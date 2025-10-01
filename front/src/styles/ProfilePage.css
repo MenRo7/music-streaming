@@ -50,6 +50,37 @@
   background-color: #252525;
 }
 
+.don-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.don-banner.success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+.don-banner.error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+.don-banner-close {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #f3f0ff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: .8;
+}
+.don-banner-close:hover { opacity: 1; }
+
 .profile-header {
   display: flex;
   align-items: center;
@@ -58,6 +89,13 @@
   background-color: #121212;
   padding: 20px;
   border-radius: 8px;
+}
+
+.actions-right {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+  align-items: center;
 }
 
 .profile-image {
@@ -246,6 +284,40 @@
   box-shadow: 0 0 0 3px rgba(94, 45, 145, 0.25);
 }
 
+.donate-btn {
+  appearance: none;
+  border: none;
+  background: #7c3aed;
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform .05s ease, opacity .15s ease, box-shadow .2s ease;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, .35);
+}
+.donate-btn:hover {
+  opacity: .95;
+  box-shadow: 0 6px 18px rgba(124, 58, 237, .45);
+}
+.donate-btn:active {
+  transform: translateY(1px);
+}
+
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.modal {
+  background: #111; color: #fff; padding: 20px; border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .4); max-width: 420px; width: 100%;
+}
+.modal h3 { margin-top: 0; }
+.modal .primary {
+  background: #22c55e; color: #111; border: none; padding: 8px 12px; border-radius: 8px;
+}
+
 @media (max-width: 1024px) {
   .artist-card,
   .album-card,
@@ -269,6 +341,9 @@
     align-self: flex-end;
   }
   .subscribe-btn {
+    margin-left: 0;
+  }
+  .actions-right {
     margin-left: 0;
   }
 }

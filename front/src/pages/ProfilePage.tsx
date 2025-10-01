@@ -18,6 +18,7 @@ import EditProfileModal from '../components/EditProfileModal';
 import DropdownMenu from '../components/DropdownMenu';
 import PlaylistCard from '../components/PlaylistCard';
 import SongList, { UISong } from '../components/SongList';
+import DonateModal from '../components/DonateModal';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisH } from '@fortawesome/free-solid-svg-icons';
@@ -36,7 +37,7 @@ const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedUserId = searchParams.get('user');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,6 +52,10 @@ const ProfilePage: React.FC = () => {
   const [subscribed, setSubscribed] = useState<boolean>(false);
   const [subPending, setSubPending] = useState<boolean>(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [donateOpen, setDonateOpen] = useState(false);
+
+  const donParam = searchParams.get('don');
+  const [showDonBanner, setShowDonBanner] = useState<boolean>(!!donParam);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -280,6 +285,14 @@ const ProfilePage: React.FC = () => {
     };
   }, [songs.length, albums.length, playlists.length]);
 
+  const closeDonBanner = () => {
+    setShowDonBanner(false);
+    if (searchParams.has('don')) {
+      searchParams.delete('don');
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
+
   if (loading) {
     return (
       <div className="profile-page">
@@ -293,6 +306,22 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="profile-page">
       <div className="profile-content">
+        {showDonBanner && (
+          <div
+            className={`don-banner ${donParam === 'ok' ? 'success' : 'error'}`}
+            role="status"
+          >
+            <span>
+              {donParam === 'ok'
+                ? 'Merci ! Votre don a bien été pris en compte.'
+                : 'Le paiement a été annulé.'}
+            </span>
+            <button className="don-banner-close" onClick={closeDonBanner} aria-label="Fermer">
+              ×
+            </button>
+          </div>
+        )}
+
         <div className="profile-header">
           <img
             className="profile-image"
@@ -306,14 +335,24 @@ const ProfilePage: React.FC = () => {
           </div>
 
           {!isSelf && (
-            <button
-              className={`subscribe-btn ${subscribed ? 'is-subscribed' : ''}`}
-              onClick={onToggleSubscribe}
-              disabled={subPending}
-              title={subscribed ? 'Se désabonner' : 'S’abonner'}
-            >
-              {subscribed ? 'Abonné' : 'S’abonner +'}
-            </button>
+            <div className="actions-right">
+              <button
+                className={`subscribe-btn ${subscribed ? 'is-subscribed' : ''}`}
+                onClick={onToggleSubscribe}
+                disabled={subPending}
+                title={subscribed ? 'Se désabonner' : 'S’abonner'}
+              >
+                {subscribed ? 'Abonné' : 'S’abonner +'}
+              </button>
+
+              <button
+                className="donate-btn"
+                onClick={() => setDonateOpen(true)}
+                title="Faire un don"
+              >
+                Faire un don
+              </button>
+            </div>
           )}
 
           {isSelf && (
@@ -397,6 +436,14 @@ const ProfilePage: React.FC = () => {
             onClose={() => setIsModalOpen(false)}
             user={user}
             onProfileUpdate={(u) => setUser(u)}
+          />
+        )}
+
+        {!isSelf && (
+          <DonateModal
+            isOpen={donateOpen}
+            onClose={() => setDonateOpen(false)}
+            toUserId={Number(user?.id)}
           />
         )}
       </div>
