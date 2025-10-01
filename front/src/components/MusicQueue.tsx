@@ -125,11 +125,13 @@ const MusicQueue: React.FC = () => {
         ? cur.includes(pid) ? cur : [...cur, pid]
         : cur.filter((id) => id !== pid);
 
-      window.dispatchEvent(
-        new CustomEvent('track:playlist-updated', {
-          detail: { trackId: Number(trackId), playlistIds: next.map(Number) },
-        })
-      );
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent('track:playlist-updated', {
+            detail: { trackId: Number(trackId), playlistIds: next.map(Number) },
+          })
+        );
+      }, 0);
 
       return { ...prev, [qid]: next };
     });

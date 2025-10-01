@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 import { AuthContext } from '../apis/AuthContext';
 import { registerUser, verifyEmail, resendEmailCode, resend2fa } from '../apis/AuthService';
@@ -18,6 +18,7 @@ const AuthPage: React.FC = () => {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const { login, confirm2fa, token } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -28,8 +29,10 @@ const AuthPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (submitting) return;
     setError('');
     setInfo('');
+    setSubmitting(true);
 
     try {
       if (isRegistering) {
@@ -37,13 +40,13 @@ const AuthPage: React.FC = () => {
           setError('Les mots de passe ne correspondent pas.');
           return;
         }
-        await registerUser(username, email, password);
+        await registerUser(username.trim(), email.trim(), password);
         setInfo('Un code de vérification vous a été envoyé par e-mail.');
         setStep('verifyEmail');
         return;
       }
 
-      const status = await login(email, password);
+      const status = await login(email.trim(), password);
       if (status === 'verification_required') {
         setInfo("Votre e-mail doit être vérifié. Un code vous a été envoyé.");
         setStep('verifyEmail');
@@ -53,33 +56,45 @@ const AuthPage: React.FC = () => {
       }
     } catch {
       setError("Erreur lors de l'authentification. Vérifiez vos informations.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleVerifyEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setError('');
     setInfo('');
+    setSubmitting(true);
+
     try {
-      await verifyEmail(email, code.trim().toUpperCase());
+      await verifyEmail(email.trim(), code.trim().toUpperCase());
       setInfo('E-mail vérifié ! Vous pouvez maintenant vous connecter.');
       setStep('form');
       setIsRegistering(false);
       setCode('');
     } catch {
       setError('Code invalide ou expiré.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleVerify2fa = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setError('');
     setInfo('');
+    setSubmitting(true);
+
     try {
-      await confirm2fa(email, code.trim().toUpperCase());
+      await confirm2fa(email.trim(), code.trim().toUpperCase());
       navigate('/main');
     } catch {
       setError('Code invalide ou expiré.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -122,6 +137,7 @@ const AuthPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="username"
               />
             </div>
 
@@ -133,6 +149,7 @@ const AuthPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete={isRegistering ? 'new-password' : 'current-password'}
               />
             </div>
 
@@ -145,13 +162,20 @@ const AuthPage: React.FC = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  autoComplete="new-password"
                 />
               </div>
             )}
 
-            <button type="submit">
-              {isRegistering ? "S'inscrire" : 'Se connecter'}
+            <button type="submit" disabled={submitting}>
+              {submitting ? 'Veuillez patienter…' : isRegistering ? "S'inscrire" : 'Se connecter'}
             </button>
+
+            {!isRegistering && (
+              <p style={{ marginTop: 12 }}>
+                <Link className="toggle-link" to="/forgot">Mot de passe oublié ?</Link>
+              </p>
+            )}
 
             <p style={{ marginTop: 12 }}>
               {isRegistering ? (
@@ -183,13 +207,27 @@ const AuthPage: React.FC = () => {
                 required
               />
             </div>
-            <button type="submit">Valider</button>
+            <button type="submit" disabled={submitting}>
+              {submitting ? 'Validation…' : 'Valider'}
+            </button>
             <p style={{ marginTop: 12 }}>
               Pas reçu ?{' '}
-              <span className="toggle-link" onClick={async () => {
-                try { await resendEmailCode(email); setInfo('Nouveau code de vérification envoyé.'); setError(''); }
-                catch { setError("Impossible d'envoyer un nouveau code."); }
-              }}>Renvoyer le code</span>
+              <span
+                className="toggle-link"
+                role="button"
+                onClick={async () => {
+                  if (!email.trim()) { setError("Renseignez d'abord votre e-mail."); return; }
+                  try {
+                    await resendEmailCode(email.trim());
+                    setInfo('Nouveau code de vérification envoyé.');
+                    setError('');
+                  } catch {
+                    setError("Impossible d'envoyer un nouveau code.");
+                  }
+                }}
+              >
+                Renvoyer le code
+              </span>
             </p>
           </form>
         )}
@@ -208,13 +246,27 @@ const AuthPage: React.FC = () => {
                 required
               />
             </div>
-            <button type="submit">Se connecter</button>
+            <button type="submit" disabled={submitting}>
+              {submitting ? 'Connexion…' : 'Se connecter'}
+            </button>
             <p style={{ marginTop: 12 }}>
               Pas reçu ?{' '}
-              <span className="toggle-link" onClick={async () => {
-                try { await resend2fa(email); setInfo('Nouveau code de connexion envoyé.'); setError(''); }
-                catch { setError("Impossible d'envoyer un nouveau code."); }
-              }}>Renvoyer le code</span>
+              <span
+                className="toggle-link"
+                role="button"
+                onClick={async () => {
+                  if (!email.trim()) { setError("Renseignez d'abord votre e-mail."); return; }
+                  try {
+                    await resend2fa(email.trim());
+                    setInfo('Nouveau code de connexion envoyé.');
+                    setError('');
+                  } catch {
+                    setError("Impossible d'envoyer un nouveau code.");
+                  }
+                }}
+              >
+                Renvoyer le code
+              </span>
             </p>
           </form>
         )}

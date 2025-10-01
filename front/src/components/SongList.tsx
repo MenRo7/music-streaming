@@ -83,11 +83,13 @@ const SongList = <T extends UISong>({
         ? (base.includes(playlistId) ? base : [...base, playlistId])
         : base.filter(id => id !== playlistId);
 
-      window.dispatchEvent(
-        new CustomEvent('track:playlist-updated', {
-          detail: { trackId: Number(song.id), playlistIds: next.map(Number) },
-        })
-      );
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent('track:playlist-updated', {
+            detail: { trackId: Number(song.id), playlistIds: next.map(Number) },
+          })
+        );
+      }, 0);
 
       return { ...prev, [song.id]: next.map(Number) };
     });

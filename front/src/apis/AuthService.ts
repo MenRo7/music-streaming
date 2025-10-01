@@ -18,3 +18,15 @@ export const verify2fa = (email: string, code: string) =>
 
 export const resend2fa = (email: string) =>
   axios.post(`${API_URL}/login/resend`, { email });
+
+export const forgotPassword = (email: string) =>
+  axios.post(`${API_URL}/password/forgot`, { email });
+
+export const resetPassword = (
+  email: string,
+  code: string,
+  password: string,
+  password_confirmation: string
+) => axios.post(`${API_URL}/password/reset`, {
+  email, code, password, password_confirmation
+});
