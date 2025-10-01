@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
   fetchUser,
@@ -7,32 +7,37 @@ import {
   isSubscribedToUser,
   subscribeToUser,
   unsubscribeFromUser,
-} from "../apis/UserService";
+} from '../apis/UserService';
 
-import { getUserMusics, getUserAlbums, deleteMusic } from "../apis/MyMusicService";
-import { getPlaylists, addMusicToPlaylist, removeMusicFromPlaylist } from "../apis/PlaylistService";
-import { addFavorite, removeFavorite, getFavorites } from "../apis/FavoritesService";
-import { usePlayer } from "../apis/PlayerContext";
+import { getUserMusics, getUserAlbums, deleteMusic } from '../apis/MyMusicService';
+import { getPlaylists, addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
+import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
+import { usePlayer } from '../apis/PlayerContext';
 
-import EditProfileModal from "../components/EditProfileModal";
-import DropdownMenu from "../components/DropdownMenu";
-import PlaylistCard from "../components/PlaylistCard";
-import SongList, { UISong } from "../components/SongList";
+import EditProfileModal from '../components/EditProfileModal';
+import DropdownMenu from '../components/DropdownMenu';
+import PlaylistCard from '../components/PlaylistCard';
+import SongList, { UISong } from '../components/SongList';
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisH } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEllipsisH } from '@fortawesome/free-solid-svg-icons';
 
-import "../styles/ProfilePage.css";
+import '../styles/ProfilePage.css';
 
-const toNumberArray = (arr: any[]): number[] =>
-  (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
+const extractPlaylistIds = (val: any): number[] => {
+  if (!Array.isArray(val)) return [];
+  return val
+    .map((x) => (x && typeof x === 'object' ? x.id : x))
+    .map(Number)
+    .filter(Number.isFinite);
+};
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
 
   const [searchParams] = useSearchParams();
-  const requestedUserId = searchParams.get("user");
+  const requestedUserId = searchParams.get('user');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -71,12 +76,12 @@ const ProfilePage: React.FC = () => {
             id: Number(m.id),
             name: m.name,
             artist: m.artist,
-            album: m.album ?? "Inconnu",
-            album_image: m.album_image || "",
-            audio: m.audio || "",
-            dateAdded: m.date_added || "",
+            album: m.album ?? 'Inconnu',
+            album_image: m.album_image || '',
+            audio: m.audio || '',
+            dateAdded: m.date_added || '',
             duration: m.duration ?? undefined,
-            playlistIds: toNumberArray(m.playlist_ids || []),
+            playlistIds: extractPlaylistIds(m.playlist_ids || []),
             ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
             artist_user_id: Number(v?.id),
           } as any)
@@ -85,7 +90,7 @@ const ProfilePage: React.FC = () => {
         setSongs(formattedSongs);
         setAlbums(myAlbums || []);
         setPlaylists(myPlaylists || []);
-        setSubscribed(false)
+        setSubscribed(false);
       } else {
         const summaryRes = await fetchUserSummary(targetId!);
         const summary = summaryRes.data;
@@ -97,12 +102,12 @@ const ProfilePage: React.FC = () => {
             id: Number(m.id),
             name: m.name,
             artist: m.artist,
-            album: m.album ?? "Inconnu",
-            album_image: m.album_image || "",
-            audio: m.audio || "",
-            dateAdded: m.date_added || "",
+            album: m.album ?? 'Inconnu',
+            album_image: m.album_image || '',
+            audio: m.audio || '',
+            dateAdded: m.date_added || '',
             duration: m.duration ?? undefined,
-            playlistIds: toNumberArray(m.playlist_ids || []),
+            playlistIds: extractPlaylistIds(m.playlist_ids || []),
             ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
             ...(m.artist_user_id != null
               ? { artist_user_id: Number(m.artist_user_id) }
@@ -122,7 +127,7 @@ const ProfilePage: React.FC = () => {
         }
       }
     } catch (e) {
-      console.error("Erreur chargement profil:", e);
+      console.error('Erreur chargement profil:', e);
     } finally {
       setLoading(false);
     }
@@ -143,7 +148,7 @@ const ProfilePage: React.FC = () => {
         );
         setFavoriteIds(ids);
       } catch (e) {
-        console.error("Erreur chargement favoris", e);
+        console.error('Erreur chargement favoris', e);
       }
     })();
   }, []);
@@ -170,8 +175,8 @@ const ProfilePage: React.FC = () => {
       if (checked) await addMusicToPlaylist(pid, sid);
       else await removeMusicFromPlaylist(pid, sid);
     } catch (e) {
-      console.error("Maj playlist échouée", e);
-      alert("Erreur lors de la modification de la playlist.");
+      console.error('Maj playlist échouée', e);
+      alert('Erreur lors de la modification de la playlist.');
     }
   };
 
@@ -186,9 +191,9 @@ const ProfilePage: React.FC = () => {
         await subscribeToUser(Number(user.id));
         setSubscribed(true);
       }
-      window.dispatchEvent(new Event("subscriptions:changed"));
+      window.dispatchEvent(new Event('subscriptions:changed'));
     } catch (e) {
-      console.error("Erreur abonnement/désabonnement:", e);
+      console.error('Erreur abonnement/désabonnement:', e);
     } finally {
       setSubPending(false);
     }
@@ -196,11 +201,11 @@ const ProfilePage: React.FC = () => {
 
   const addToFavoritesLocal = async (id: number) => {
     await addFavorite(id);
-    setFavoriteIds(prev => new Set(prev).add(Number(id)));
+    setFavoriteIds((prev) => new Set(prev).add(Number(id)));
   };
   const removeFromFavoritesLocal = async (id: number) => {
     await removeFavorite(id);
-    setFavoriteIds(prev => {
+    setFavoriteIds((prev) => {
       const s = new Set(prev);
       s.delete(Number(id));
       return s;
@@ -218,18 +223,18 @@ const ProfilePage: React.FC = () => {
       const base = [
         ...viewItems,
         {
-          label: isFavorite(song.id) ? "Supprimer des favoris" : "Ajouter aux favoris",
+          label: isFavorite(song.id) ? 'Supprimer des favoris' : 'Ajouter aux favoris',
           onClick: async () => {
             try {
               if (isFavorite(song.id)) await removeFromFavoritesLocal(song.id);
               else await addToFavoritesLocal(song.id);
             } catch (e) {
-              console.error("Maj favoris échouée", e);
+              console.error('Maj favoris échouée', e);
             }
           },
         },
         {
-          label: "Ajouter à une playlist",
+          label: 'Ajouter à une playlist',
           onClick: () => {},
           withPlaylistMenu: true,
           songId: song.id,
@@ -237,23 +242,23 @@ const ProfilePage: React.FC = () => {
           onToggle: (playlistId: number, checked: boolean) =>
             handleTogglePlaylist(playlistId, checked, song.id),
         },
-        { label: "Ajouter à la file d’attente", onClick: () => addToQueue(song) },
+        { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
       ];
 
       if (isSelf) {
         base.push(
           {
-            label: "Modifier la musique",
+            label: 'Modifier la musique',
             onClick: () => navigate(`/edit-music/${song.id}`),
           },
           {
-            label: "Supprimer",
+            label: 'Supprimer',
             onClick: async () => {
               try {
                 await deleteMusic(song.id);
                 setSongs((prev) => prev.filter((m) => m.id !== song.id));
               } catch {
-                alert("Erreur lors de la suppression");
+                alert('Erreur lors de la suppression');
               }
             },
           }
@@ -291,30 +296,30 @@ const ProfilePage: React.FC = () => {
         <div className="profile-header">
           <img
             className="profile-image"
-            src={hasAvatar ? user.profile_image : "/placeholder-avatar.png"}
+            src={hasAvatar ? user.profile_image : '/placeholder-avatar.png'}
             alt="User Profile"
           />
 
           <div className="profile-info" style={{ flex: 1 }}>
-            <h1>{user?.name ?? "Profil"}</h1>
+            <h1>{user?.name ?? 'Profil'}</h1>
             {isSelf && <p>{user?.email}</p>}
           </div>
 
           {!isSelf && (
             <button
-              className={`subscribe-btn ${subscribed ? "is-subscribed" : ""}`}
+              className={`subscribe-btn ${subscribed ? 'is-subscribed' : ''}`}
               onClick={onToggleSubscribe}
               disabled={subPending}
-              title={subscribed ? "Se désabonner" : "S’abonner"}
+              title={subscribed ? 'Se désabonner' : 'S’abonner'}
             >
-              {subscribed ? "Abonné" : "S’abonner +"}
+              {subscribed ? 'Abonné' : 'S’abonner +'}
             </button>
           )}
 
           {isSelf && (
             <DropdownMenu
               trigger={<FontAwesomeIcon icon={faEllipsisH} className="profile-menu-icon" />}
-              items={[{ label: "Modifier le profil", onClick: openProfileModal }]}
+              items={[{ label: 'Modifier le profil', onClick: () => setIsModalOpen(true) }]}
             />
           )}
         </div>
@@ -334,9 +339,9 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="top-section" style={{ textAlign: "left" }}>
-          <h2 style={{ textAlign: "left", marginBottom: 16 }}>
-            {isSelf ? "Mes musiques" : "Musiques"}
+        <div className="top-section" style={{ textAlign: 'left' }}>
+          <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
+            {isSelf ? 'Mes musiques' : 'Musiques'}
           </h2>
           <SongList
             songs={songs}
@@ -352,11 +357,11 @@ const ProfilePage: React.FC = () => {
           />
         </div>
 
-        <div className="top-section" style={{ textAlign: "left" }}>
-          <h2 style={{ textAlign: "left", marginBottom: 16 }}>
-            {isSelf ? "Mes albums" : "Albums"}
+        <div className="top-section" style={{ textAlign: 'left' }}>
+          <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
+            {isSelf ? 'Mes albums' : 'Albums'}
           </h2>
-          <div className="album-row" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <div className="album-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {albums.length === 0 && <div>Aucun album pour le moment.</div>}
             {albums.map((album: any) => (
               <PlaylistCard
@@ -369,11 +374,11 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="top-section" style={{ textAlign: "left" }}>
-          <h2 style={{ textAlign: "left", marginBottom: 16 }}>
-            {isSelf ? "Mes playlists" : "Playlists"}
+        <div className="top-section" style={{ textAlign: 'left' }}>
+          <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
+            {isSelf ? 'Mes playlists' : 'Playlists'}
           </h2>
-          <div className="album-row" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <div className="album-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {playlists.length === 0 && <div>Aucune playlist pour le moment.</div>}
             {playlists.map((pl: any) => (
               <PlaylistCard
@@ -389,9 +394,9 @@ const ProfilePage: React.FC = () => {
         {isSelf && isModalOpen && (
           <EditProfileModal
             isOpen={isModalOpen}
-            onClose={closeProfileModal}
+            onClose={() => setIsModalOpen(false)}
             user={user}
-            onProfileUpdate={handleProfileUpdate}
+            onProfileUpdate={(u) => setUser(u)}
           />
         )}
       </div>

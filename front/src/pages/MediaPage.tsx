@@ -47,8 +47,14 @@ interface MediaPageProps {
   headerMenuItems?: MenuItem[];
 }
 
-const toNumberArray = (arr: any[]): number[] =>
-  (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
+// ✅ Utilitaire commun: supporte un tableau d'ids ou d'objets { id }
+const extractPlaylistIds = (val: any): number[] => {
+  if (!Array.isArray(val)) return [];
+  return val
+    .map((x) => (x && typeof x === 'object' ? x.id : x))
+    .map(Number)
+    .filter(Number.isFinite);
+};
 
 const MediaPage: React.FC<MediaPageProps> = ({
   title,
@@ -82,7 +88,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
         album_image: s.album_image,
         audio: s.audio,
         duration: s.duration,
-        playlistIds: toNumberArray(s.playlistIds ?? []),
+        playlistIds: extractPlaylistIds(s.playlistIds ?? []),
       })),
     [songs]
   );
@@ -100,7 +106,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
             audio: s.audio,
             dateAdded: s.dateAdded,
             duration: s.duration,
-            playlistIds: toNumberArray(s.playlistIds ?? []),
+            playlistIds: extractPlaylistIds(s.playlistIds ?? []),
             ...(s as any).album_id != null ? { album_id: (s as any).album_id } : {},
             ...(s as any).artist_user_id != null ? { artist_user_id: (s as any).artist_user_id } : {},
           } as any)

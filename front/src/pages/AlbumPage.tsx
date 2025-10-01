@@ -10,6 +10,14 @@ import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesServ
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 
+const extractPlaylistIds = (val: any): number[] => {
+  if (!Array.isArray(val)) return [];
+  return val
+    .map((x) => (x && typeof x === 'object' ? x.id : x))
+    .map(Number)
+    .filter(Number.isFinite);
+};
+
 const toDurationStr = (v?: string | number | null) => {
   if (v == null) return undefined;
   if (typeof v === 'string') return v;
@@ -55,9 +63,7 @@ const AlbumPage: React.FC = () => {
     }
   }, [id]);
 
-  useEffect(() => {
-    fetchAlbum();
-  }, [fetchAlbum]);
+  useEffect(() => { fetchAlbum(); }, [fetchAlbum]);
 
   useEffect(() => {
     (async () => {
@@ -89,7 +95,7 @@ const AlbumPage: React.FC = () => {
     });
   };
 
-  const mediaSongs: (Track & { dateAdded?: string; playlistIds?: number[]; artist_user_id?: number })[] =
+  const songs: (Track & { dateAdded?: string; playlistIds?: number[]; artist_user_id?: number })[] =
     useMemo(() => {
       if (!album?.musics) return [];
       return album.musics.map((m) => ({
@@ -100,7 +106,7 @@ const AlbumPage: React.FC = () => {
         album_image: album.image || undefined,
         audio: m.audio || '',
         duration: toDurationStr(m.duration),
-        playlistIds: (m.playlist_ids || []) as number[],
+        playlistIds: extractPlaylistIds((m as any).playlist_ids ?? (m as any).playlists ?? (m as any).playlistIds ?? []),
         dateAdded: album.created_at || '',
         ...(album.user_id ? { artist_user_id: Number(album.user_id) } : {}),
       }));
@@ -117,7 +123,6 @@ const AlbumPage: React.FC = () => {
   };
 
   const headerMenuItems = useMemo(() => {
-    const songs = mediaSongs;
     if (!songs.length) return [];
 
     const addAllToQueue = () => songs.forEach((s) => addToQueue(s));
@@ -160,7 +165,7 @@ const AlbumPage: React.FC = () => {
       },
       { label: 'Ajouter aux favoris', onClick: addAllToFavorites },
     ];
-  }, [mediaSongs, addToQueue]);
+  }, [songs, addToQueue]);
 
   if (loading) {
     return (
@@ -189,7 +194,7 @@ const AlbumPage: React.FC = () => {
       title={album.title}
       artist={album.artist_name || 'Artiste inconnu'}
       image={album.image || ''}
-      songs={mediaSongs}
+      songs={songs}
       collectionType="album"
       collectionId={Number(id)}
       onEdit={canEdit ? () => navigate(`/album/${id}/edit`) : undefined}

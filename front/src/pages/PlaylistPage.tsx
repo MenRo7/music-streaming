@@ -17,6 +17,14 @@ import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
 import { useUser } from '../apis/UserContext';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 
+const extractPlaylistIds = (val: any): number[] => {
+  if (!Array.isArray(val)) return [];
+  return val
+    .map((x) => (x && typeof x === 'object' ? x.id : x))
+    .map(Number)
+    .filter(Number.isFinite);
+};
+
 const PlaylistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -63,24 +71,24 @@ const PlaylistPage: React.FC = () => {
   const isFavorite = (songId: number) => favoriteIds.has(Number(songId));
   const addToFavorites = async (songId: number) => {
     await addFavorite(songId);
-    setFavoriteIds(prev => new Set(prev).add(Number(songId)));
+    setFavoriteIds((prev) => new Set(prev).add(Number(songId)));
   };
   const removeFromFavorites = async (songId: number) => {
     await removeFavorite(songId);
-    setFavoriteIds(prev => {
+    setFavoriteIds((prev) => {
       const s = new Set(prev);
       s.delete(Number(songId));
       return s;
     });
   };
 
-  const isOwner = useMemo(() => {
+  const canEdit = useMemo(() => {
     if (!playlist || !viewer) return false;
     return Number(playlist.user_id) === Number(viewer.id);
   }, [playlist, viewer]);
 
   const handleRemoveMusicFromPlaylist = async (songId: number) => {
-    if (!playlist || !isOwner) return;
+    if (!playlist || !canEdit) return;
     try {
       await removeMusicFromPlaylist(playlist.id, songId);
       setPlaylist((prev: any) => ({
@@ -93,12 +101,12 @@ const PlaylistPage: React.FC = () => {
   };
 
   const handleEditPlaylist = () => {
-    if (!isOwner) return;
+    if (!canEdit) return;
     setIsModalOpen(true);
   };
 
   const handleDeletePlaylist = async () => {
-    if (!playlist || !isOwner) return;
+    if (!playlist || !canEdit) return;
     try {
       await deletePlaylist(playlist.id);
       fetchPlaylists();
@@ -124,8 +132,16 @@ const PlaylistPage: React.FC = () => {
     }
   };
 
+  const songsNormalized = useMemo(() => {
+    const raw = Array.isArray(playlist?.songs) ? playlist!.songs : [];
+    return raw.map((s: any) => ({
+      ...s,
+      playlistIds: extractPlaylistIds(s.playlistIds ?? s.playlists ?? s.playlist_ids ?? []),
+    }));
+  }, [playlist?.songs]);
+
   const headerMenuItems = useMemo(() => {
-    const songs = (playlist?.songs || []) as Array<{ id: number }>;
+    const songs = songsNormalized as Array<{ id: number }>;
     if (!songs.length) return [];
 
     const addAllToQueue = () => songs.forEach((s) => addToQueue(s as any));
@@ -168,23 +184,23 @@ const PlaylistPage: React.FC = () => {
       },
       { label: 'Ajouter aux favoris', onClick: addAllToFavorites },
     ];
-  }, [playlist?.songs, addToQueue]);
+  }, [songsNormalized, addToQueue]);
 
   return (
     <MediaPage
       title={playlist?.title}
       image={playlist?.image}
-      songs={playlist?.songs || []}
+      songs={songsNormalized}
       isPlaylist={true}
       collectionType="playlist"
       collectionId={playlist?.id}
-      onEdit={isOwner ? handleEditPlaylist : undefined}
-      onDelete={isOwner ? handleDeletePlaylist : undefined}
-      isLiked={!isOwner ? liked : undefined}
-      onToggleLike={!isOwner ? toggleLike : undefined}
+      onEdit={canEdit ? handleEditPlaylist : undefined}
+      onDelete={canEdit ? handleDeletePlaylist : undefined}
+      isLiked={!canEdit ? liked : undefined}
+      onToggleLike={!canEdit ? toggleLike : undefined}
       headerMenuItems={headerMenuItems}
       renderModal={
-        isOwner ? (
+        canEdit ? (
           <CreateEditPlaylistModal
             isOpen={isModalOpen}
             onClose={closeModal}
@@ -228,7 +244,7 @@ const PlaylistPage: React.FC = () => {
           { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
         ];
 
-        if (isOwner) {
+        if (canEdit) {
           base.push({
             label: 'Supprimer de cette playlist',
             onClick: () => handleRemoveMusicFromPlaylist(song.id),

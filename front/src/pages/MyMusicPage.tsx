@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import {
-  getUserMusics,
-  getUserAlbums,
-  deleteMusic,
-} from '../apis/MyMusicService';
+import { getUserMusics, getUserAlbums, deleteMusic } from '../apis/MyMusicService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import { addFavorite } from '../apis/FavoritesService';
 import { usePlayer } from '../apis/PlayerContext';
@@ -13,24 +9,27 @@ import { usePlayer } from '../apis/PlayerContext';
 import PlaylistCard from '../components/PlaylistCard';
 import SongList, { UISong } from '../components/SongList';
 
-const toNumberArray = (arr: any[]): number[] =>
-  (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
+const extractPlaylistIds = (val: any): number[] => {
+  if (!Array.isArray(val)) return [];
+  return val
+    .map((x) => (x && typeof x === 'object' ? x.id : x))
+    .map(Number)
+    .filter(Number.isFinite);
+};
 
 const MyMusicPage: React.FC = () => {
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
-  const [musics, setMusics] = useState<UISong[]>([]);
+
+  const [songs, setSongs] = useState<UISong[]>([]);
   const [albums, setAlbums] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [musicData, albumData] = await Promise.all([
-          getUserMusics(),
-          getUserAlbums(),
-        ]);
+        const [musicData, albumData] = await Promise.all([getUserMusics(), getUserAlbums()]);
 
-        const formattedSongs: UISong[] = (musicData as any[]).map((m: any) => ({
+        const formatted: UISong[] = (musicData as any[]).map((m: any) => ({
           id: Number(m.id),
           name: m.name,
           artist: m.artist,
@@ -39,12 +38,12 @@ const MyMusicPage: React.FC = () => {
           audio: m.audio || '',
           dateAdded: m.date_added ? new Date(m.date_added).toLocaleDateString() : '',
           duration: m.duration ?? undefined,
-          playlistIds: toNumberArray(m.playlist_ids || []),
+          playlistIds: extractPlaylistIds(m.playlist_ids || []),
           ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
           ...(m.artist_user_id != null ? { artist_user_id: Number(m.artist_user_id) } : {}),
         }));
 
-        setMusics(formattedSongs);
+        setSongs(formatted);
         setAlbums(albumData);
       } catch (error) {
         console.error('Erreur lors du chargement :', error);
@@ -54,7 +53,11 @@ const MyMusicPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const handleTogglePlaylist = async (playlistId: number | string, checked: boolean, songId: number | string) => {
+  const onTogglePlaylist = async (
+    playlistId: number | string,
+    checked: boolean,
+    songId: number | string
+  ) => {
     const pid = Number(playlistId);
     const sid = Number(songId);
     if (!Number.isFinite(pid) || !Number.isFinite(sid)) return;
@@ -73,7 +76,7 @@ const MyMusicPage: React.FC = () => {
         <h2>Ma musique</h2>
 
         <SongList
-          songs={musics}
+          songs={songs}
           showAlbum
           showArtist
           showDateAdded
@@ -100,7 +103,7 @@ const MyMusicPage: React.FC = () => {
                 songId: song.id,
                 existingPlaylistIds: song.playlistIds ?? [],
                 onToggle: (playlistId: number, checked: boolean) =>
-                  handleTogglePlaylist(playlistId, checked, song.id),
+                  onTogglePlaylist(playlistId, checked, song.id),
               },
               { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
               {
@@ -112,7 +115,7 @@ const MyMusicPage: React.FC = () => {
                 onClick: async () => {
                   try {
                     await deleteMusic(song.id);
-                    setMusics((prev) => prev.filter((m) => m.id !== song.id));
+                    setSongs((prev) => prev.filter((m) => m.id !== song.id));
                   } catch {
                     alert('Erreur lors de la suppression');
                   }

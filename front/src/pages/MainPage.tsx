@@ -1,16 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { getPlaylists } from "../apis/PlaylistService";
-import { getLikesSummary } from "../apis/UserService";
-import { getFavorites } from "../apis/FavoritesService";
-import { getUserAlbums } from "../apis/MyMusicService";
+import { getPlaylists } from '../apis/PlaylistService';
+import { getLikesSummary } from '../apis/UserService';
+import { getFavorites } from '../apis/FavoritesService';
+import { getUserAlbums } from '../apis/MyMusicService';
 
-import PlaylistCard from "../components/PlaylistCard";
-import ProfileCircleCard from "../components/ProfileCircleCard";
-import { usePlayer } from "../apis/PlayerContext";
+import PlaylistCard from '../components/PlaylistCard';
+import ProfileCircleCard from '../components/ProfileCircleCard';
+import { usePlayer } from '../apis/PlayerContext';
 
-import "../styles/MainPage.css";
+import '../styles/MainPage.css';
 
 const TrackCard: React.FC<{
   id: number;
@@ -21,7 +21,7 @@ const TrackCard: React.FC<{
   onPlay?: () => void;
   onOpenAlbum?: () => void;
 }> = ({ title, artist, image, onPlay, onOpenAlbum }) => (
-  <div className="mp-track-card" role={onPlay ? "button" : undefined}>
+  <div className="mp-track-card" role={onPlay ? 'button' : undefined}>
     <div className="mp-track-cover" onClick={onOpenAlbum}>
       {image ? <img src={image} alt={title} /> : <div className="mp-cover-ph" />}
     </div>
@@ -38,6 +38,7 @@ const TrackCard: React.FC<{
     </button>
   </div>
 );
+
 interface LikedProfile {
   id: number;
   name: string;
@@ -90,7 +91,7 @@ const MainPage: React.FC = () => {
       setRecentFavorites(Array.isArray(favs) ? favs.slice(0, 12) : []);
       setMyAlbums(Array.isArray(albums) ? albums.slice(0, 12) : []);
     } catch (e) {
-      console.error("Chargement MainPage échoué", e);
+      console.error('Chargement MainPage échoué', e);
       setPlaylists([]);
       setFollowing([]);
       setLikedAlbums([]);
@@ -180,7 +181,7 @@ const MainPage: React.FC = () => {
                   artist={m.artist}
                   image={m.album_image || undefined}
                   onPlay={() =>
-                    playSong(m.audio || "", m.name, m.artist, m.album_image || "", m.id)
+                    playSong(m.audio || '', m.name, m.artist, m.album_image || '', m.id)
                   }
                   onOpenAlbum={() =>
                     navigate(`/search?query=${encodeURIComponent(m.name)}`)

@@ -7,10 +7,15 @@ import MediaPage from './MediaPage';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { UISong } from '../components/SongList';
 
-const toNumberArray = (arr: any[]): number[] =>
-  (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
-
 const cover = '/favorites-cover.svg';
+
+const extractPlaylistIds = (val: any): number[] => {
+  if (!Array.isArray(val)) return [];
+  return val
+    .map((x) => (x && typeof x === 'object' ? x.id : x))
+    .map(Number)
+    .filter(Number.isFinite);
+};
 
 const FavoritesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -34,7 +39,7 @@ const FavoritesPage: React.FC = () => {
             audio: m.audio ?? m.stream_url ?? '',
             dateAdded: m.dateAdded ?? m.date_added ?? m.favorited_at ?? m.created_at ?? '',
             duration: m.duration ?? undefined,
-            playlistIds: toNumberArray(m.playlist_ids ?? m.playlists ?? []),
+            playlistIds: extractPlaylistIds(m.playlist_ids ?? m.playlists ?? m.playlistIds ?? []),
             ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
             ...(m.artist_user_id != null ? { artist_user_id: Number(m.artist_user_id) } : {}),
           } as any)
@@ -54,7 +59,7 @@ const FavoritesPage: React.FC = () => {
     if (loading || songs.length === 0) return [];
 
     const addAllToQueue = () => {
-      songs.forEach((s) => addToQueue(s));
+      songs.forEach((s) => addToQueue(s as any));
     };
 
     const onToggleBulkPlaylist = async (playlistId: number, checked: boolean) => {
@@ -68,6 +73,20 @@ const FavoritesPage: React.FC = () => {
             songs.map((s) => removeMusicFromPlaylist(Number(playlistId), Number(s.id)))
           );
         }
+
+        // Mise à jour locale réactive
+        setSongs((prev) =>
+          prev.map((s) => {
+            const cur = Array.isArray(s.playlistIds) ? s.playlistIds : [];
+            const pid = Number(playlistId);
+            return {
+              ...s,
+              playlistIds: checked
+                ? Array.from(new Set([...cur, pid]))
+                : cur.filter((id) => Number(id) !== pid),
+            };
+          })
+        );
       } catch (e) {
         console.error('Maj bulk playlist échouée', e);
       }
@@ -120,10 +139,28 @@ const FavoritesPage: React.FC = () => {
           withPlaylistMenu: true,
           songId: (song as any).id,
           existingPlaylistIds: (song as any).playlistIds ?? [],
-          onToggle: (playlistId: number, checked: boolean) =>
-            checked
-              ? addMusicToPlaylist(playlistId, (song as any).id)
-              : removeMusicFromPlaylist(playlistId, (song as any).id),
+          onToggle: async (playlistId: number, checked: boolean) => {
+            try {
+              if (checked) await addMusicToPlaylist(playlistId, (song as any).id);
+              else await removeMusicFromPlaylist(playlistId, (song as any).id);
+
+              setSongs((prev) =>
+                prev.map((s) => {
+                  if (s.id !== (song as any).id) return s;
+                  const cur = Array.isArray(s.playlistIds) ? s.playlistIds : [];
+                  const pid = Number(playlistId);
+                  return {
+                    ...s,
+                    playlistIds: checked
+                      ? Array.from(new Set([...cur, pid]))
+                      : cur.filter((id) => Number(id) !== pid),
+                  };
+                })
+              );
+            } catch (e) {
+              console.error('Maj playlist échouée', e);
+            }
+          },
         },
         {
           label: 'Supprimer des favoris',

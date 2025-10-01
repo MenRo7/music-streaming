@@ -11,7 +11,7 @@ interface Song {
   file: File | null;
 }
 
-const ImportPage = () => {
+const ImportPage: React.FC = () => {
   const [albumName, setAlbumName] = useState('');
   const [albumType, setAlbumType] = useState('single');
   const [songs, setSongs] = useState<Song[]>([{ title: '', file: null }]);
@@ -24,18 +24,19 @@ const ImportPage = () => {
   const navigate = useNavigate();
 
   const addSong = () => {
-    setSongs([...songs, { title: '', file: null }]);
+    setSongs((prev) => [...prev, { title: '', file: null }]);
   };
 
   const removeSong = (index: number) => {
-    const updatedSongs = songs.filter((_, idx) => idx !== index);
-    setSongs(updatedSongs);
+    setSongs((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   const handleSongChange = (index: number, field: keyof Song, value: any) => {
-    const updatedSongs = [...songs];
-    updatedSongs[index][field] = value;
-    setSongs(updatedSongs);
+    setSongs((prev) => {
+      const next = [...prev];
+      next[index][field] = value;
+      return next;
+    });
   };
 
   const submitMusic = async () => {
@@ -177,7 +178,9 @@ const ImportPage = () => {
                   <input
                     type="file"
                     accept="audio/*"
-                    onChange={(e) => handleSongChange(index, 'file', e.target.files ? e.target.files[0] : null)}
+                    onChange={(e) =>
+                      handleSongChange(index, 'file', e.target.files ? e.target.files[0] : null)
+                    }
                   />
                   <button
                     className="remove-btn"
