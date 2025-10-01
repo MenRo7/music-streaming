@@ -70,3 +70,6 @@ button:hover {
 .toggle-link:hover {
   color: #4b2485;
 }
+
+.error-message { color: #ff6b6b; margin-bottom: 10px; }
+.info-message { color: #9ad67f; margin-bottom: 10px; }
