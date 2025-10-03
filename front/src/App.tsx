@@ -21,6 +21,7 @@ import MyMusicPage from './pages/MyMusicPage';
 import FavoritesPage from './pages/FavoritesPage';
 import EditAlbumPage from './pages/EditAlbumPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import PreferencesPage from './pages/PreferencesPage';
 
 import { AuthProvider } from './apis/AuthContext';
 import { PlaylistProvider } from './apis/PlaylistContext';
@@ -170,6 +171,22 @@ const AppShell: React.FC = () => {
                   <ProfilePage />
                   </>
               } 
+            />
+          }
+        />
+
+        <Route
+          path="/preferences"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <PreferencesPage />
+                </>
+              }
             />
           }
         />

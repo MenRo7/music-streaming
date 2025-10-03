@@ -19,11 +19,13 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'id' => (int) $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
-            'updated_at' => $user->updated_at,
+            'id'                => (int) $user->id,
+            'name'              => $user->name,
+            'email'             => $user->email,
+            'profile_image'     => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+            'updated_at'        => $user->updated_at,
+            'stripe_connect_id' => $user->stripe_connect_id,
+            'payments_enabled'  => (bool) $user->payments_enabled,
         ]);
     }
 
@@ -84,10 +86,12 @@ class UserController extends Controller
 
         return response()->json([
             'user'      => [
-                'id' => (int) $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+                'id'                => (int) $user->id,
+                'name'              => $user->name,
+                'email'             => $user->email,
+                'profile_image'     => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+                'stripe_connect_id' => $user->stripe_connect_id,
+                'payments_enabled'  => (bool) $user->payments_enabled,
             ],
             'musics'    => $musics,
             'albums'    => $albums,
@@ -101,11 +105,13 @@ class UserController extends Controller
             $user = Auth::user();
 
             return response()->json([
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
-                'updated_at' => $user->updated_at,
+                'id'                => $user->id,
+                'name'              => $user->name,
+                'email'             => $user->email,
+                'profile_image'     => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+                'updated_at'        => $user->updated_at,
+                'stripe_connect_id' => $user->stripe_connect_id,
+                'payments_enabled'  => (bool) $user->payments_enabled,
             ]);
         } else {
             return response()->json(['message' => 'Non authentifié'], 401);
@@ -142,10 +148,12 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Profil mis à jour avec succès',
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+                'id'                => $user->id,
+                'name'              => $user->name,
+                'email'             => $user->email,
+                'profile_image'     => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+                'stripe_connect_id' => $user->stripe_connect_id,
+                'payments_enabled'  => (bool) $user->payments_enabled,
             ],
         ], 200);
     }
@@ -175,7 +183,7 @@ class UserController extends Controller
                     'image' => $p->image ? asset('storage/' . $p->image) : null,
                 ];
             });
-        
+
         $profiles = $user->following()
             ->select('users.id', 'users.name', 'users.profile_image', 'users.updated_at')
             ->get()

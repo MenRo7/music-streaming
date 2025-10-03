@@ -55,6 +55,7 @@ class User extends Authenticatable
             'two_factor_expires_at' => 'datetime',
             'password' => 'hashed',
             'password_reset_expires_at' => 'datetime',
+            'payments_enabled' => 'boolean',
         ];
     }
 
@@ -63,7 +64,7 @@ class User extends Authenticatable
         return $this->hasMany(Playlist::class);
     }
 
-        public function favorites()
+    public function favorites()
     {
         return $this->belongsToMany(\App\Models\Music::class, 'favorites')
             ->withTimestamps();

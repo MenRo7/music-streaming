@@ -21,9 +21,22 @@ const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
       const { id } = await createDonationCheckoutSession(toUserId, a, 'eur');
       const stripeJs = await loadStripe();
       await stripeJs.redirectToCheckout({ sessionId: id });
-    } catch (e) {
-      console.error(e);
-      alert("Impossible d'initialiser le paiement.");
+    } catch (e: any) {
+      // Log complet pour debug
+      console.error('Donation error:', e?.response?.data || e);
+
+      // Récupération d’un message lisible
+      const data = e?.response?.data;
+      const msg =
+        data?.error ||
+        data?.message ||
+        (data?.errors
+          ? Object.values(data.errors).flat()[0] // 1er message de validation Laravel
+          : null) ||
+        e?.message ||
+        "Erreur inconnue";
+
+      alert(msg);
     } finally {
       setLoading(false);
     }

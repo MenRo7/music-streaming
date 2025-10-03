@@ -10,6 +10,8 @@ use App\Http\Controllers\MusicController;
 use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\DonationController;
+use App\Http\Controllers\PreferencesController;
+
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -70,6 +72,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/search', [GlobalSearchController::class, 'search']);
     Route::post('/users/{id}/donate/checkout', [DonationController::class, 'createCheckoutSession']);
 
+    Route::get('/preferences', [PreferencesController::class, 'index']);
+    Route::post('/preferences/locale', [PreferencesController::class, 'setLocale']);
+    Route::post('/preferences/stripe/onboarding', [PreferencesController::class, 'createStripeOnboarding']);
+    Route::get('/preferences/stripe/status', [PreferencesController::class, 'stripeStatus']);
 });
 
 Route::get('/search', [GlobalSearchController::class, 'search']);

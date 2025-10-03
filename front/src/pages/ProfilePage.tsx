@@ -158,14 +158,17 @@ const ProfilePage: React.FC = () => {
     })();
   }, []);
 
+  useEffect(() => {
+  if (user) {
+    console.log('payments_enabled value:', user.payments_enabled, 'typeof:', typeof user.payments_enabled);
+  }
+}, [user]);
+
+
   const isSelf = useMemo(
     () => Boolean(viewer?.id) && Boolean(user?.id) && Number(viewer.id) === Number(user.id),
     [viewer, user]
   );
-
-  const openProfileModal = () => setIsModalOpen(true);
-  const closeProfileModal = () => setIsModalOpen(false);
-  const handleProfileUpdate = (updatedUser: any) => setUser(updatedUser);
 
   const handleTogglePlaylist = async (
     playlistId: number | string,
@@ -348,7 +351,7 @@ const ProfilePage: React.FC = () => {
               <button
                 className="donate-btn"
                 onClick={() => setDonateOpen(true)}
-                title="Faire un don"
+                title={user?.payments_enabled ? 'Faire un don' : 'Paiements non activés'}
               >
                 Faire un don
               </button>
