@@ -21,18 +21,18 @@ return [
         'sanctum/csrf-cookie',
     ],
 
-    'allowed_methods' => ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+    'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000','http://localhost:5173'],
+    'allowed_origins' => ['CORS_ALLOWED_ORIGINS', 'http://localhost:3000'],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['Content-Type', 'X-Requested-With', 'Accept', 'Authorization', 'X-CSRF-TOKEN'],
 
-    'exposed_headers' => ['Accept-Ranges','Content-Range','Content-Length','Content-Type'],
+    'exposed_headers' => [],
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => (bool) env('CORS_SUPPORTS_CREDENTIALS', true),
 
 ];
