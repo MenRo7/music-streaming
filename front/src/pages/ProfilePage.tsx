@@ -158,13 +158,6 @@ const ProfilePage: React.FC = () => {
     })();
   }, []);
 
-  useEffect(() => {
-  if (user) {
-    console.log('payments_enabled value:', user.payments_enabled, 'typeof:', typeof user.payments_enabled);
-  }
-}, [user]);
-
-
   const isSelf = useMemo(
     () => Boolean(viewer?.id) && Boolean(user?.id) && Number(viewer.id) === Number(user.id),
     [viewer, user]
