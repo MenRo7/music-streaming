@@ -12,6 +12,7 @@ use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AccountDeletionController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -27,6 +28,9 @@ Route::middleware('throttle:6,1')->group(function () {
 
 Route::get('/account/email/change/confirm/{token}', [AccountController::class, 'confirmEmailChange'])
     ->name('account.email.confirm');
+
+Route::get('/account/delete/confirm/{token}', [AccountDeletionController::class, 'confirmDeletion'])
+    ->name('account.delete.confirm');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -85,6 +89,10 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('account.email.request');
     Route::post('/account/password/change', [AccountController::class, 'changePassword'])
         ->name('account.password.change');
+
+    Route::post('/account/delete/request', [AccountDeletionController::class, 'requestDeletion'])
+    ->name('account.delete.request')
+    ->middleware('throttle:3,1');
 });
 
 Route::get('/search', [GlobalSearchController::class, 'search']);

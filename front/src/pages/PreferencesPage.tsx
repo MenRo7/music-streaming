@@ -4,9 +4,9 @@ import {
   getPreferences,
   getStripeStatus,
   startStripeOnboarding,
-  setLocale,
+  setLocale as setLocalePref,
 } from '../apis/PreferencesService';
-import { fetchUser } from '../apis/UserService';
+import { fetchUser, requestAccountDeletion } from '../apis/UserService';
 import PersonalInfoModal from '../components/PersonalInfoModal';
 
 import '../styles/PreferencesPage.css';
@@ -73,7 +73,7 @@ const PreferencesPage: React.FC = () => {
 
   const onSaveLocale = async () => {
     try {
-      await setLocale(locale);
+      await setLocalePref(locale);
       alert('Langue enregistrée ✅');
     } catch (e) {
       console.error(e);
@@ -99,6 +99,24 @@ const PreferencesPage: React.FC = () => {
       !stripe.payouts_enabled
     );
   }, [stripe]);
+
+  const onRequestDeletion = async () => {
+    const ok = window.confirm(
+      "Cette action est irréversible.\n\n" +
+      "Nous allons vous envoyer un e-mail pour confirmer la suppression de votre compte " +
+      "et de toutes les données associées (playlists, musiques, albums, likes, abonnements, fichiers…).\n\n" +
+      "Voulez-vous continuer ?"
+    );
+    if (!ok) return;
+
+    try {
+      await requestAccountDeletion();
+      alert('E-mail de confirmation envoyé. Vérifiez votre boîte mail 📬');
+    } catch (e) {
+      console.error(e);
+      alert("Impossible d'envoyer l’e-mail de confirmation.");
+    }
+  };
 
   return (
     <div className="preferences-page">
@@ -138,6 +156,7 @@ const PreferencesPage: React.FC = () => {
                 </button>
               </div>
             </div>
+
             <div className="card">
               <h2>Langue</h2>
               <div className="row">
@@ -196,11 +215,29 @@ const PreferencesPage: React.FC = () => {
                 et utilisez l’adresse e-mail associée à votre compte connecté.
               </p>
             </div>
+
+            <div className="card" style={{ borderColor: '#ef4444' }}>
+              <h2>Supprimer mon compte</h2>
+              <p className="hint">
+                Cette opération est <strong>définitive</strong> et supprimera toutes vos données
+                (profil, musiques, albums, playlists, likes, abonnements, fichiers…).
+                Un e-mail de confirmation vous sera envoyé. La suppression ne sera effectuée
+                qu’après votre clic sur le lien de confirmation.
+              </p>
+              <div className="row mt">
+                <button
+                  className="btn"
+                  style={{ background: '#ef4444', color: '#fff' }}
+                  onClick={onRequestDeletion}
+                >
+                  Supprimer mon compte…
+                </button>
+              </div>
+            </div>
           </>
         )}
       </div>
 
-      {/* Modal d’informations personnelles */}
       {user && (
         <PersonalInfoModal
           isOpen={showPersonalModal}

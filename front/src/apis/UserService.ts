@@ -76,3 +76,7 @@ export const changePassword = async (currentPassword: string, newPassword: strin
     getAuthHeader()
   );
 };
+
+export const requestAccountDeletion = async () => {
+  return axios.post(`${API_URL}/account/delete/request`, {}, getAuthHeader());
+};
