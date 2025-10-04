@@ -11,7 +11,7 @@ use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\PreferencesController;
-
+use App\Http\Controllers\AccountController; // ⬅️ AJOUT
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -24,6 +24,9 @@ Route::middleware('throttle:6,1')->group(function () {
     Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
     Route::post('/password/reset',  [AuthController::class, 'resetPassword']);
 });
+
+Route::get('/account/email/change/confirm/{token}', [AccountController::class, 'confirmEmailChange'])
+    ->name('account.email.confirm');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -76,6 +79,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/preferences/locale', [PreferencesController::class, 'setLocale']);
     Route::post('/preferences/stripe/onboarding', [PreferencesController::class, 'createStripeOnboarding']);
     Route::get('/preferences/stripe/status', [PreferencesController::class, 'stripeStatus']);
+
+    Route::post('/account/email/change/request', [AccountController::class, 'requestEmailChange'])
+        ->name('account.email.request');
+    Route::post('/account/password/change', [AccountController::class, 'changePassword'])
+        ->name('account.password.change');
 });
 
 Route::get('/search', [GlobalSearchController::class, 'search']);

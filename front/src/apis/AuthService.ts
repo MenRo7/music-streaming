@@ -1,8 +1,18 @@
 import axios from 'axios';
 import { API_URL } from '../apis/api';
 
-export const registerUser = (name: string, email: string, password: string) =>
-  axios.post(`${API_URL}/register`, { name, email, password });
+export const registerUser = (
+  name: string,
+  email: string,
+  password: string,
+  date_of_birth: string
+) =>
+  axios.post(`${API_URL}/register`, {
+    name,
+    email,
+    password,
+    date_of_birth,
+  });
 
 export const verifyEmail = (email: string, code: string) =>
   axios.post(`${API_URL}/verify-email`, { email, code });
@@ -27,6 +37,10 @@ export const resetPassword = (
   code: string,
   password: string,
   password_confirmation: string
-) => axios.post(`${API_URL}/password/reset`, {
-  email, code, password, password_confirmation
-});
+) =>
+  axios.post(`${API_URL}/password/reset`, {
+    email,
+    code,
+    password,
+    password_confirmation,
+  });

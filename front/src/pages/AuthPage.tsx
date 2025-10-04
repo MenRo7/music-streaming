@@ -14,6 +14,7 @@ const AuthPage: React.FC = () => {
   const [email, setEmail]     = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState(''); // 'YYYY-MM-DD'
 
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -40,7 +41,22 @@ const AuthPage: React.FC = () => {
           setError('Les mots de passe ne correspondent pas.');
           return;
         }
-        await registerUser(username.trim(), email.trim(), password);
+
+        if (dateOfBirth) {
+          const today = new Date();
+          const [y, m, d] = dateOfBirth.split('-').map(Number);
+          const dob = new Date(y, (m || 1) - 1, d || 1);
+          const eighteen = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+          if (dob > eighteen) {
+            setError('Vous devez avoir au moins 18 ans pour créer un compte.');
+            return;
+          }
+        } else {
+          setError('Veuillez renseigner votre date de naissance.');
+          return;
+        }
+
+        await registerUser(username.trim(), email.trim(), password, dateOfBirth.trim());
         setInfo('Un code de vérification vous a été envoyé par e-mail.');
         setStep('verifyEmail');
         return;
@@ -154,17 +170,31 @@ const AuthPage: React.FC = () => {
             </div>
 
             {isRegistering && (
-              <div className="input-group">
-                <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  autoComplete="new-password"
-                />
-              </div>
+              <>
+                <div className="input-group">
+                  <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label htmlFor="dateOfBirth">Date de naissance</label>
+                  <input
+                    type="date"
+                    id="dateOfBirth"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                    required
+                    autoComplete="bday"
+                  />
+                </div>
+              </>
             )}
 
             <button type="submit" disabled={submitting}>

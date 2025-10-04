@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(SecurityHeaders::class);
+        $middleware->alias([
+            'adult' => EnsureUserIsAdult::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

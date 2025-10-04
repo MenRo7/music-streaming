@@ -6,6 +6,9 @@ import {
   startStripeOnboarding,
   setLocale,
 } from '../apis/PreferencesService';
+import { fetchUser } from '../apis/UserService';
+import PersonalInfoModal from '../components/PersonalInfoModal';
+
 import '../styles/PreferencesPage.css';
 
 type StripeStatus = {
@@ -14,6 +17,15 @@ type StripeStatus = {
   charges_enabled: boolean;
   payouts_enabled: boolean;
   currently_due: string[];
+};
+
+type CurrentUser = {
+  id: number;
+  name: string;
+  email: string;
+  profile_image?: string | null;
+  updated_at?: string | null;
+  date_of_birth?: string | null;
 };
 
 const PreferencesPage: React.FC = () => {
@@ -30,6 +42,9 @@ const PreferencesPage: React.FC = () => {
     currently_due: [],
   });
 
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [showPersonalModal, setShowPersonalModal] = useState(false);
+
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const onboardingState = params.get('onboarding');
 
@@ -44,6 +59,9 @@ const PreferencesPage: React.FC = () => {
 
         const st = await getStripeStatus();
         setStripe(st);
+
+        const ures = await fetchUser();
+        setUser(ures.data);
       } catch (e) {
         console.error('Erreur chargement préférences', e);
         alert("Impossible de charger vos préférences.");
@@ -74,8 +92,12 @@ const PreferencesPage: React.FC = () => {
   };
 
   const needsAction = useMemo(() => {
-    return !stripe.has_connect || (stripe.currently_due && stripe.currently_due.length > 0)
-      || !stripe.charges_enabled || !stripe.payouts_enabled;
+    return (
+      !stripe.has_connect ||
+      (stripe.currently_due && stripe.currently_due.length > 0) ||
+      !stripe.charges_enabled ||
+      !stripe.payouts_enabled
+    );
   }, [stripe]);
 
   return (
@@ -98,6 +120,24 @@ const PreferencesPage: React.FC = () => {
           <div className="card"><p>Chargement…</p></div>
         ) : (
           <>
+            <div className="card">
+              <h2>Informations personnelles</h2>
+              <div className="grid">
+                <div>
+                  <div className="label">E-mail actuel</div>
+                  <div className="value">{user?.email || '—'}</div>
+                </div>
+                <div>
+                  <div className="label">Date de naissance</div>
+                  <div className="value">{user?.date_of_birth || '—'}</div>
+                </div>
+              </div>
+              <div className="row mt">
+                <button className="btn info-edit" onClick={() => setShowPersonalModal(true)}>
+                  Modifier mes informations
+                </button>
+              </div>
+            </div>
             <div className="card">
               <h2>Langue</h2>
               <div className="row">
@@ -159,6 +199,16 @@ const PreferencesPage: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Modal d’informations personnelles */}
+      {user && (
+        <PersonalInfoModal
+          isOpen={showPersonalModal}
+          onClose={() => setShowPersonalModal(false)}
+          user={user}
+          onProfileUpdate={(u) => setUser(u)}
+        />
+      )}
     </div>
   );
 };

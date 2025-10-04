@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 use App\Mail\OneTimeCodeMail;
+use Illuminate\Support\Carbon;
 
 class AuthController extends Controller
 {
@@ -43,15 +44,19 @@ class AuthController extends Controller
 
     public function register(Request $request) {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|max:255|unique:users',
+            'password'      => 'required|string|min:8',
+            'date_of_birth' => 'required|date|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
+        ], [
+            'date_of_birth.before_or_equal' => 'Vous devez avoir au moins 18 ans pour créer un compte.',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name'          => $request->name,
+            'email'         => $request->email,
+            'password'      => Hash::make($request->password),
+            'date_of_birth' => Carbon::parse($request->date_of_birth)->toDateString(),
         ]);
 
         if (!Role::where('name', 'user')->exists()) {
@@ -115,7 +120,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user || !\Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'message' => ['The provided credentials are incorrect'],
             ]);
@@ -233,7 +238,7 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['code' => ['Invalid or expired code']]);
         }
 
-        $user->password = Hash::make($data['password']);
+        $user->password = \Hash::make($data['password']);
         $user->password_reset_code = null;
         $user->password_reset_expires_at = null;
 
@@ -243,5 +248,4 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Password updated successfully']);
     }
-
 }

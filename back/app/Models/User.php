@@ -30,6 +30,7 @@ class User extends Authenticatable
         'two_factor_expires_at',
         'password_reset_code',
         'password_reset_expires_at',
+        'date_of_birth',
     ];
 
     /**
@@ -56,7 +57,14 @@ class User extends Authenticatable
             'password' => 'hashed',
             'password_reset_expires_at' => 'datetime',
             'payments_enabled' => 'boolean',
+            'email_verified_at' => 'datetime',
+            'date_of_birth'     => 'date',
         ];
+    }
+
+    public function getAgeAttribute(): ?int
+    {
+        return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 
     public function playlists()

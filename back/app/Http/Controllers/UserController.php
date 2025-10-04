@@ -8,6 +8,7 @@ use App\Models\Music;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Carbon;
 
 class UserController extends Controller
 {
@@ -26,6 +27,8 @@ class UserController extends Controller
             'updated_at'        => $user->updated_at,
             'stripe_connect_id' => $user->stripe_connect_id,
             'payments_enabled'  => (bool) $user->payments_enabled,
+            'date_of_birth'     => optional($user->date_of_birth)?->toDateString(),
+            'age'               => $user->age ?? null,
         ]);
     }
 
@@ -92,6 +95,8 @@ class UserController extends Controller
                 'profile_image'     => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
                 'stripe_connect_id' => $user->stripe_connect_id,
                 'payments_enabled'  => (bool) $user->payments_enabled,
+                'date_of_birth'     => optional($user->date_of_birth)?->toDateString(),
+                'age'               => $user->age ?? null,
             ],
             'musics'    => $musics,
             'albums'    => $albums,
@@ -112,6 +117,8 @@ class UserController extends Controller
                 'updated_at'        => $user->updated_at,
                 'stripe_connect_id' => $user->stripe_connect_id,
                 'payments_enabled'  => (bool) $user->payments_enabled,
+                'date_of_birth'     => optional($user->date_of_birth)?->toDateString(),
+                'age'               => $user->age ?? null,
             ]);
         } else {
             return response()->json(['message' => 'Non authentifié'], 401);
@@ -123,12 +130,17 @@ class UserController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'name' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png',
+            'name'          => 'required|string|max:255',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp',
+            'date_of_birth' => 'nullable|date|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
         ]);
 
         $oldName = $user->name;
         $user->name = $request->input('name');
+
+        if ($request->filled('date_of_birth')) {
+            $user->date_of_birth = Carbon::parse($request->input('date_of_birth'));
+        }
 
         if ($request->hasFile('image')) {
             if ($user->profile_image) {
@@ -154,6 +166,8 @@ class UserController extends Controller
                 'profile_image'     => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
                 'stripe_connect_id' => $user->stripe_connect_id,
                 'payments_enabled'  => (bool) $user->payments_enabled,
+                'date_of_birth'     => optional($user->date_of_birth)?->toDateString(),
+                'age'               => $user->age ?? null,
             ],
         ], 200);
     }

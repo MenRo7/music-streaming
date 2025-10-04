@@ -10,6 +10,24 @@
   border-radius: 6px;
   box-shadow: 4px 0 8px rgba(0,0,0,.3);
   overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #1e1e1e #252525;
+}
+
+.preferences-page::-webkit-scrollbar {
+  width: 10px;
+}
+.preferences-page::-webkit-scrollbar-thumb {
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+}
+.preferences-page::-webkit-scrollbar-thumb:hover {
+  background-color: #d1b3ff;
+}
+.preferences-page::-webkit-scrollbar-track {
+  background-color: #252525;
+  border-radius: 10px;
 }
 
 @media (max-width: 1200px) {
@@ -72,14 +90,32 @@
   padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
+
 .btn.primary {
   border: none;
   background: #7c3aed;
   box-shadow: 0 4px 14px rgba(124,58,237,.35);
   font-weight: 700;
 }
-.btn:hover { opacity: .95; }
+.btn:hover {
+  opacity: 0.95;
+}
+
+.btn.info-edit {
+  background: #7c3aed;
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(124,58,237,.35);
+  font-weight: 700;
+}
+.btn.info-edit:hover {
+  background: #6b21a8;
+  box-shadow: 0 4px 14px rgba(107,33,168,.45);
+}
 
 .pref-banner {
   padding: 10px 14px;
