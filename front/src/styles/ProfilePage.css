@@ -50,6 +50,7 @@
   background-color: #252525;
 }
 
+/* --- Bannière Don --- */
 .don-banner {
   display: flex;
   align-items: center;
@@ -81,6 +82,7 @@
 }
 .don-banner-close:hover { opacity: 1; }
 
+/* --- En-tête profil --- */
 .profile-header {
   display: flex;
   align-items: center;
@@ -93,9 +95,20 @@
 
 .actions-right {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;
   margin-left: auto;
-  align-items: center;
+  gap: 6px;
+}
+
+.actions-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.donate-hints {
+  text-align: right;
+  margin-top: 6px;
 }
 
 .profile-image {
@@ -118,6 +131,7 @@
   color: #aaa;
 }
 
+/* --- Menu --- */
 .menu-container {
   position: relative;
 }
@@ -159,6 +173,7 @@
   color: #5e2d91;
 }
 
+/* --- Stats --- */
 .profile-stats {
   display: flex;
   gap: 20px;
@@ -180,6 +195,7 @@
   margin-bottom: 10px;
 }
 
+/* --- Sections --- */
 .top-section {
   margin-bottom: 40px;
   background-color: #121212;
@@ -193,6 +209,7 @@
   margin-bottom: 20px;
 }
 
+/* --- Cartes (albums, playlists, artistes) --- */
 .top-artists,
 .top-albums,
 .public-playlists {
@@ -243,6 +260,7 @@
   transform: scale(1.05);
 }
 
+/* --- Bouton S’abonner --- */
 .subscribe-btn {
   appearance: none;
   border: 2px solid #5e2d91;
@@ -284,6 +302,7 @@
   box-shadow: 0 0 0 3px rgba(94, 45, 145, 0.25);
 }
 
+/* --- Don --- */
 .donate-btn {
   appearance: none;
   border: none;
@@ -297,14 +316,24 @@
   transition: transform .05s ease, opacity .15s ease, box-shadow .2s ease;
   box-shadow: 0 4px 14px rgba(124, 58, 237, .35);
 }
+
 .donate-btn:hover {
   opacity: .95;
   box-shadow: 0 6px 18px rgba(124, 58, 237, .45);
 }
+
 .donate-btn:active {
   transform: translateY(1px);
 }
 
+.donate-hint {
+  font-size: 0.85rem;
+  color: #bbb;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* --- Modale --- */
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(0,0,0,.45);
   display: flex; align-items: center; justify-content: center; z-index: 1000;
@@ -318,6 +347,7 @@
   background: #22c55e; color: #111; border: none; padding: 8px 12px; border-radius: 8px;
 }
 
+/* --- Responsive --- */
 @media (max-width: 1024px) {
   .artist-card,
   .album-card,
@@ -344,7 +374,10 @@
     margin-left: 0;
   }
   .actions-right {
-    margin-left: 0;
+    align-items: center;
+  }
+  .actions-buttons {
+    justify-content: center;
   }
 }
 

@@ -163,6 +163,30 @@ const ProfilePage: React.FC = () => {
     [viewer, user]
   );
 
+  const viewerIsMinor = useMemo(() => {
+    const a = Number(viewer?.age ?? 0);
+    return Number.isFinite(a) && a < 18;
+  }, [viewer]);
+
+  const creatorIsMinor = useMemo(() => {
+    const a = Number(user?.age ?? 0);
+    return Number.isFinite(a) && a < 18;
+  }, [user]);
+
+  const donateDisabled = useMemo(() => {
+    if (viewerIsMinor) return true;
+    if (!user?.payments_enabled) return true;
+    if (creatorIsMinor) return true;
+    return false;
+  }, [viewerIsMinor, user?.payments_enabled, creatorIsMinor]);
+
+  const donateTitle = useMemo(() => {
+    if (viewerIsMinor) return 'Vous devez avoir 18 ans pour faire un don';
+    if (creatorIsMinor) return 'Cet utilisateur n’a pas 18 ans';
+    if (!user?.payments_enabled) return 'Paiements non activés';
+    return 'Faire un don';
+  }, [viewerIsMinor, creatorIsMinor, user?.payments_enabled]);
+
   const handleTogglePlaylist = async (
     playlistId: number | string,
     checked: boolean,
@@ -341,13 +365,39 @@ const ProfilePage: React.FC = () => {
                 {subscribed ? 'Abonné' : 'S’abonner +'}
               </button>
 
-              <button
-                className="donate-btn"
-                onClick={() => setDonateOpen(true)}
-                title={user?.payments_enabled ? 'Faire un don' : 'Paiements non activés'}
-              >
-                Faire un don
-              </button>
+              <div className="donate-section">
+                <button
+                  className="donate-btn"
+                  onClick={() => {
+                    if (viewer?.age && viewer.age < 18) return;
+                    if (!user?.payments_enabled || (user?.age && user.age < 18)) return;
+                    setDonateOpen(true);
+                  }}
+                  disabled={
+                    (viewer?.age && viewer.age < 18) ||
+                    !user?.payments_enabled ||
+                    (user?.age && user.age < 18)
+                  }
+                >
+                  Faire un don
+                </button>
+
+                {viewer?.age && viewer.age < 18 && (
+                  <p className="donate-hint">
+                    <em>Vous devez avoir 18 ans pour faire un don.</em>
+                  </p>
+                )}
+                {user?.age && user.age < 18 && (
+                  <p className="donate-hint">
+                    <em>Cet utilisateur n’a pas 18 ans, vous ne pouvez pas lui faire de don.</em>
+                  </p>
+                )}
+                {!user?.payments_enabled && !(user?.age && user.age < 18) && (
+                  <p className="donate-hint">
+                    <em>Ce créateur n’a pas encore activé les paiements.</em>
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -413,7 +463,7 @@ const ProfilePage: React.FC = () => {
           <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
             {isSelf ? 'Mes playlists' : 'Playlists'}
           </h2>
-          <div className="album-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div className="album-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {playlists.length === 0 && <div>Aucune playlist pour le moment.</div>}
             {playlists.map((pl: any) => (
               <PlaylistCard

@@ -60,10 +60,9 @@ const PersonalInfoModal: React.FC<PersonalInfoModalProps> = ({
 
   const maxDob = useMemo(() => {
     const t = new Date();
-    const y = t.getFullYear() - 18;
     const m = String(t.getMonth() + 1).padStart(2, "0");
     const d = String(t.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
+    return `${t.getFullYear()}-${m}-${d}`;
   }, []);
 
   const handleSubmitEmail = async (e: React.FormEvent) => {
@@ -113,18 +112,6 @@ const PersonalInfoModal: React.FC<PersonalInfoModalProps> = ({
     try {
       if (!dob.trim()) {
         setError("Sélectionnez une date de naissance.");
-        return;
-      }
-      const today = new Date();
-      const [y, m, d] = dob.split("-").map(Number);
-      const dobDate = new Date(y, (m || 1) - 1, d || 1);
-      const eighteen = new Date(
-        today.getFullYear() - 18,
-        today.getMonth(),
-        today.getDate()
-      );
-      if (dobDate > eighteen) {
-        setError("Vous devez avoir au moins 18 ans.");
         return;
       }
 

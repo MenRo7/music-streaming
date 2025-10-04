@@ -19,7 +19,12 @@ class DonationController extends Controller
             'currency'     => 'in:eur,usd,gbp',
         ]);
         $currency = $req->input('currency', 'eur');
-
+        $viewer = Auth::user();
+        if (!$viewer || !$viewer->date_of_birth || $viewer->date_of_birth->age < 18) {
+            return response()->json([
+                'error' => 'Les dons sont réservés aux utilisateurs majeurs (18+).',
+            ], 403);
+        }
         $artist = User::findOrFail($userId);
 
         if (!$artist->stripe_connect_id) {

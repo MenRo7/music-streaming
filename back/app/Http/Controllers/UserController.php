@@ -132,7 +132,7 @@ class UserController extends Controller
         $request->validate([
             'name'          => 'required|string|max:255',
             'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp',
-            'date_of_birth' => 'nullable|date|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
+            'date_of_birth' => 'nullable|date|before_or_equal:today',
         ]);
 
         $oldName = $user->name;
