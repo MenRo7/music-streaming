@@ -107,14 +107,12 @@ const Sidebar: React.FC = () => {
     };
   }, [activeFilters, showAll]);
 
-  // contenu playlists selon sous-filtre
   const playlistsToShow = useMemo(() => {
     if (!show.playlists) return { fav: false, mine: [], liked: [] };
 
     if (mineOnly) {
       return { fav: false, mine: playlists, liked: [] };
     }
-    // tout: favoris + mes playlists + playlists likées
     return { fav: true, mine: playlists, liked: likedPlaylists };
   }, [show.playlists, mineOnly, playlists, likedPlaylists]);
 

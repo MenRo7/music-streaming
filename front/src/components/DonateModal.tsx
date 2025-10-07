@@ -22,16 +22,13 @@ const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
       const stripeJs = await loadStripe();
       await stripeJs.redirectToCheckout({ sessionId: id });
     } catch (e: any) {
-      // Log complet pour debug
       console.error('Donation error:', e?.response?.data || e);
-
-      // Récupération d’un message lisible
       const data = e?.response?.data;
       const msg =
         data?.error ||
         data?.message ||
         (data?.errors
-          ? Object.values(data.errors).flat()[0] // 1er message de validation Laravel
+          ? Object.values(data.errors).flat()[0]
           : null) ||
         e?.message ||
         "Erreur inconnue";

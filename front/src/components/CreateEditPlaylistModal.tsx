@@ -33,7 +33,6 @@ const CreateEditPlaylistModal: React.FC<CreateEditPlaylistModalProps> = ({
     e.preventDefault();
   
     if (!title.trim()) {
-      console.error("Le titre est requis");
       return;
     }
   
