@@ -97,6 +97,7 @@ const SongPlayer: React.FC = () => {
     const isNewSource = lastUrlRef.current !== audioUrl;
     if (isNewSource) {
       audio.src = audioUrl;
+      audio.load();
       lastUrlRef.current = audioUrl;
       audio.currentTime = 0;
       seekingRef.current = false;
@@ -125,9 +126,6 @@ const SongPlayer: React.FC = () => {
     };
 
     const onEnded = () => {
-      // Si repeat actif, on laisse la boucle native (audio.loop) faire son job.
-      // Par sécurité, si une implémentation déclenche quand même 'ended',
-      // on relance instantanément et on ne passe PAS au titre suivant.
       if (audio.loop || repeatRef.current === 'one') {
         if (!audio.loop) {
           audio.currentTime = 0;

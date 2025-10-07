@@ -146,18 +146,6 @@ const ImportPage: React.FC = () => {
               />
             </div>
             <div className="import-form">
-              <label>Type de l'album</label>
-              <select
-                value={albumType}
-                onChange={(e) => setAlbumType(e.target.value)}
-              >
-                <option value="single">Single</option>
-                <option value="ep">EP</option>
-                <option value="album">Album</option>
-                <option value="compilation">Compilation</option>
-              </select>
-            </div>
-            <div className="import-form">
               <label>Image de l'album</label>
               <input
                 type="file"

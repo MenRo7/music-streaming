@@ -17,7 +17,6 @@ class AudioStreamController extends Controller
         $filename = str_replace(['../', '..\\'], '', $filename);
 
         $disk = Storage::disk('public');
-
         if (!$disk->exists($filename)) {
             Log::warning('Audio file not found for streaming', [
                 'filename' => $filename,
@@ -27,44 +26,80 @@ class AudioStreamController extends Controller
         }
 
         $fullPath = $disk->path($filename);
-        $size     = $disk->size($filename);
+        $size     = (int) $disk->size($filename);
         $start    = 0;
-        $end      = $size - 1;
-        $length   = $size;
+        $end      = $size > 0 ? $size - 1 : 0;
         $status   = 200;
+
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $mime = match ($ext) {
+            'mp3' => 'audio/mpeg',
+            'm4a' => 'audio/mp4',
+            'aac' => 'audio/aac',
+            'wav' => 'audio/wav',
+            'ogg' => 'audio/ogg',
+            'oga' => 'audio/ogg',
+            default => 'audio/mpeg',
+        };
+
         $range = $request->header('Range');
-        if ($range && preg_match('/bytes=(\d+)-(\d*)/i', $range, $m)) {
-            $start = (int) $m[1];
-            if ($m[2] !== '') {
-                $end = min((int) $m[2], $size - 1);
+        if ($size > 0 && $range && preg_match('/bytes=(\d*)-(\d*)/i', $range, $m)) {
+            $reqStart = ($m[1] !== '') ? (int)$m[1] : null;
+            $reqEnd   = ($m[2] !== '') ? (int)$m[2] : null;
+
+            if ($reqStart === null && $reqEnd !== null) {
+                $start = max(0, $size - $reqEnd);
+                $end   = $size - 1;
+            } else {
+                $start = max(0, min($size - 1, $reqStart ?? 0));
+                $end   = ($reqEnd !== null) ? min($reqEnd, $size - 1) : $size - 1;
             }
-            $length = $end - $start + 1;
+
+            if ($start > $end || $start >= $size) {
+                return response('', 416, [
+                    'Content-Range' => "bytes */{$size}",
+                    'Accept-Ranges' => 'bytes',
+                    'Content-Type'  => $mime,
+                ]);
+            }
+
             $status = 206;
         }
 
+        $length = ($end - $start + 1);
+
         $headers = [
-            'Content-Type'   => 'audio/mpeg',
+            'Content-Type'   => $mime,
             'Accept-Ranges'  => 'bytes',
-            'Content-Length' => $length,
+            'Content-Length' => (string)$length,
         ];
         if ($status === 206) {
-            $headers['Content-Range'] = "bytes $start-$end/$size";
+            $headers['Content-Range'] = "bytes {$start}-{$end}/{$size}";
         }
+
+        if ($request->isMethod('HEAD')) {
+            return response('', $status, $headers);
+        }
+
         while (ob_get_level() > 0) { @ob_end_clean(); }
 
-        $stream = function () use ($fullPath, $start, $length) {
+        $stream = static function () use ($fullPath, $start, $length) {
             $fp = fopen($fullPath, 'rb');
-            fseek($fp, $start);
-
-            $remaining = $length;
-            $chunk = 8192;
-            while ($remaining > 0 && !feof($fp)) {
-                $read = fread($fp, min($chunk, $remaining));
-                $remaining -= strlen($read);
-                echo $read;
-                @ob_flush(); flush();
+            if ($fp === false) { return; }
+            try {
+                fseek($fp, $start);
+                $remaining = $length;
+                $chunk = 8192;
+                while ($remaining > 0 && !feof($fp)) {
+                    $read = fread($fp, min($chunk, $remaining));
+                    if ($read === false) { break; }
+                    $remaining -= strlen($read);
+                    echo $read;
+                    flush();
+                }
+            } finally {
+                fclose($fp);
             }
-            fclose($fp);
         };
 
         return response()->stream($stream, $status, $headers);
