@@ -15,6 +15,8 @@ const AuthPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState(''); // 'YYYY-MM-DD'
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -53,6 +55,11 @@ const AuthPage: React.FC = () => {
           }
         } else {
           setError('Veuillez renseigner votre date de naissance.');
+          return;
+        }
+
+        if (!acceptedTerms || !acceptedPrivacy) {
+          setError("Vous devez accepter les Conditions Générales d'Utilisation et la Politique de Confidentialité.");
           return;
         }
 
@@ -194,6 +201,32 @@ const AuthPage: React.FC = () => {
                     autoComplete="bday"
                   />
                 </div>
+
+                <div className="checkbox-group">
+                  <input
+                    type="checkbox"
+                    id="acceptTerms"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    required
+                  />
+                  <label htmlFor="acceptTerms">
+                    J'accepte les <Link to="/terms" target="_blank">Conditions Générales d'Utilisation</Link>
+                  </label>
+                </div>
+
+                <div className="checkbox-group">
+                  <input
+                    type="checkbox"
+                    id="acceptPrivacy"
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                    required
+                  />
+                  <label htmlFor="acceptPrivacy">
+                    J'accepte la <Link to="/privacy" target="_blank">Politique de Confidentialité</Link>
+                  </label>
+                </div>
               </>
             )}
 
@@ -300,6 +333,12 @@ const AuthPage: React.FC = () => {
             </p>
           </form>
         )}
+
+        <div className="auth-footer">
+          <Link to="/privacy" className="footer-link">Politique de Confidentialité</Link>
+          <span className="footer-separator">•</span>
+          <Link to="/terms" className="footer-link">Conditions d'Utilisation</Link>
+        </div>
       </div>
     </div>
   );

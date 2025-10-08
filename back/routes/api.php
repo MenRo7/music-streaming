@@ -13,6 +13,7 @@ use App\Http\Controllers\DonationController;
 use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountDeletionController;
+use App\Http\Controllers\DataExportController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -93,6 +94,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/account/delete/request', [AccountDeletionController::class, 'requestDeletion'])
     ->name('account.delete.request')
     ->middleware('throttle:3,1');
+
+    // GDPR Data Export & Access (Articles 15 & 20)
+    Route::get('/account/data/export', [DataExportController::class, 'exportData'])
+        ->name('account.data.export');
+    Route::get('/account/data/summary', [DataExportController::class, 'showDataSummary'])
+        ->name('account.data.summary');
 });
 
 Route::get('/search', [GlobalSearchController::class, 'search']);

@@ -22,6 +22,8 @@ import FavoritesPage from './pages/FavoritesPage';
 import EditAlbumPage from './pages/EditAlbumPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import PreferencesPage from './pages/PreferencesPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
 
 import { AuthProvider } from './apis/AuthContext';
 import { PlaylistProvider } from './apis/PlaylistContext';
@@ -45,6 +47,8 @@ const AppShell: React.FC = () => {
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/forgot" element={<ForgotPasswordPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsOfServicePage />} />
         <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
 
         <Route
