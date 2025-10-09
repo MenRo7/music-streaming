@@ -48,9 +48,8 @@ const AuthPage: React.FC = () => {
           const today = new Date();
           const [y, m, d] = dateOfBirth.split('-').map(Number);
           const dob = new Date(y, (m || 1) - 1, d || 1);
-          const eighteen = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-          if (dob > eighteen) {
-            setError('Vous devez avoir au moins 18 ans pour créer un compte.');
+          if (dob >= today) {
+            setError('La date de naissance doit être antérieure à aujourd\'hui.');
             return;
           }
         } else {

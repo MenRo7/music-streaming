@@ -1,0 +1,14 @@
+# Robots.txt for Rhapsody Music Streaming Platform
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /preferences
+Disallow: /my-music
+
+# Sitemap
+Sitemap: http://localhost:3000/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1

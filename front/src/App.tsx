@@ -11,6 +11,7 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import MusicQueue from './components/MusicQueue';
 import SongPlayer from './components/SongPlayer';
+import CookieConsent from './components/CookieConsent';
 import PlaylistPage from './pages/PlaylistPage';
 import ProfilePage from './pages/ProfilePage';
 import MainPage from './pages/MainPage';
@@ -41,6 +42,7 @@ const AppShell: React.FC = () => {
   const location = useLocation();
   const isAuthed = Boolean(localStorage.getItem('authToken'));
   const onAuthPage = location.pathname.startsWith('/auth');
+  const onAuthFlow = location.pathname.startsWith('/auth') || location.pathname.startsWith('/forgot');
 
   return (
     <div className="app">
@@ -213,6 +215,7 @@ const AppShell: React.FC = () => {
       </Routes>
 
       {isAuthed && !onAuthPage && <SongPlayer />}
+      {!onAuthFlow && <CookieConsent />}
     </div>
   );
 };

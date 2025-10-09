@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   getPreferences,
   getStripeStatus,
@@ -9,6 +10,7 @@ import {
 import { fetchUser, requestAccountDeletion } from '../apis/UserService';
 import { exportUserData, getUserDataSummary } from '../apis/DataExportService';
 import PersonalInfoModal from '../components/PersonalInfoModal';
+import { isAdult as checkIsAdult } from '../utils/ageCalculator';
 
 import '../styles/PreferencesPage.css';
 
@@ -31,9 +33,10 @@ type CurrentUser = {
 
 const PreferencesPage: React.FC = () => {
   const location = useLocation();
+  const { i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
 
-  const [locale, setLocaleState] = useState<'fr' | 'en'>('fr');
+  const [locale, setLocaleState] = useState<string>(i18n.language || 'fr');
 
   const [connectId, setConnectId] = useState<string | null>(null);
   const [stripe, setStripe] = useState<StripeStatus>({
@@ -48,6 +51,10 @@ const PreferencesPage: React.FC = () => {
   const [exportingData, setExportingData] = useState(false);
   const [showDataSummary, setShowDataSummary] = useState(false);
   const [dataSummary, setDataSummary] = useState<any>(null);
+
+  const isAdult = useMemo(() => {
+    return checkIsAdult(user?.date_of_birth);
+  }, [user?.date_of_birth]);
 
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const onboardingState = params.get('onboarding');
@@ -77,7 +84,14 @@ const PreferencesPage: React.FC = () => {
 
   const onSaveLocale = async () => {
     try {
-      await setLocalePref(locale);
+      // Update i18next language
+      await i18n.changeLanguage(locale);
+
+      // Save to backend if locale is 'fr' or 'en' (backend only supports these two)
+      if (locale === 'fr' || locale === 'en') {
+        await setLocalePref(locale);
+      }
+
       alert('Langue enregistrée ✅');
     } catch (e) {
       console.error(e);
@@ -186,63 +200,87 @@ const PreferencesPage: React.FC = () => {
             </div>
 
             <div className="card">
-              <h2>Langue</h2>
+              <h2>🌐 Langue / Language</h2>
+              <p className="hint">
+                Choisissez votre langue préférée pour l'interface.
+              </p>
               <div className="row">
                 <select
                   value={locale}
-                  onChange={(e) => setLocaleState(e.target.value as 'fr' | 'en')}
+                  onChange={(e) => setLocaleState(e.target.value)}
+                  style={{ flex: 1 }}
                 >
-                  <option value="fr">Français</option>
-                  <option value="en">English</option>
+                  <option value="fr">🇫🇷 Français</option>
+                  <option value="en">🇬🇧 English</option>
+                  <option value="es">🇪🇸 Español</option>
+                  <option value="it">🇮🇹 Italiano</option>
+                  <option value="pt">🇵🇹 Português</option>
+                  <option value="de">🇩🇪 Deutsch</option>
+                  <option value="zh">🇨🇳 中文</option>
+                  <option value="ja">🇯🇵 日本語</option>
                 </select>
                 <button className="btn primary" onClick={onSaveLocale}>Enregistrer</button>
               </div>
             </div>
 
-            <div className="card">
-              <h2>Paiements (Stripe Connect)</h2>
+            {isAdult ? (
+              <div className="card">
+                <h2>Paiements (Stripe Connect)</h2>
 
-              <div className="grid">
-                <div>
-                  <div className="label">Compte connecté</div>
-                  <div className="value">
-                    {stripe.has_connect ? (stripe.account_id || connectId) : 'Aucun'}
+                <div className="grid">
+                  <div>
+                    <div className="label">Compte connecté</div>
+                    <div className="value">
+                      {stripe.has_connect ? (stripe.account_id || connectId) : 'Aucun'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="label">Encaissements (charges)</div>
+                    <div className={`pill ${stripe.charges_enabled ? 'ok' : 'ko'}`}>
+                      {stripe.charges_enabled ? 'Activés' : 'À compléter'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="label">Virements (payouts)</div>
+                    <div className={`pill ${stripe.payouts_enabled ? 'ok' : 'ko'}`}>
+                      {stripe.payouts_enabled ? 'Activés' : 'À compléter'}
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <div className="label">Encaissements (charges)</div>
-                  <div className={`pill ${stripe.charges_enabled ? 'ok' : 'ko'}`}>
-                    {stripe.charges_enabled ? 'Activés' : 'À compléter'}
+
+                {stripe.currently_due?.length > 0 && (
+                  <div className="due-box">
+                    <div className="label">Informations requises :</div>
+                    <ul>
+                      {stripe.currently_due.map((k) => <li key={k}>{k}</li>)}
+                    </ul>
                   </div>
+                )}
+
+                <div className="row mt">
+                  <button className="btn primary" onClick={onStartOnboarding}>
+                    {needsAction ? 'Activer/Compléter mes paiements' : 'Mettre à jour mes informations'}
+                  </button>
                 </div>
-                <div>
-                  <div className="label">Virements (payouts)</div>
-                  <div className={`pill ${stripe.payouts_enabled ? 'ok' : 'ko'}`}>
-                    {stripe.payouts_enabled ? 'Activés' : 'À compléter'}
-                  </div>
-                </div>
+
+                <p className="hint">
+                  Astuce : si Stripe demande une vérification (2FA), ouvrez la page en navigation privée
+                  et utilisez l'adresse e-mail associée à votre compte connecté.
+                </p>
               </div>
-
-              {stripe.currently_due?.length > 0 && (
-                <div className="due-box">
-                  <div className="label">Informations requises :</div>
-                  <ul>
-                    {stripe.currently_due.map((k) => <li key={k}>{k}</li>)}
-                  </ul>
-                </div>
-              )}
-
-              <div className="row mt">
-                <button className="btn primary" onClick={onStartOnboarding}>
-                  {needsAction ? 'Activer/Compléter mes paiements' : 'Mettre à jour mes informations'}
-                </button>
+            ) : (
+              <div className="card">
+                <h2>⚠️ Paiements (18+)</h2>
+                <p className="hint">
+                  Les fonctionnalités de paiement (donations et réception de fonds via Stripe)
+                  sont réservées aux utilisateurs majeurs (18 ans et plus) conformément aux
+                  obligations légales et aux conditions d'utilisation de Stripe.
+                </p>
+                <p className="hint" style={{ marginTop: '12px' }}>
+                  Vous pourrez accéder à ces fonctionnalités dès votre majorité.
+                </p>
               </div>
-
-              <p className="hint">
-                Astuce : si Stripe demande une vérification (2FA), ouvrez la page en navigation privée
-                et utilisez l’adresse e-mail associée à votre compte connecté.
-              </p>
-            </div>
+            )}
 
             <div className="card" style={{ borderColor: '#3b82f6' }}>
               <h2>Mes données (RGPD)</h2>
@@ -266,6 +304,26 @@ const PreferencesPage: React.FC = () => {
                   onClick={handleViewDataSummary}
                 >
                   📊 Voir le résumé de mes données
+                </button>
+              </div>
+            </div>
+
+            <div className="card" style={{ borderColor: '#8b5cf6' }}>
+              <h2>🍪 Gestion des cookies</h2>
+              <p className="hint">
+                Gérez vos préférences de cookies. Vous pouvez à tout moment modifier vos choix
+                concernant les cookies fonctionnels et analytiques.
+              </p>
+              <div className="row mt">
+                <button
+                  className="btn"
+                  style={{ background: '#8b5cf6', color: '#fff' }}
+                  onClick={() => {
+                    localStorage.removeItem('cookieConsent');
+                    window.location.reload();
+                  }}
+                >
+                  Modifier mes préférences de cookies
                 </button>
               </div>
             </div>

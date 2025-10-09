@@ -280,8 +280,24 @@ const PrivacyPolicyPage: React.FC = () => {
         <section>
           <h2>12. Mineurs</h2>
           <p>
-            Notre service est réservé aux personnes âgées de 18 ans et plus. Nous ne collectons pas
-            sciemment de données personnelles auprès de mineurs.
+            Notre service est accessible à tous les utilisateurs, y compris les mineurs. Cependant,
+            certaines fonctionnalités sont soumises à des restrictions d'âge :
+          </p>
+          <ul>
+            <li>
+              <strong>Fonctionnalités accessibles à tous :</strong> Écoute de musique, création de playlists,
+              upload de contenu, abonnements à des artistes, gestion de profil.
+            </li>
+            <li>
+              <strong>Fonctionnalités réservées aux 18+ :</strong> Donations via Stripe, réception de paiements,
+              activation de Stripe Connect. Ces restrictions sont conformes aux obligations légales et aux
+              conditions d'utilisation de nos partenaires de paiement.
+            </li>
+          </ul>
+          <p>
+            Pour les utilisateurs mineurs, nous recommandons la supervision d'un parent ou tuteur légal.
+            Les mineurs ont accès aux mêmes droits RGPD que les adultes (accès, rectification, portabilité,
+            effacement).
           </p>
         </section>
 

@@ -47,9 +47,9 @@ class AuthController extends Controller
             'name'          => 'required|string|max:255',
             'email'         => 'required|email|max:255|unique:users',
             'password'      => 'required|string|min:8',
-            'date_of_birth' => 'required|date|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
+            'date_of_birth' => 'required|date|before:today',
         ], [
-            'date_of_birth.before_or_equal' => 'Vous devez avoir au moins 18 ans pour créer un compte.',
+            'date_of_birth.before' => 'La date de naissance doit être antérieure à aujourd\'hui.',
         ]);
 
         $user = User::create([
