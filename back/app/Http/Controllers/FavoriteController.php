@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
@@ -16,7 +15,7 @@ class FavoriteController extends Controller
             ->with([
                 'user:id,name',
                 'album:id,title,image',
-                'playlists:id'
+                'playlists:id',
             ])
             ->withPivot('created_at')
             ->orderByDesc('favorites.created_at')
@@ -31,19 +30,19 @@ class FavoriteController extends Controller
                 }
 
                 return [
-                    'id'              => (int) $m->id,
-                    'name'            => $m->title,
-                    'artist'          => optional($m->user)->name ?? $m->artist_name,
-                    'artist_user_id'  => optional($m->user)->id ? (int) $m->user->id : null,
-                    'album'           => optional($m->album)->title ?? 'Inconnu',
-                    'album_id'        => optional($m->album)->id ? (int) $m->album->id : null,
-                    'album_image'     => $m->image
+                    'id' => (int) $m->id,
+                    'name' => $m->title,
+                    'artist' => optional($m->user)->name ?? $m->artist_name,
+                    'artist_user_id' => optional($m->user)->id ? (int) $m->user->id : null,
+                    'album' => optional($m->album)->title ?? 'Inconnu',
+                    'album_id' => optional($m->album)->id ? (int) $m->album->id : null,
+                    'album_image' => $m->image
                         ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
                         : null,
-                    'audio'           => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
-                    'duration'        => $m->duration,
-                    'dateAdded'       => $dateAdded,
-                    'playlistIds'     => $m->playlists
+                    'audio' => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                    'duration' => $m->duration,
+                    'dateAdded' => $dateAdded,
+                    'playlistIds' => $m->playlists
                         ->pluck('id')
                         ->map(fn ($id) => (int) $id)
                         ->values()
@@ -58,6 +57,7 @@ class FavoriteController extends Controller
     {
         $user = Auth::user();
         $user->favorites()->syncWithoutDetaching([$music->id]);
+
         return response()->json(['status' => 'ok']);
     }
 
@@ -65,6 +65,7 @@ class FavoriteController extends Controller
     {
         $user = Auth::user();
         $user->favorites()->detach($music->id);
+
         return response()->json(['status' => 'ok']);
     }
 }

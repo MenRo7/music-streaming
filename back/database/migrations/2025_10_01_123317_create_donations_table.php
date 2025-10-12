@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('donations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('from_user_id')
-                  ->nullable()
-                  ->constrained('users')
-                  ->nullOnDelete();
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->foreignId('to_user_id')
-                  ->constrained('users')
-                  ->cascadeOnDelete();
+                ->constrained('users')
+                ->cascadeOnDelete();
             $table->integer('amount_cents');
             $table->string('currency', 10)->default('eur');
             $table->string('status')->default('created');

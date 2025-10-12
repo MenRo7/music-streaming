@@ -21,8 +21,10 @@
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",
+        "larastan/larastan": "^2.9",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
+        "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^11.5.3"
     },
     "autoload": {
@@ -56,6 +58,16 @@
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
+        ],
+        "test": "phpunit",
+        "test:coverage": "phpunit --coverage-html coverage",
+        "lint": "vendor/bin/pint --test",
+        "lint:fix": "vendor/bin/pint",
+        "analyse": "vendor/bin/phpstan analyse",
+        "check": [
+            "@lint",
+            "@analyse",
+            "@test"
         ]
     },
     "extra": {

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Album;
+use App\Models\Donation;
+use App\Models\Music;
+use App\Models\Playlist;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use App\Models\Music;
-use App\Models\Album;
-use App\Models\Playlist;
-use App\Models\Donation;
 
 class DataExportController extends Controller
 {
@@ -43,7 +43,7 @@ class DataExportController extends Controller
             'payment_info' => [
                 'stripe_connect_id' => $user->stripe_connect_id,
                 'payments_enabled' => (bool) $user->payments_enabled,
-                'stripe_onboarding_completed' => !empty($user->stripe_connect_id) && $user->payments_enabled,
+                'stripe_onboarding_completed' => ! empty($user->stripe_connect_id) && $user->payments_enabled,
             ],
 
             // Music Uploads

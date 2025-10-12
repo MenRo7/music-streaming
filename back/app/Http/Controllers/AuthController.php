@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Mail\OneTimeCodeMail;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
-use App\Mail\OneTimeCodeMail;
-use Illuminate\Support\Carbon;
 
 class AuthController extends Controller
 {
@@ -21,6 +20,7 @@ class AuthController extends Controller
         for ($i = 0; $i < 6; $i++) {
             $out .= $alphabet[random_int(0, strlen($alphabet) - 1)];
         }
+
         return $out;
     }
 
@@ -42,24 +42,25 @@ class AuthController extends Controller
         Mail::to($user->email)->send(new OneTimeCodeMail($user->two_factor_code, 'Connexion'));
     }
 
-    public function register(Request $request) {
+    public function register(Request $request)
+    {
         $request->validate([
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email|max:255|unique:users',
-            'password'      => 'required|string|min:8',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
             'date_of_birth' => 'required|date|before:today',
         ], [
             'date_of_birth.before' => 'La date de naissance doit être antérieure à aujourd\'hui.',
         ]);
 
         $user = User::create([
-            'name'          => $request->name,
-            'email'         => $request->email,
-            'password'      => Hash::make($request->password),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
             'date_of_birth' => Carbon::parse($request->date_of_birth)->toDateString(),
         ]);
 
-        if (!Role::where('name', 'user')->exists()) {
+        if (! Role::where('name', 'user')->exists()) {
             Role::create(['name' => 'user']);
         }
         $user->assignRole('user');
@@ -68,7 +69,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'User created. Verification code sent by email.',
-            'status'  => 'verification_required',
+            'status' => 'verification_required',
         ], 201);
     }
 
@@ -76,15 +77,17 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'email' => 'required|email',
-            'code'  => 'required|string|size:6',
+            'code' => 'required|string|size:6',
         ]);
 
         $user = User::where('email', $data['email'])->first();
-        if (!$user) abort(404, 'User not found');
+        if (! $user) {
+            abort(404, 'User not found');
+        }
 
         if (
-            !$user->email_verification_code ||
-            !$user->email_verification_expires_at ||
+            ! $user->email_verification_code ||
+            ! $user->email_verification_expires_at ||
             now()->greaterThan($user->email_verification_expires_at) ||
             strtoupper($data['code']) !== $user->email_verification_code
         ) {
@@ -109,10 +112,12 @@ class AuthController extends Controller
         }
 
         $this->sendEmailVerification($user);
+
         return response()->json(['message' => 'A new verification code has been sent']);
     }
 
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -120,16 +125,17 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !\Hash::check($request->password, $user->password)) {
+        if (! $user || ! \Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'message' => ['The provided credentials are incorrect'],
             ]);
         }
 
-        if (!$user->email_verified_at) {
+        if (! $user->email_verified_at) {
             $this->sendEmailVerification($user);
+
             return response()->json([
-                'status'  => 'verification_required',
+                'status' => 'verification_required',
                 'message' => 'Email not verified. A code has been sent to your inbox.',
             ], 403);
         }
@@ -137,7 +143,7 @@ class AuthController extends Controller
         $this->sendTwoFactor($user);
 
         return response()->json([
-            'status'  => '2fa_required',
+            'status' => '2fa_required',
             'message' => 'A login code has been sent to your email.',
         ]);
     }
@@ -146,14 +152,14 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'email' => 'required|email',
-            'code'  => 'required|string|size:6',
+            'code' => 'required|string|size:6',
         ]);
 
         $user = User::where('email', $data['email'])->firstOrFail();
 
         if (
-            !$user->two_factor_code ||
-            !$user->two_factor_expires_at ||
+            ! $user->two_factor_code ||
+            ! $user->two_factor_expires_at ||
             now()->greaterThan($user->two_factor_expires_at) ||
             strtoupper($data['code']) !== $user->two_factor_code
         ) {
@@ -168,7 +174,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user'  => $user,
+            'user' => $user,
         ]);
     }
 
@@ -177,10 +183,12 @@ class AuthController extends Controller
         $request->validate(['email' => 'required|email']);
         $user = User::where('email', $request->email)->firstOrFail();
         $this->sendTwoFactor($user);
+
         return response()->json(['message' => 'A new login code has been sent']);
     }
 
-    public function logout(Request $request) {
+    public function logout(Request $request)
+    {
         $request->user()->tokens()->delete();
 
         return response()->json([
@@ -188,7 +196,8 @@ class AuthController extends Controller
         ]);
     }
 
-    public function user(Request $request) {
+    public function user(Request $request)
+    {
         return response()->json([
             'id' => $request->user()->id,
             'name' => $request->user()->name,
@@ -215,23 +224,23 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Si un compte existe pour cet e-mail, un code a été envoyé.'
+            'message' => 'Si un compte existe pour cet e-mail, un code a été envoyé.',
         ]);
     }
 
     public function resetPassword(Request $request)
     {
         $data = $request->validate([
-            'email'    => 'required|email',
-            'code'     => 'required|string|size:6',
+            'email' => 'required|email',
+            'code' => 'required|string|size:6',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
         $user = User::where('email', $data['email'])->firstOrFail();
 
         if (
-            !$user->password_reset_code ||
-            !$user->password_reset_expires_at ||
+            ! $user->password_reset_code ||
+            ! $user->password_reset_expires_at ||
             now()->greaterThan($user->password_reset_expires_at) ||
             strtoupper($data['code']) !== $user->password_reset_code
         ) {

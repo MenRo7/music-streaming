@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -21,7 +22,7 @@ class SecurityHeaders
         $res->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
         if (app()->environment('production')) {
-            $res->headers->set('Strict-Transport-Security','max-age=31536000; includeSubDomains; preload');
+            $res->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
             $res->headers->set('Content-Security-Policy', $this->prodCsp());
         } else {
             $res->headers->set('Content-Security-Policy', $this->devCsp());
@@ -32,7 +33,7 @@ class SecurityHeaders
 
     private function devCsp(): string
     {
-        $api  = 'http://127.0.0.1:8000';
+        $api = 'http://127.0.0.1:8000';
         $vite = 'http://localhost:5173';
 
         return implode('; ', [
@@ -43,7 +44,7 @@ class SecurityHeaders
             "font-src 'self' data:",
             "connect-src 'self' $api $vite ws://localhost:5173",
             "frame-ancestors 'none'",
-            "frame-src https://js.stripe.com",
+            'frame-src https://js.stripe.com',
             "media-src 'self' blob:",
             "base-uri 'self'",
             "form-action 'self'",
@@ -53,7 +54,7 @@ class SecurityHeaders
     private function prodCsp(): string
     {
         $appUrl = config('app.url');
-        $host   = parse_url($appUrl, PHP_URL_SCHEME) . '://' . parse_url($appUrl, PHP_URL_HOST);
+        $host = parse_url($appUrl, PHP_URL_SCHEME) . '://' . parse_url($appUrl, PHP_URL_HOST);
 
         return implode('; ', [
             "default-src 'self'",
@@ -63,7 +64,7 @@ class SecurityHeaders
             "font-src 'self' data:",
             "connect-src 'self' $host",
             "frame-ancestors 'none'",
-            "frame-src https://js.stripe.com",
+            'frame-src https://js.stripe.com',
             "media-src 'self'",
             "base-uri 'self'",
             "form-action 'self'",

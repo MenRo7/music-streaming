@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
+import ENV from '../config/env';
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   toUserId: number;
 };
-
-const STRIPE_PUBLISHABLE = 'pk_test_51SDQmuC43NOGGMR33uTOpWQiSiuocDddKt9GDPIoNHnrCph9hbhe9JBK8vQjJOjBKdTXNK5ITNhgIekfiOvJ3JCN00oFEkRMYb';
 
 const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
   const [amount, setAmount] = useState('5');
@@ -41,9 +40,13 @@ const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
 
   const loadStripe = () =>
     new Promise<any>((resolve, reject) => {
-      if ((window as any).Stripe) return resolve((window as any).Stripe(STRIPE_PUBLISHABLE));
+      if (!ENV.STRIPE_PUBLISHABLE_KEY) {
+        reject(new Error('Stripe publishable key not configured'));
+        return;
+      }
+      if ((window as any).Stripe) return resolve((window as any).Stripe(ENV.STRIPE_PUBLISHABLE_KEY));
       const s = document.createElement('script'); s.src = 'https://js.stripe.com/v3/';
-      s.onload = () => resolve((window as any).Stripe(STRIPE_PUBLISHABLE));
+      s.onload = () => resolve((window as any).Stripe(ENV.STRIPE_PUBLISHABLE_KEY));
       s.onerror = reject;
       document.body.appendChild(s);
     });

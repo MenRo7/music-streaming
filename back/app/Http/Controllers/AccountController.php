@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\EmailChangeRequest;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -17,11 +17,11 @@ class AccountController extends Controller
         $user = $request->user();
 
         $data = $request->validate([
-            'new_email'        => 'required|email|max:255|unique:users,email',
+            'new_email' => 'required|email|max:255|unique:users,email',
             'current_password' => 'required|string',
         ]);
 
-        if (!Hash::check($data['current_password'], $user->password)) {
+        if (! Hash::check($data['current_password'], $user->password)) {
             throw ValidationException::withMessages([
                 'current_password' => ['Mot de passe incorrect.'],
             ]);
@@ -31,9 +31,9 @@ class AccountController extends Controller
 
         $token = Str::random(64);
         $ecr = EmailChangeRequest::create([
-            'user_id'    => $user->id,
-            'new_email'  => $data['new_email'],
-            'token'      => $token,
+            'user_id' => $user->id,
+            'new_email' => $data['new_email'],
+            'token' => $token,
             'expires_at' => now()->addHours(24),
         ]);
 
@@ -43,12 +43,12 @@ class AccountController extends Controller
             "Bonjour,\n\nCliquez sur ce lien pour confirmer votre changement d'adresse e-mail :\n{$confirmUrl}\n\nCe lien expire dans 24h.",
             function ($message) use ($ecr) {
                 $message->to($ecr->new_email)
-                        ->subject('Confirmez votre changement d’e-mail');
+                    ->subject('Confirmez votre changement d’e-mail');
             }
         );
 
         return response()->json([
-            'message'     => 'Demande envoyée. Vérifiez votre nouvelle adresse e-mail pour confirmer.',
+            'message' => 'Demande envoyée. Vérifiez votre nouvelle adresse e-mail pour confirmer.',
             'confirm_url' => $confirmUrl,
         ]);
     }
@@ -59,14 +59,14 @@ class AccountController extends Controller
             ->where('expires_at', '>', now())
             ->first();
 
-        if (!$req) {
+        if (! $req) {
             return response()->view('account.email_change_error', [
                 'message' => 'Lien invalide ou expiré.',
             ], 400);
         }
 
         $user = User::find($req->user_id);
-        if (!$user) {
+        if (! $user) {
             return response()->view('account.email_change_error', [
                 'message' => 'Utilisateur introuvable.',
             ], 404);
@@ -89,12 +89,12 @@ class AccountController extends Controller
 
         $data = $request->validate([
             'current_password' => 'required|string',
-            'new_password'     => 'required|string|min:8|different:current_password',
+            'new_password' => 'required|string|min:8|different:current_password',
         ], [
             'new_password.different' => 'Le nouveau mot de passe doit être différent de l’actuel.',
         ]);
 
-        if (!Hash::check($data['current_password'], $user->password)) {
+        if (! Hash::check($data['current_password'], $user->password)) {
             throw ValidationException::withMessages([
                 'current_password' => ['Mot de passe incorrect.'],
             ]);

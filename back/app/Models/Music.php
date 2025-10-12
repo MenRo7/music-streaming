@@ -10,6 +10,7 @@ class Music extends Model
     use HasFactory;
 
     protected $fillable = ['user_id', 'album_id', 'title', 'audio', 'image', 'artist_name'];
+
     protected $appends = ['artist'];
 
     public function user()
@@ -38,5 +39,3 @@ class Music extends Model
             ->withTimestamps();
     }
 }
-
-

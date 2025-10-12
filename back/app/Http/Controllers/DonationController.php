@@ -6,9 +6,9 @@ use App\Models\Donation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Stripe\Stripe;
-use Stripe\Checkout\Session as Checkout;
 use Stripe\Account;
+use Stripe\Checkout\Session as Checkout;
+use Stripe\Stripe;
 
 class DonationController extends Controller
 {
@@ -16,18 +16,18 @@ class DonationController extends Controller
     {
         $req->validate([
             'amount_cents' => 'required|integer|min:100|max:2000000',
-            'currency'     => 'in:eur,usd,gbp',
+            'currency' => 'in:eur,usd,gbp',
         ]);
         $currency = $req->input('currency', 'eur');
         $viewer = Auth::user();
-        if (!$viewer || !$viewer->date_of_birth || $viewer->date_of_birth->age < 18) {
+        if (! $viewer || ! $viewer->date_of_birth || $viewer->date_of_birth->age < 18) {
             return response()->json([
                 'error' => 'Les dons sont réservés aux utilisateurs majeurs (18+).',
             ], 403);
         }
         $artist = User::findOrFail($userId);
 
-        if (!$artist->stripe_connect_id) {
+        if (! $artist->stripe_connect_id) {
             return response()->json(['error' => "L'artiste n'a pas encore de compte de paiement actif."], 422);
         }
 
@@ -42,29 +42,30 @@ class DonationController extends Controller
 
         $enabledNow = (bool) ($acct->charges_enabled && $acct->payouts_enabled);
 
-        if ($enabledNow && !$artist->payments_enabled) {
+        if ($enabledNow && ! $artist->payments_enabled) {
             $artist->payments_enabled = true;
             $artist->save();
         }
 
-        if (!$enabledNow) {
+        if (! $enabledNow) {
             $due = $acct->requirements->currently_due ?? [];
+
             return response()->json([
-                'error'          => "Les paiements de cet artiste ne sont pas encore activés.",
-                'currently_due'  => $due,
-                'account_id'     => $acct->id,
-                'charges_enabled'=> (bool) $acct->charges_enabled,
-                'payouts_enabled'=> (bool) $acct->payouts_enabled,
+                'error' => 'Les paiements de cet artiste ne sont pas encore activés.',
+                'currently_due' => $due,
+                'account_id' => $acct->id,
+                'charges_enabled' => (bool) $acct->charges_enabled,
+                'payouts_enabled' => (bool) $acct->payouts_enabled,
             ], 422);
         }
 
         $fromUserId = Auth::id();
         $donation = Donation::create([
             'from_user_id' => $fromUserId,
-            'to_user_id'   => $artist->id,
+            'to_user_id' => $artist->id,
             'amount_cents' => $req->amount_cents,
-            'currency'     => $currency,
-            'status'       => 'created',
+            'currency' => $currency,
+            'status' => 'created',
         ]);
 
         $feeBps = (int) env('STRIPE_CONNECT_APP_FEE_BPS', 0); // ex: 500 = 5%
@@ -77,15 +78,15 @@ class DonationController extends Controller
                 'line_items' => [[
                     'quantity' => 1,
                     'price_data' => [
-                        'currency'    => $currency,
+                        'currency' => $currency,
                         'unit_amount' => $donation->amount_cents,
-                        'product_data'=> [
+                        'product_data' => [
                             'name' => "Don à {$artist->name}",
                         ],
                     ],
                 ]],
                 'success_url' => (config('services.stripe.frontend_url') ?? env('FRONTEND_URL')) . "/profile?user={$artist->id}&don=ok",
-                'cancel_url'  => (config('services.stripe.frontend_url') ?? env('FRONTEND_URL')) . "/profile?user={$artist->id}&don=ko",
+                'cancel_url' => (config('services.stripe.frontend_url') ?? env('FRONTEND_URL')) . "/profile?user={$artist->id}&don=ko",
 
                 'payment_intent_data' => [
                     'application_fee_amount' => $application_fee_amount,
@@ -93,8 +94,8 @@ class DonationController extends Controller
                         'destination' => $artist->stripe_connect_id,
                     ],
                     'metadata' => [
-                        'donation_id'  => (string) $donation->id,
-                        'to_user_id'   => (string) $artist->id,
+                        'donation_id' => (string) $donation->id,
+                        'to_user_id' => (string) $artist->id,
                         'from_user_id' => (string) ($fromUserId ?? 0),
                     ],
                 ],
@@ -113,9 +114,9 @@ class DonationController extends Controller
 
     public function webhook(Request $request)
     {
-        $payload   = $request->getContent();
+        $payload = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
-        $secret    = env('STRIPE_WEBHOOK_SECRET');
+        $secret = env('STRIPE_WEBHOOK_SECRET');
 
         try {
             $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $secret);
@@ -124,13 +125,13 @@ class DonationController extends Controller
         }
 
         if (in_array($event->type, ['account.updated', 'capability.updated'])) {
-            $obj       = $event->data->object;
+            $obj = $event->data->object;
             $accountId = $obj->id ?? ($obj->account ?? null);
 
             if ($accountId) {
                 try {
                     Stripe::setApiKey(config('services.stripe.secret') ?? env('STRIPE_SECRET'));
-                    $acct    = Account::retrieve($accountId);
+                    $acct = Account::retrieve($accountId);
                     $enabled = (bool) ($acct->charges_enabled && $acct->payouts_enabled);
 
                     User::where('stripe_connect_id', $acct->id)
@@ -142,19 +143,19 @@ class DonationController extends Controller
         }
 
         if ($event->type === 'checkout.session.completed') {
-            $session    = $event->data->object;
+            $session = $event->data->object;
             $donationId = $session->metadata->donation_id ?? null;
 
             if ($donationId) {
                 Donation::where('id', $donationId)->update([
-                    'status'                => 'paid',
+                    'status' => 'paid',
                     'stripe_payment_intent' => $session->payment_intent ?? null,
                 ]);
             }
         }
 
         if ($event->type === 'payment_intent.payment_failed') {
-            $pi         = $event->data->object;
+            $pi = $event->data->object;
             $donationId = $pi->metadata->donation_id ?? null;
 
             if ($donationId) {

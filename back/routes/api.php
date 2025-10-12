@@ -1,19 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\PlaylistController;
-use App\Http\Controllers\GlobalSearchController;
-use App\Http\Controllers\MusicController;
-use App\Http\Controllers\AlbumController;
-use App\Http\Controllers\FavoriteController;
-use App\Http\Controllers\DonationController;
-use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AccountDeletionController;
+use App\Http\Controllers\AlbumController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DataExportController;
+use App\Http\Controllers\DonationController;
+use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\GlobalSearchController;
+use App\Http\Controllers\MusicController;
+use App\Http\Controllers\PlaylistController;
+use App\Http\Controllers\PreferencesController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -24,7 +23,7 @@ Route::middleware('throttle:6,1')->group(function () {
     Route::post('/login/verify', [AuthController::class, 'verify2fa']);
     Route::post('/login/resend', [AuthController::class, 'resend2fa']);
     Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
-    Route::post('/password/reset',  [AuthController::class, 'resetPassword']);
+    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 });
 
 Route::get('/account/email/change/confirm/{token}', [AccountController::class, 'confirmEmailChange'])
@@ -92,8 +91,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('account.password.change');
 
     Route::post('/account/delete/request', [AccountDeletionController::class, 'requestDeletion'])
-    ->name('account.delete.request')
-    ->middleware('throttle:3,1');
+        ->name('account.delete.request')
+        ->middleware('throttle:3,1');
 
     // GDPR Data Export & Access (Articles 15 & 20)
     Route::get('/account/data/export', [DataExportController::class, 'exportData'])

@@ -13,6 +13,7 @@ class OneTimeCodeMail extends Mailable
     use Queueable, SerializesModels;
 
     public string $code;
+
     public string $purpose;
 
     /**

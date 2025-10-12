@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Album;
 use App\Models\Music;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AlbumController extends Controller
@@ -17,14 +17,14 @@ class AlbumController extends Controller
     {
         $albums = Auth::user()->albums->map(function ($album) {
             return [
-                'id'          => (int) $album->id,
-                'title'       => $album->title,
-                'type'        => $album->type,
-                'image'       => $this->publicUrl($album->image),
-                'user_id'     => (int) $album->user_id,
+                'id' => (int) $album->id,
+                'title' => $album->title,
+                'type' => $album->type,
+                'image' => $this->publicUrl($album->image),
+                'user_id' => (int) $album->user_id,
                 'artist_name' => $album->artist_name,
-                'created_at'  => optional($album->created_at)?->format('d/m/Y'),
-                'updated_at'  => optional($album->updated_at)?->toDateTimeString(),
+                'created_at' => optional($album->created_at)?->format('d/m/Y'),
+                'updated_at' => optional($album->updated_at)?->toDateTimeString(),
             ];
         });
 
@@ -40,7 +40,7 @@ class AlbumController extends Controller
             },
         ])->find($id);
 
-        if (!$album) {
+        if (! $album) {
             return response()->json(['message' => 'Album non trouvé'], 404);
         }
 
@@ -50,17 +50,17 @@ class AlbumController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title'           => 'required|string|max:255',
-            'type'            => 'required|in:single,ep,album,compilation',
-            'image'           => 'nullable|image',
-            'songs'           => 'required|array|min:1',
-            'songs.*.title'   => 'required|string|max:255',
-            'songs.*.audio'   => 'required|mimes:mp3,wav,flac',
+            'title' => 'required|string|max:255',
+            'type' => 'required|in:single,ep,album,compilation',
+            'image' => 'nullable|image',
+            'songs' => 'required|array|min:1',
+            'songs.*.title' => 'required|string|max:255',
+            'songs.*.audio' => 'required|mimes:mp3,wav,flac',
         ]);
 
         $user = Auth::user();
 
-        $album = new Album();
+        $album = new Album;
         $album->title = $request->title;
         $album->type = $request->type;
         $album->artist_name = $user->name;
@@ -73,7 +73,7 @@ class AlbumController extends Controller
         $album->save();
 
         foreach ($request->songs as $idx => $songData) {
-            $music = new Music();
+            $music = new Music;
             $music->title = $songData['title'];
             $music->artist_name = $user->name;
             $music->user_id = $user->id;
@@ -98,12 +98,12 @@ class AlbumController extends Controller
 
         return response()->json([
             'message' => 'Album et morceaux ajoutés avec succès',
-            'album'   => [
-                'id'          => (int) $album->id,
-                'title'       => $album->title,
-                'type'        => $album->type,
-                'image'       => $this->publicUrl($album->image),
-                'user_id'     => (int) $album->user_id,
+            'album' => [
+                'id' => (int) $album->id,
+                'title' => $album->title,
+                'type' => $album->type,
+                'image' => $this->publicUrl($album->image),
+                'user_id' => (int) $album->user_id,
                 'artist_name' => $album->artist_name,
             ],
         ]);
@@ -116,14 +116,14 @@ class AlbumController extends Controller
             ->get()
             ->map(function ($album) {
                 return [
-                    'id'          => (int) $album->id,
-                    'title'       => $album->title,
-                    'type'        => $album->type,
-                    'image'       => $this->publicUrl($album->image),
-                    'user_id'     => (int) $album->user_id,
+                    'id' => (int) $album->id,
+                    'title' => $album->title,
+                    'type' => $album->type,
+                    'image' => $this->publicUrl($album->image),
+                    'user_id' => (int) $album->user_id,
                     'artist_name' => $album->artist_name,
-                    'created_at'  => optional($album->created_at)?->format('d/m/Y'),
-                    'updated_at'  => optional($album->updated_at)?->toDateTimeString(),
+                    'created_at' => optional($album->created_at)?->format('d/m/Y'),
+                    'updated_at' => optional($album->updated_at)?->toDateTimeString(),
                 ];
             });
 
@@ -141,7 +141,7 @@ class AlbumController extends Controller
             $q->with(['user:id,name', 'playlists:id']);
         }])->find($id);
 
-        if (!$album) {
+        if (! $album) {
             return response()->json(['message' => 'Album non trouvé'], 404);
         }
 
@@ -184,7 +184,7 @@ class AlbumController extends Controller
             $q->with(['playlists:id', 'favoredBy:id']);
         }])->find($id);
 
-        if (!$album) {
+        if (! $album) {
             return response()->json(['message' => 'Album non trouvé'], 404);
         }
 
@@ -230,15 +230,16 @@ class AlbumController extends Controller
             DB::commit();
 
             return response()->json([
-                'status'            => 'ok',
+                'status' => 'ok',
                 'deleted_track_ids' => $deletedTrackIds,
-                'deleted_album_id'  => $albumId,
+                'deleted_album_id' => $albumId,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Erreur lors de la suppression de l’album.',
-                'error'   => config('app.debug') ? $e->getMessage() : null,
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -246,7 +247,7 @@ class AlbumController extends Controller
     public function like($id)
     {
         $album = Album::findOrFail($id);
-        $user  = Auth::user();
+        $user = Auth::user();
 
         if (method_exists($user, 'likedAlbums')) {
             $user->likedAlbums()->syncWithoutDetaching([$album->id]);
@@ -262,7 +263,7 @@ class AlbumController extends Controller
     public function unlike($id)
     {
         $album = Album::findOrFail($id);
-        $user  = Auth::user();
+        $user = Auth::user();
 
         if (method_exists($user, 'likedAlbums')) {
             $user->likedAlbums()->detach($album->id);
@@ -284,38 +285,41 @@ class AlbumController extends Controller
             : false;
 
         return [
-            'id'          => (int) $album->id,
-            'title'       => $album->title,
-            'type'        => $album->type,
-            'image'       => $this->publicUrl($album->image),
-            'user_id'     => (int) $album->user_id,
+            'id' => (int) $album->id,
+            'title' => $album->title,
+            'type' => $album->type,
+            'image' => $this->publicUrl($album->image),
+            'user_id' => (int) $album->user_id,
             'artist_name' => optional($album->user)->name ?? $album->artist_name,
-            'created_at'  => optional($album->created_at)?->format('d/m/Y'),
-            'updated_at'  => optional($album->updated_at)?->toDateTimeString(),
-            'musics'      => $musics,
-            'is_liked'    => $isLiked,
+            'created_at' => optional($album->created_at)?->format('d/m/Y'),
+            'updated_at' => optional($album->updated_at)?->toDateTimeString(),
+            'musics' => $musics,
+            'is_liked' => $isLiked,
         ];
     }
 
     private function formatTrack(Music $m): array
     {
         return [
-            'id'           => (int) $m->id,
-            'title'        => $m->title,
-            'artist_name'  => optional($m->user)->name ?? $m->artist_name,
-            'duration'     => $m->duration,
-            'audio'        => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
-            'image'        => $this->publicUrl($m->image),
-            'playlist_ids' => $m->playlists->pluck('id')->map(fn($id) => (int) $id)->values()->all(),
-            'date_added'   => optional($m->created_at)?->format('d/m/Y'),
-            'updated_at'   => optional($m->updated_at)?->toDateTimeString(),
+            'id' => (int) $m->id,
+            'title' => $m->title,
+            'artist_name' => optional($m->user)->name ?? $m->artist_name,
+            'duration' => $m->duration,
+            'audio' => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+            'image' => $this->publicUrl($m->image),
+            'playlist_ids' => $m->playlists->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
+            'date_added' => optional($m->created_at)?->format('d/m/Y'),
+            'updated_at' => optional($m->updated_at)?->toDateTimeString(),
         ];
     }
 
     private function publicUrl(?string $path): ?string
     {
-        if (!$path) return null;
+        if (! $path) {
+            return null;
+        }
         $clean = str_replace('\\', '/', $path);
+
         return asset('storage/' . ltrim($clean, '/'));
     }
 
@@ -336,22 +340,25 @@ class AlbumController extends Controller
 
         $basename = Str::random(40) . '.' . $ext;
         Storage::disk('public')->putFileAs($dir, $file, $basename);
+
         return $dir . '/' . $basename;
     }
 
     private function deleteImageIfOrphan(?string $path, ?int $ignoreMusicId = null, ?int $ignoreAlbumId = null): void
     {
-        if (!$path) return;
+        if (! $path) {
+            return;
+        }
 
         $stillUsedByMusic = Music::where('image', $path)
-            ->when($ignoreMusicId, fn($q) => $q->where('id', '!=', $ignoreMusicId))
+            ->when($ignoreMusicId, fn ($q) => $q->where('id', '!=', $ignoreMusicId))
             ->exists();
 
         $stillUsedByAlbum = Album::where('image', $path)
-            ->when($ignoreAlbumId, fn($q) => $q->where('id', '!=', $ignoreAlbumId))
+            ->when($ignoreAlbumId, fn ($q) => $q->where('id', '!=', $ignoreAlbumId))
             ->exists();
 
-        if (!$stillUsedByMusic && !$stillUsedByAlbum && Storage::disk('public')->exists($path)) {
+        if (! $stillUsedByMusic && ! $stillUsedByAlbum && Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
         }
     }
