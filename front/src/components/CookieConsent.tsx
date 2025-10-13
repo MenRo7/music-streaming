@@ -140,12 +140,13 @@ const CookieConsent: React.FC = () => {
             <div className="cookie-preferences">
               <div className="cookie-category">
                 <div className="cookie-category-header">
-                  <label className="cookie-toggle">
+                  <label className="cookie-toggle" aria-label="Cookies Essentiels (Obligatoires)">
                     <input
                       type="checkbox"
                       checked={true}
                       disabled={true}
                       readOnly
+                      aria-label="Cookies Essentiels (Obligatoires)"
                     />
                     <span className="cookie-toggle-slider disabled"></span>
                   </label>
@@ -166,13 +167,14 @@ const CookieConsent: React.FC = () => {
 
               <div className="cookie-category">
                 <div className="cookie-category-header">
-                  <label className="cookie-toggle">
+                  <label className="cookie-toggle" aria-label="Cookies Fonctionnels">
                     <input
                       type="checkbox"
                       checked={preferences.functional}
                       onChange={(e) =>
                         setPreferences({ ...preferences, functional: e.target.checked })
                       }
+                      aria-label="Cookies Fonctionnels"
                     />
                     <span className="cookie-toggle-slider"></span>
                   </label>
@@ -192,13 +194,14 @@ const CookieConsent: React.FC = () => {
 
               <div className="cookie-category">
                 <div className="cookie-category-header">
-                  <label className="cookie-toggle">
+                  <label className="cookie-toggle" aria-label="Cookies Analytiques">
                     <input
                       type="checkbox"
                       checked={preferences.analytics}
                       onChange={(e) =>
                         setPreferences({ ...preferences, analytics: e.target.checked })
                       }
+                      aria-label="Cookies Analytiques"
                     />
                     <span className="cookie-toggle-slider"></span>
                   </label>

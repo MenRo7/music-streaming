@@ -170,8 +170,15 @@ const Sidebar: React.FC = () => {
             </button>
           </li>
             {activeFilters.size > 0 && (
-              <li className="reset-filters" onClick={resetFilters}>
-                <FontAwesomeIcon icon={faTimes} className="filter-clear-icon" />
+              <li className="reset-filters">
+                <button
+                  onClick={resetFilters}
+                  className="link-button"
+                  title="Réinitialiser les filtres"
+                  aria-label="Réinitialiser les filtres"
+                >
+                  <FontAwesomeIcon icon={faTimes} className="filter-clear-icon" />
+                </button>
               </li>
             )}
         </ul>
@@ -195,7 +202,18 @@ const Sidebar: React.FC = () => {
 
             {!mineOnly &&
               playlistsToShow.liked.map((pl) => (
-                <div key={`lp-${pl.id}`} role="button" onClick={() => navigate(`/playlist/${pl.id}`)}>
+                <div
+                  key={`lp-${pl.id}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/playlist/${pl.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/playlist/${pl.id}`);
+                    }
+                  }}
+                >
                   <PlaylistCard title={pl.title} image={pl.image} />
                 </div>
               ))}
@@ -237,7 +255,14 @@ const Sidebar: React.FC = () => {
                   <div
                     key={`la-${al.id}`}
                     role="button"
+                    tabIndex={0}
                     onClick={() => navigate(`/album/${al.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate(`/album/${al.id}`);
+                      }
+                    }}
                   >
                     <PlaylistCard title={al.title} image={al.image} />
                   </div>

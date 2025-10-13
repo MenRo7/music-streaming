@@ -12,6 +12,7 @@ import Sidebar from './components/Sidebar';
 import MusicQueue from './components/MusicQueue';
 import SongPlayer from './components/SongPlayer';
 import CookieConsent from './components/CookieConsent';
+import SkipToContent from './components/SkipToContent';
 import PlaylistPage from './pages/PlaylistPage';
 import ProfilePage from './pages/ProfilePage';
 import MainPage from './pages/MainPage';
@@ -46,6 +47,7 @@ const AppShell: React.FC = () => {
 
   return (
     <div className="app">
+      <SkipToContent />
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/forgot" element={<ForgotPasswordPage />} />

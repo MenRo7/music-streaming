@@ -277,6 +277,7 @@ const AuthPage: React.FC = () => {
               <span
                 className="toggle-link"
                 role="button"
+                tabIndex={0}
                 onClick={async () => {
                   if (!email.trim()) { setError("Renseignez d'abord votre e-mail."); return; }
                   try {
@@ -285,6 +286,12 @@ const AuthPage: React.FC = () => {
                     setError('');
                   } catch {
                     setError("Impossible d'envoyer un nouveau code.");
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.currentTarget.click();
                   }
                 }}
               >
@@ -316,6 +323,7 @@ const AuthPage: React.FC = () => {
               <span
                 className="toggle-link"
                 role="button"
+                tabIndex={0}
                 onClick={async () => {
                   if (!email.trim()) { setError("Renseignez d'abord votre e-mail."); return; }
                   try {
@@ -324,6 +332,12 @@ const AuthPage: React.FC = () => {
                     setError('');
                   } catch {
                     setError("Impossible d'envoyer un nouveau code.");
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.currentTarget.click();
                   }
                 }}
               >

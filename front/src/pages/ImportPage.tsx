@@ -91,8 +91,9 @@ const ImportPage: React.FC = () => {
         <div className="form-section">
           <h3>Choisissez le type d'importation</h3>
           <div className="import-form">
-            <label>Sélectionnez le type</label>
+            <label htmlFor="import-type">Sélectionnez le type</label>
             <select
+              id="import-type"
               value={importType}
               onChange={(e) => setImportType(e.target.value as 'music' | 'album')}
             >
@@ -106,8 +107,9 @@ const ImportPage: React.FC = () => {
           <div className="form-section">
             <h3>Importer une musique</h3>
             <div className="import-form">
-              <label>Titre de la musique</label>
+              <label htmlFor="music-title">Titre de la musique</label>
               <input
+                id="music-title"
                 type="text"
                 placeholder="Entrez le titre de la musique"
                 value={musicTitle}
@@ -115,16 +117,18 @@ const ImportPage: React.FC = () => {
               />
             </div>
             <div className="import-form">
-              <label>Fichier audio</label>
+              <label htmlFor="music-file">Fichier audio</label>
               <input
+                id="music-file"
                 type="file"
                 accept="audio/*"
                 onChange={(e) => setMusicFile(e.target.files ? e.target.files[0] : null)}
               />
             </div>
             <div className="import-form">
-              <label>Image de la musique</label>
+              <label htmlFor="music-image">Image de la musique</label>
               <input
+                id="music-image"
                 type="file"
                 onChange={(e) => setMusicImage(e.target.files ? e.target.files[0] : null)}
               />
@@ -137,8 +141,9 @@ const ImportPage: React.FC = () => {
           <div className="form-section">
             <h3>Importer un album</h3>
             <div className="import-form">
-              <label>Nom de l'album</label>
+              <label htmlFor="album-name">Nom de l'album</label>
               <input
+                id="album-name"
                 type="text"
                 placeholder="Entrez le nom de l'album"
                 value={albumName}
@@ -146,8 +151,9 @@ const ImportPage: React.FC = () => {
               />
             </div>
             <div className="import-form">
-              <label>Image de l'album</label>
+              <label htmlFor="album-image">Image de l'album</label>
               <input
+                id="album-image"
                 type="file"
                 onChange={(e) => setAlbumImage(e.target.files ? e.target.files[0] : null)}
               />

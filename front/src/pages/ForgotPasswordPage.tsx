@@ -69,7 +69,6 @@ const ForgotPasswordPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoFocus
               />
             </div>
 
@@ -136,6 +135,7 @@ const ForgotPasswordPage: React.FC = () => {
               <span
                 className="toggle-link"
                 role="button"
+                tabIndex={0}
                 onClick={async () => {
                   try {
                     await forgotPassword(email);
@@ -143,6 +143,12 @@ const ForgotPasswordPage: React.FC = () => {
                     setError('');
                   } catch {
                     setError("Impossible d'envoyer un nouveau code.");
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.currentTarget.click();
                   }
                 }}
               >

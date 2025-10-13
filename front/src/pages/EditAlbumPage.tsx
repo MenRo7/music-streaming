@@ -228,18 +228,19 @@ const EditAlbumPage: React.FC = () => {
           <h3>Infos de l’album</h3>
 
           <div className="import-form">
-            <label>Titre</label>
+            <label htmlFor="album-title">Titre</label>
             <input
+              id="album-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nom de l’album"
+              placeholder="Nom de l'album"
             />
           </div>
 
           <div className="import-form">
-            <label>Image de l’album</label>
-            <input type="file" accept="image/*" onChange={onAlbumImageChange} />
+            <label htmlFor="album-image">Image de l'album</label>
+            <input id="album-image" type="file" accept="image/*" onChange={onAlbumImageChange} />
             <small style={{ opacity: 0.8 }}>
               Cette image s’applique automatiquement à toutes les musiques de l’album.
             </small>
@@ -274,8 +275,9 @@ const EditAlbumPage: React.FC = () => {
                 />
 
                 <div className="import-form" style={{ margin: 0 }}>
-                  <label>{audioLabel}</label>
+                  <label htmlFor={`track-audio-${t.id}`}>{audioLabel}</label>
                   <input
+                    id={`track-audio-${t.id}`}
                     type="file"
                     accept="audio/*"
                     onChange={(e) => onTrackAudioChange(t.id, e.target.files?.[0] ?? null)}
@@ -307,8 +309,9 @@ const EditAlbumPage: React.FC = () => {
                 onChange={(e) => onNewTrackTitle(idx, e.target.value)}
               />
               <div className="import-form" style={{ margin: 0 }}>
-                <label>Choisir un fichier *</label>
+                <label htmlFor={`new-track-audio-${idx}`}>Choisir un fichier *</label>
                 <input
+                  id={`new-track-audio-${idx}`}
                   type="file"
                   accept="audio/*"
                   onChange={(e) => onNewTrackAudio(idx, e.target.files?.[0] ?? null)}

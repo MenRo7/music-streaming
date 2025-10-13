@@ -50,6 +50,7 @@
     ]
   },
   "devDependencies": {
+    "@axe-core/react": "^4.10.2",
     "@types/lodash.debounce": "^4.0.9",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",

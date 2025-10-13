@@ -57,8 +57,9 @@ const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
     <div className="modal-backdrop">
       <div className="modal" style={{ maxWidth: 420 }}>
         <h3>Faire un don</h3>
-        <label style={{ display:'block', marginBottom:8 }}>Montant (EUR)</label>
+        <label htmlFor="donation-amount" style={{ display:'block', marginBottom:8 }}>Montant (EUR)</label>
         <input
+          id="donation-amount"
           type="number"
           min={1}
           step="0.5"

@@ -164,14 +164,16 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
                         setOpenSubIndex(index);
                         computeSubmenuPos(index);
                       }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const next = openSubIndex === index ? null : index;
-                        setOpenSubIndex(next);
-                        if (next !== null) computeSubmenuPos(index);
-                      }}
                     >
-                      <button className="dropdown-item dropdown-submenu-toggle">
+                      <button
+                        className="dropdown-item dropdown-submenu-toggle"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const next = openSubIndex === index ? null : index;
+                          setOpenSubIndex(next);
+                          if (next !== null) computeSubmenuPos(index);
+                        }}
+                      >
                         <span>{item.label}</span>
                         <span className="submenu-caret" aria-hidden>›</span>
                       </button>
@@ -183,6 +185,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
                             className="dropdown-menu dropdown-submenu-flyout"
                             style={{ top: submenuPos.top, left: submenuPos.left, minWidth: submenuPos.minWidth }}
                             role="menu"
+                            tabIndex={-1}
                             onClick={(e) => e.stopPropagation()}
                           >
                             {item.submenuContent}

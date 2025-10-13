@@ -34,7 +34,7 @@ php artisan queue:listen --tries=1   # Queue worker
 vendor/bin/phpunit                   # Run all tests
 vendor/bin/phpunit tests/Unit        # Unit tests only
 vendor/bin/phpunit tests/Feature     # Feature tests only
-vendor/bin/phpunit --filter TestName # Single test
+vendor/bin/phpunit --filter TestName # Single test (e.g., --filter testUserCanLogin)
 
 # Code quality
 composer lint                        # Check code style
@@ -45,6 +45,7 @@ composer test:coverage               # Run tests with coverage
 
 # Combined dev environment (with frontend + queue)
 composer dev                         # Runs server, queue, and vite concurrently
+                                     # Note: Requires npm dependencies installed in ../front
 ```
 
 ### Frontend (React)
@@ -159,6 +160,14 @@ npm run analyze                           # Analyze bundle size (after build)
 - `src/styles/` - Design system (tokens, themes)
 - `src/utils/` - Utility functions (validation, accessibility, SEO)
 - `src/hooks/` - Custom React hooks (useForm, etc.)
+
+## Platform-Specific Notes
+
+### Windows Development
+This project has been developed and tested on Windows. When working on Windows:
+- Use forward slashes or double backslashes in paths
+- Some commands may need to be run in Git Bash or PowerShell
+- Ensure line endings are set correctly (Git should handle this automatically with `.gitattributes`)
 
 ## Environment Configuration
 

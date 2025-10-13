@@ -118,16 +118,16 @@ const MainPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="main-content">
+      <main id="main-content" className="main-content">
         <div className="main-page">
           <div className="mp-loading">Chargement…</div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="main-content">
+    <main id="main-content" className="main-content">
       <div className="main-page">
         <h1>Page principale</h1>
 
@@ -224,7 +224,7 @@ const MainPage: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 };
 
