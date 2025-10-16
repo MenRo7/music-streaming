@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePlayer } from '../apis/PlayerContext';
 import SearchResultItem from './SearchResultItem';
 import '../styles/SearchResultsDropdown.css';
@@ -59,6 +60,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
   onUserClick,
   onTrackClick,
 }) => {
+  const { t } = useTranslation();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { playSong } = usePlayer();
 
@@ -81,7 +83,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
   const handleMusicClick = (track: Music) => {
     if (onTrackClick) return onTrackClick(track);
     if (!track.audio) return;
-    playSong(track.audio, track.title, track.artist_name || 'Inconnu', track.image || '', track.id);
+    playSong(track.audio, track.title, track.artist_name || t('search.unknown'), track.image || '', track.id);
   };
 
   const handleAlbumClick = (id: number) => {
@@ -102,7 +104,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
     <div className="search-results-dropdown" ref={dropdownRef} onScroll={handleScroll}>
       {users.length > 0 && (
         <div className="search-section">
-          <h4>Utilisateurs</h4>
+          <h4>{t('search.users')}</h4>
           <ul className="search-result-list">
             {users.map(user => (
               <SearchResultItem
@@ -119,7 +121,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
 
       {playlists.length > 0 && (
         <div className="search-section">
-          <h4>Playlists</h4>
+          <h4>{t('search.playlists')}</h4>
           <ul className="search-result-list">
             {playlists.map(pl => (
               <SearchResultItem
@@ -135,7 +137,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
 
       {musics.length > 0 && (
         <div className="search-section">
-          <h4>Titres</h4>
+          <h4>{t('search.tracks')}</h4>
           <ul className="search-result-list">
             {musics.map(track => (
               <SearchResultItem
@@ -151,7 +153,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
 
       {albums.length > 0 && (
         <div className="search-section">
-          <h4>Albums</h4>
+          <h4>{t('search.albums')}</h4>
           <ul className="search-result-list">
             {albums.map(album => (
               <SearchResultItem
@@ -167,7 +169,7 @@ const SearchResultsDropdown: React.FC<SearchResultsDropdownProps> = ({
 
       {loadingMore && (
         <div style={{ textAlign: 'center', padding: '10px' }}>
-          Chargement...
+          {t('common.loading')}
         </div>
       )}
     </div>

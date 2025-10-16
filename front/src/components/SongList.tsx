@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
@@ -50,6 +51,7 @@ const SongList = <T extends UISong>({
   onAlbumClick,
   onArtistClick,
 }: SongListProps<T>) => {
+  const { t } = useTranslation();
   const { playSong, currentTrackId, isPlaying } = usePlayer();
   const [overridePlaylists, setOverridePlaylists] = useState<Record<number, number[]>>({});
 
@@ -138,13 +140,13 @@ const SongList = <T extends UISong>({
 
         <thead>
           <tr>
-            <th className="col-index">#</th>
-            <th className="col-name">Nom</th>
-            {showAlbum && <th className="col-album">Album</th>}
-            {showArtist && <th className="col-artist">Artiste</th>}
-            {showDateAdded && <th className="col-date">Date d&apos;ajout</th>}
-            {showDuration && <th className="col-duration">Durée</th>}
-            <th className="col-actions">Action</th>
+            <th className="col-index">{t('songList.index')}</th>
+            <th className="col-name">{t('songList.name')}</th>
+            {showAlbum && <th className="col-album">{t('songList.album')}</th>}
+            {showArtist && <th className="col-artist">{t('songList.artist')}</th>}
+            {showDateAdded && <th className="col-date">{t('songList.dateAdded')}</th>}
+            {showDuration && <th className="col-duration">{t('songList.duration')}</th>}
+            <th className="col-actions">{t('songList.actions')}</th>
           </tr>
         </thead>
 
@@ -169,7 +171,7 @@ const SongList = <T extends UISong>({
               const idsKey = computedExisting.slice().sort((a, b) => a - b).join('_');
 
               return [{
-                label: action.label || 'Ajouter à une playlist',
+                label: action.label || t('songList.addToPlaylist'),
                 onClick: () => {},
                 submenuContent: (
                   <PlaylistCheckboxMenu

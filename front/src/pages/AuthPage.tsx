@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { AuthContext } from '../apis/AuthContext';
 import { registerUser, verifyEmail, resendEmailCode, resend2fa } from '../apis/AuthService';
@@ -7,6 +8,7 @@ import { registerUser, verifyEmail, resendEmailCode, resend2fa } from '../apis/A
 import '../styles/AuthPage.css';
 
 const AuthPage: React.FC = () => {
+  const { t } = useTranslation();
   const [isRegistering, setIsRegistering] = useState(false);
   const [step, setStep] = useState<'form' | 'verifyEmail' | 'verify2fa'>('form');
 
@@ -40,7 +42,7 @@ const AuthPage: React.FC = () => {
     try {
       if (isRegistering) {
         if (password !== confirmPassword) {
-          setError('Les mots de passe ne correspondent pas.');
+          setError(t('auth.passwordsDoNotMatch'));
           return;
         }
 
@@ -49,35 +51,35 @@ const AuthPage: React.FC = () => {
           const [y, m, d] = dateOfBirth.split('-').map(Number);
           const dob = new Date(y, (m || 1) - 1, d || 1);
           if (dob >= today) {
-            setError('La date de naissance doit être antérieure à aujourd\'hui.');
+            setError(t('auth.dobMustBeInPast'));
             return;
           }
         } else {
-          setError('Veuillez renseigner votre date de naissance.');
+          setError(t('auth.pleaseProvideDob'));
           return;
         }
 
         if (!acceptedTerms || !acceptedPrivacy) {
-          setError("Vous devez accepter les Conditions Générales d'Utilisation et la Politique de Confidentialité.");
+          setError(t('auth.mustAcceptTermsAndPrivacy'));
           return;
         }
 
         await registerUser(username.trim(), email.trim(), password, dateOfBirth.trim());
-        setInfo('Un code de vérification vous a été envoyé par e-mail.');
+        setInfo(t('auth.verificationCodeSent'));
         setStep('verifyEmail');
         return;
       }
 
       const status = await login(email.trim(), password);
       if (status === 'verification_required') {
-        setInfo("Votre e-mail doit être vérifié. Un code vous a été envoyé.");
+        setInfo(t('auth.emailMustBeVerified'));
         setStep('verifyEmail');
       } else if (status === '2fa_required') {
-        setInfo('Un code de connexion vous a été envoyé par e-mail.');
+        setInfo(t('auth.loginCodeSent'));
         setStep('verify2fa');
       }
     } catch {
-      setError("Erreur lors de l'authentification. Vérifiez vos informations.");
+      setError(t('auth.authenticationError'));
     } finally {
       setSubmitting(false);
     }
@@ -92,12 +94,12 @@ const AuthPage: React.FC = () => {
 
     try {
       await verifyEmail(email.trim(), code.trim().toUpperCase());
-      setInfo('E-mail vérifié ! Vous pouvez maintenant vous connecter.');
+      setInfo(t('auth.emailVerified'));
       setStep('form');
       setIsRegistering(false);
       setCode('');
     } catch {
-      setError('Code invalide ou expiré.');
+      setError(t('auth.invalidOrExpiredCode'));
     } finally {
       setSubmitting(false);
     }
@@ -114,7 +116,7 @@ const AuthPage: React.FC = () => {
       await confirm2fa(email.trim(), code.trim().toUpperCase());
       navigate('/main');
     } catch {
-      setError('Code invalide ou expiré.');
+      setError(t('auth.invalidOrExpiredCode'));
     } finally {
       setSubmitting(false);
     }
@@ -125,12 +127,12 @@ const AuthPage: React.FC = () => {
       <div className="auth-container">
         <h2>
           {step === 'verifyEmail'
-            ? 'Vérifier votre e-mail'
+            ? t('auth.verifyYourEmail')
             : step === 'verify2fa'
-            ? 'Entrer le code de connexion'
+            ? t('auth.enterLoginCode')
             : isRegistering
-            ? 'Créer un compte'
-            : 'Se connecter'}
+            ? t('auth.createAccount')
+            : t('auth.login')}
         </h2>
 
         {error && <p className="error-message">{error}</p>}
@@ -140,7 +142,7 @@ const AuthPage: React.FC = () => {
           <form onSubmit={handleSubmit}>
             {isRegistering && (
               <div className="input-group">
-                <label htmlFor="username">Nom d&apos;utilisateur</label>
+                <label htmlFor="username">{t('auth.username')}</label>
                 <input
                   type="text"
                   id="username"
@@ -152,7 +154,7 @@ const AuthPage: React.FC = () => {
             )}
 
             <div className="input-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">{t('auth.email')}</label>
               <input
                 type="email"
                 id="email"
@@ -164,7 +166,7 @@ const AuthPage: React.FC = () => {
             </div>
 
             <div className="input-group">
-              <label htmlFor="password">Mot de passe</label>
+              <label htmlFor="password">{t('auth.password')}</label>
               <input
                 type="password"
                 id="password"
@@ -178,7 +180,7 @@ const AuthPage: React.FC = () => {
             {isRegistering && (
               <>
                 <div className="input-group">
-                  <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
+                  <label htmlFor="confirmPassword">{t('auth.confirmPassword')}</label>
                   <input
                     type="password"
                     id="confirmPassword"
@@ -190,7 +192,7 @@ const AuthPage: React.FC = () => {
                 </div>
 
                 <div className="input-group">
-                  <label htmlFor="dateOfBirth">Date de naissance</label>
+                  <label htmlFor="dateOfBirth">{t('auth.dateOfBirth')}</label>
                   <input
                     type="date"
                     id="dateOfBirth"
@@ -210,7 +212,7 @@ const AuthPage: React.FC = () => {
                     required
                   />
                   <label htmlFor="acceptTerms">
-                    J'accepte les <Link to="/terms" target="_blank">Conditions Générales d'Utilisation</Link>
+                    {t('auth.iAcceptThe')} <Link to="/terms" target="_blank">{t('auth.termsOfUse')}</Link>
                   </label>
                 </div>
 
@@ -223,32 +225,32 @@ const AuthPage: React.FC = () => {
                     required
                   />
                   <label htmlFor="acceptPrivacy">
-                    J'accepte la <Link to="/privacy" target="_blank">Politique de Confidentialité</Link>
+                    {t('auth.iAcceptThe')} <Link to="/privacy" target="_blank">{t('auth.privacyPolicy')}</Link>
                   </label>
                 </div>
               </>
             )}
 
             <button type="submit" disabled={submitting}>
-              {submitting ? 'Veuillez patienter…' : isRegistering ? "S'inscrire" : 'Se connecter'}
+              {submitting ? t('auth.pleaseWait') : isRegistering ? t('auth.register') : t('auth.login')}
             </button>
 
             {!isRegistering && (
               <p style={{ marginTop: 12 }}>
-                <Link className="toggle-link" to="/forgot">Mot de passe oublié ?</Link>
+                <Link className="toggle-link" to="/forgot">{t('auth.forgotPassword')}</Link>
               </p>
             )}
 
             <p style={{ marginTop: 12 }}>
               {isRegistering ? (
                 <>
-                  Vous avez déjà un compte ?{' '}
-                  <span className="toggle-link" onClick={() => setIsRegistering(false)}>Se connecter</span>
+                  {t('auth.alreadyHaveAccount')}{' '}
+                  <span className="toggle-link" onClick={() => setIsRegistering(false)}>{t('auth.login')}</span>
                 </>
               ) : (
                 <>
-                  Vous n&apos;avez pas de compte ?{' '}
-                  <span className="toggle-link" onClick={() => setIsRegistering(true)}>S&apos;inscrire</span>
+                  {t('auth.dontHaveAccount')}{' '}
+                  <span className="toggle-link" onClick={() => setIsRegistering(true)}>{t('auth.register')}</span>
                 </>
               )}
             </p>
@@ -258,7 +260,7 @@ const AuthPage: React.FC = () => {
         {step === 'verifyEmail' && (
           <form onSubmit={handleVerifyEmail}>
             <div className="input-group">
-              <label htmlFor="code">Code reçu par e-mail</label>
+              <label htmlFor="code">{t('auth.codeReceivedByEmail')}</label>
               <input
                 type="text"
                 id="code"
@@ -270,22 +272,22 @@ const AuthPage: React.FC = () => {
               />
             </div>
             <button type="submit" disabled={submitting}>
-              {submitting ? 'Validation…' : 'Valider'}
+              {submitting ? t('auth.validating') : t('auth.validate')}
             </button>
             <p style={{ marginTop: 12 }}>
-              Pas reçu ?{' '}
+              {t('auth.notReceived')}{' '}
               <span
                 className="toggle-link"
                 role="button"
                 tabIndex={0}
                 onClick={async () => {
-                  if (!email.trim()) { setError("Renseignez d'abord votre e-mail."); return; }
+                  if (!email.trim()) { setError(t('auth.provideEmailFirst')); return; }
                   try {
                     await resendEmailCode(email.trim());
-                    setInfo('Nouveau code de vérification envoyé.');
+                    setInfo(t('auth.newVerificationCodeSent'));
                     setError('');
                   } catch {
-                    setError("Impossible d'envoyer un nouveau code.");
+                    setError(t('auth.cannotSendNewCode'));
                   }
                 }}
                 onKeyDown={(e) => {
@@ -295,7 +297,7 @@ const AuthPage: React.FC = () => {
                   }
                 }}
               >
-                Renvoyer le code
+                {t('auth.resendCode')}
               </span>
             </p>
           </form>
@@ -304,7 +306,7 @@ const AuthPage: React.FC = () => {
         {step === 'verify2fa' && (
           <form onSubmit={handleVerify2fa}>
             <div className="input-group">
-              <label htmlFor="code2fa">Code de connexion (2FA)</label>
+              <label htmlFor="code2fa">{t('auth.loginCode2FA')}</label>
               <input
                 type="text"
                 id="code2fa"
@@ -316,22 +318,22 @@ const AuthPage: React.FC = () => {
               />
             </div>
             <button type="submit" disabled={submitting}>
-              {submitting ? 'Connexion…' : 'Se connecter'}
+              {submitting ? t('auth.loggingIn') : t('auth.login')}
             </button>
             <p style={{ marginTop: 12 }}>
-              Pas reçu ?{' '}
+              {t('auth.notReceived')}{' '}
               <span
                 className="toggle-link"
                 role="button"
                 tabIndex={0}
                 onClick={async () => {
-                  if (!email.trim()) { setError("Renseignez d'abord votre e-mail."); return; }
+                  if (!email.trim()) { setError(t('auth.provideEmailFirst')); return; }
                   try {
                     await resend2fa(email.trim());
-                    setInfo('Nouveau code de connexion envoyé.');
+                    setInfo(t('auth.newLoginCodeSent'));
                     setError('');
                   } catch {
-                    setError("Impossible d'envoyer un nouveau code.");
+                    setError(t('auth.cannotSendNewCode'));
                   }
                 }}
                 onKeyDown={(e) => {
@@ -341,16 +343,16 @@ const AuthPage: React.FC = () => {
                   }
                 }}
               >
-                Renvoyer le code
+                {t('auth.resendCode')}
               </span>
             </p>
           </form>
         )}
 
         <div className="auth-footer">
-          <Link to="/privacy" className="footer-link">Politique de Confidentialité</Link>
+          <Link to="/privacy" className="footer-link">{t('auth.privacyPolicy')}</Link>
           <span className="footer-separator">•</span>
-          <Link to="/terms" className="footer-link">Conditions d'Utilisation</Link>
+          <Link to="/terms" className="footer-link">{t('auth.termsOfUse')}</Link>
         </div>
       </div>
     </div>

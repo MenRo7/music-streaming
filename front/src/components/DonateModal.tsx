@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ENV from '../config/env';
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
 };
 
 const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState('5');
   const [loading, setLoading] = useState(false);
 
@@ -56,8 +58,10 @@ const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
   return (
     <div className="modal-backdrop">
       <div className="modal" style={{ maxWidth: 420 }}>
-        <h3>Faire un don</h3>
-        <label htmlFor="donation-amount" style={{ display:'block', marginBottom:8 }}>Montant (EUR)</label>
+        <h3>{t('donate.title')}</h3>
+        <label htmlFor="donation-amount" style={{ display:'block', marginBottom:8 }}>
+          {t('donate.amount')}
+        </label>
         <input
           id="donation-amount"
           type="number"
@@ -68,9 +72,11 @@ const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
           style={{ width:'100%', padding:8, marginBottom:16 }}
         />
         <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
-          <button onClick={onClose} disabled={loading}>Annuler</button>
+          <button onClick={onClose} disabled={loading}>
+            {t('common.cancel')}
+          </button>
           <button className="primary" onClick={onConfirm} disabled={loading}>
-            {loading ? 'Redirection…' : 'Payer'}
+            {loading ? t('donate.redirecting') : t('donate.pay')}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import {
   getAlbumById,
@@ -35,6 +36,7 @@ const toDurationStr = (v?: string | number | null) => {
 };
 
 const EditAlbumPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const albumId = Number(id);
   const navigate = useNavigate();
@@ -126,7 +128,7 @@ const EditAlbumPage: React.FC = () => {
     const updates = (a.musics || []).map((m) => ({
       id: Number(m.id),
       name: m.title,
-      artist: m.artist_name || a.artist_name || 'Inconnu',
+      artist: m.artist_name || a.artist_name || t('search.unknown'),
       album: a.title,
       album_image: (a.image || m.image || '') || undefined,
       audio: m.audio || '',
@@ -146,12 +148,12 @@ const EditAlbumPage: React.FC = () => {
         await updateAlbum(albumId, fd);
       }
 
-      const toDelete = tracks.filter((t) => t._deleted);
+      const toDelete = tracks.filter((track) => track._deleted);
       const deletedIds: number[] = [];
-      for (const t of toDelete) {
+      for (const track of toDelete) {
         try {
-          await deleteTrack(t.id);
-          deletedIds.push(Number(t.id));
+          await deleteTrack(track.id);
+          deletedIds.push(Number(track.id));
         } catch {}
       }
       if (deletedIds.length) {
@@ -159,13 +161,13 @@ const EditAlbumPage: React.FC = () => {
       }
 
       const toUpdate = tracks.filter(
-        (t) => !t._deleted && ((t._title && t._title !== t.title) || !!t._audioFile)
+        (track) => !track._deleted && ((track._title && track._title !== track.title) || !!track._audioFile)
       );
-      for (const t of toUpdate) {
+      for (const track of toUpdate) {
         const fd = new FormData();
-        if (t._title && t._title !== t.title) fd.append('title', t._title);
-        if (t._audioFile) fd.append('audio', t._audioFile);
-        await updateTrack(t.id, fd);
+        if (track._title && track._title !== track.title) fd.append('title', track._title);
+        if (track._audioFile) fd.append('audio', track._audioFile);
+        await updateTrack(track.id, fd);
       }
 
       const toAdd = newTracks.filter((nt) => nt.title.trim() && nt.audio);
@@ -206,7 +208,7 @@ const EditAlbumPage: React.FC = () => {
   if (loading) {
     return (
       <div className="import-page">
-        <div className="import-content"><h2>Chargement…</h2></div>
+        <div className="import-content"><h2>{t('common.loading')}</h2></div>
       </div>
     );
   }
@@ -214,7 +216,7 @@ const EditAlbumPage: React.FC = () => {
   if (!album) {
     return (
       <div className="import-page">
-        <div className="import-content"><h2>Album introuvable.</h2></div>
+        <div className="import-content"><h2>{t('editAlbum.albumNotFound')}</h2></div>
       </div>
     );
   }
@@ -222,66 +224,66 @@ const EditAlbumPage: React.FC = () => {
   return (
     <div className="import-page">
       <div className="import-content">
-        <h2>Modifier l’album</h2>
+        <h2>{t('editAlbum.title')}</h2>
 
         <div className="form-section">
-          <h3>Infos de l’album</h3>
+          <h3>{t('editAlbum.albumInfo')}</h3>
 
           <div className="import-form">
-            <label htmlFor="album-title">Titre</label>
+            <label htmlFor="album-title">{t('editAlbum.albumTitle')}</label>
             <input
               id="album-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nom de l'album"
+              placeholder={t('editAlbum.albumName')}
             />
           </div>
 
           <div className="import-form">
-            <label htmlFor="album-image">Image de l'album</label>
+            <label htmlFor="album-image">{t('editAlbum.albumImage')}</label>
             <input id="album-image" type="file" accept="image/*" onChange={onAlbumImageChange} />
             <small style={{ opacity: 0.8 }}>
-              Cette image s’applique automatiquement à toutes les musiques de l’album.
+              {t('editAlbum.imageAppliesAll')}
             </small>
           </div>
         </div>
 
         <div className="form-section" style={{ marginTop: 24 }}>
-          <h3>Titres</h3>
+          <h3>{t('editAlbum.tracks')}</h3>
 
-          {(tracks || []).map((t) => {
-            const hasAudio = Boolean(t.audio);
-            const chosen = t._audioFile?.name;
-            const audioLabel = hasAudio ? 'Modifier le fichier' : 'Choisir un fichier';
+          {(tracks || []).map((track) => {
+            const hasAudio = Boolean(track.audio);
+            const chosen = track._audioFile?.name;
+            const audioLabel = hasAudio ? t('editAlbum.changeFile') : t('editAlbum.chooseFile');
             const audioInfo = chosen
               ? chosen
               : hasAudio
-              ? 'Fichier actuel présent'
-              : 'Aucun fichier sélectionné';
+              ? t('editAlbum.currentFilePresent')
+              : t('editAlbum.noFileSelected');
 
-            const rowStyle: React.CSSProperties = t._deleted
+            const rowStyle: React.CSSProperties = track._deleted
               ? { opacity: 0.5, filter: 'grayscale(1)' }
               : {};
 
             return (
-              <div className="song-item" key={t.id} style={rowStyle}>
+              <div className="song-item" key={track.id} style={rowStyle}>
                 <input
                   type="text"
-                  placeholder="Titre du morceau"
-                  value={t._title ?? ''}
-                  onChange={(e) => onTrackTitleChange(t.id, e.target.value)}
-                  disabled={t._deleted}
+                  placeholder={t('editAlbum.trackTitle')}
+                  value={track._title ?? ''}
+                  onChange={(e) => onTrackTitleChange(track.id, e.target.value)}
+                  disabled={track._deleted}
                 />
 
                 <div className="import-form" style={{ margin: 0 }}>
-                  <label htmlFor={`track-audio-${t.id}`}>{audioLabel}</label>
+                  <label htmlFor={`track-audio-${track.id}`}>{audioLabel}</label>
                   <input
-                    id={`track-audio-${t.id}`}
+                    id={`track-audio-${track.id}`}
                     type="file"
                     accept="audio/*"
-                    onChange={(e) => onTrackAudioChange(t.id, e.target.files?.[0] ?? null)}
-                    disabled={t._deleted}
+                    onChange={(e) => onTrackAudioChange(track.id, e.target.files?.[0] ?? null)}
+                    disabled={track._deleted}
                   />
                   <small style={{ opacity: 0.8, display: 'block', marginTop: 6 }}>
                     {audioInfo}
@@ -290,26 +292,26 @@ const EditAlbumPage: React.FC = () => {
 
                 <button
                   className="remove-btn"
-                  onClick={() => toggleDeleteTrack(t.id)}
+                  onClick={() => toggleDeleteTrack(track.id)}
                 >
-                  {t._deleted ? 'Annuler la suppression' : 'Supprimer'}
+                  {track._deleted ? t('editAlbum.cancelDeletion') : t('common.delete')}
                 </button>
               </div>
             );
           })}
 
-          <h3 style={{ marginTop: 24 }}>Ajouter des titres</h3>
+          <h3 style={{ marginTop: 24 }}>{t('editAlbum.addTracks')}</h3>
 
           {newTracks.map((nt, idx) => (
             <div className="song-item" key={idx}>
               <input
                 type="text"
-                placeholder="Titre du morceau *"
+                placeholder={t('editAlbum.trackTitleRequired')}
                 value={nt.title}
                 onChange={(e) => onNewTrackTitle(idx, e.target.value)}
               />
               <div className="import-form" style={{ margin: 0 }}>
-                <label htmlFor={`new-track-audio-${idx}`}>Choisir un fichier *</label>
+                <label htmlFor={`new-track-audio-${idx}`}>{t('editAlbum.chooseFileRequired')}</label>
                 <input
                   id={`new-track-audio-${idx}`}
                   type="file"
@@ -317,32 +319,32 @@ const EditAlbumPage: React.FC = () => {
                   onChange={(e) => onNewTrackAudio(idx, e.target.files?.[0] ?? null)}
                 />
                 <small style={{ opacity: 0.8, display: 'block', marginTop: 6 }}>
-                  {nt.audio ? nt.audio.name : 'Aucun fichier'}
+                  {nt.audio ? nt.audio.name : t('editAlbum.noFile')}
                 </small>
               </div>
 
               {newTracks.length > 1 && (
                 <button className="remove-btn" onClick={() => removeNewTrackRow(idx)}>
-                  Retirer cette ligne
+                  {t('editAlbum.removeThisRow')}
                 </button>
               )}
             </div>
           ))}
 
           <button className="add-song-btn" onClick={addNewTrackRow}>
-            Ajouter une ligne
+            {t('editAlbum.addRow')}
           </button>
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
           <button onClick={saveAll} disabled={savingAll}>
-            {savingAll ? 'Enregistrement…' : 'Enregistrer'}
+            {savingAll ? t('editAlbum.saving') : t('common.save')}
           </button>
           <button className="remove-btn" onClick={removeAlbum} disabled={deletingAlbum}>
-            {deletingAlbum ? 'Suppression…' : 'Supprimer l’album'}
+            {deletingAlbum ? t('editAlbum.deleting') : t('editAlbum.deleteAlbum')}
           </button>
           <button onClick={() => navigate(`/album/${albumId}`)}>
-            ← Retour à l’album
+            ← {t('editAlbum.backToAlbum')}
           </button>
         </div>
       </div>

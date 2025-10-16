@@ -32,8 +32,8 @@ type CurrentUser = {
 };
 
 const PreferencesPage: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
-  const { i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
 
   const [locale, setLocaleState] = useState<string>(i18n.language || 'fr');
@@ -74,13 +74,13 @@ const PreferencesPage: React.FC = () => {
         const ures = await fetchUser();
         setUser(ures.data);
       } catch (e) {
-        console.error('Erreur chargement préférences', e);
-        alert("Impossible de charger vos préférences.");
+        console.error(t('preferences.errorLoading'), e);
+        alert(t('preferences.errorLoadingPreferences'));
       } finally {
         setLoading(false);
       }
     })();
-  }, [location.key]);
+  }, [location.key, t]);
 
   const onSaveLocale = async () => {
     try {
@@ -92,10 +92,10 @@ const PreferencesPage: React.FC = () => {
         await setLocalePref(locale);
       }
 
-      alert('Langue enregistrée ✅');
+      alert(t('preferences.languageSaved'));
     } catch (e) {
       console.error(e);
-      alert('Erreur lors de la sauvegarde de la langue.');
+      alert(t('preferences.errorSavingLanguage'));
     }
   };
 
@@ -105,7 +105,7 @@ const PreferencesPage: React.FC = () => {
       window.location.href = onboarding_url;
     } catch (e) {
       console.error(e);
-      alert("Impossible de démarrer l'onboarding Stripe.");
+      alert(t('preferences.errorStartingOnboarding'));
     }
   };
 
@@ -119,20 +119,15 @@ const PreferencesPage: React.FC = () => {
   }, [stripe]);
 
   const onRequestDeletion = async () => {
-    const ok = window.confirm(
-      "Cette action est irréversible.\n\n" +
-      "Nous allons vous envoyer un e-mail pour confirmer la suppression de votre compte " +
-      "et de toutes les données associées (playlists, musiques, albums, likes, abonnements, fichiers…).\n\n" +
-      "Voulez-vous continuer ?"
-    );
+    const ok = window.confirm(t('preferences.deleteAccountConfirm').replace(/\\n/g, '\n'));
     if (!ok) return;
 
     try {
       await requestAccountDeletion();
-      alert('E-mail de confirmation envoyé. Vérifiez votre boîte mail 📬');
+      alert(t('preferences.deleteAccountEmailSent'));
     } catch (e) {
       console.error(e);
-      alert("Impossible d'envoyer l'e-mail de confirmation.");
+      alert(t('preferences.errorSendingDeleteEmail'));
     }
   };
 
@@ -140,10 +135,10 @@ const PreferencesPage: React.FC = () => {
     setExportingData(true);
     try {
       await exportUserData();
-      alert('✅ Vos données ont été téléchargées avec succès !');
+      alert(t('preferences.dataExported'));
     } catch (e) {
       console.error(e);
-      alert("❌ Erreur lors de l'export de vos données.");
+      alert(t('preferences.errorExportingData'));
     } finally {
       setExportingData(false);
     }
@@ -156,53 +151,53 @@ const PreferencesPage: React.FC = () => {
       setShowDataSummary(true);
     } catch (e) {
       console.error(e);
-      alert("❌ Erreur lors de la récupération du résumé de vos données.");
+      alert(t('preferences.errorViewingSummary'));
     }
   };
 
   return (
     <div className="preferences-page">
       <div className="preferences-content">
-        <h1>Préférences</h1>
+        <h1>{t('preferences.title')}</h1>
 
         {onboardingState === 'success' && (
           <div className="pref-banner success" role="status">
-            Compte Stripe mis à jour. Merci !
+            {t('preferences.onboardingSuccess')}
           </div>
         )}
         {onboardingState === 'refresh' && (
           <div className="pref-banner warn" role="status">
-            Onboarding interrompu. Vous pouvez reprendre quand vous voulez.
+            {t('preferences.onboardingRefresh')}
           </div>
         )}
 
         {loading ? (
-          <div className="card"><p>Chargement…</p></div>
+          <div className="card"><p>{t('preferences.loading')}</p></div>
         ) : (
           <>
             <div className="card">
-              <h2>Informations personnelles</h2>
+              <h2>{t('preferences.personalInfo')}</h2>
               <div className="grid">
                 <div>
-                  <div className="label">E-mail actuel</div>
+                  <div className="label">{t('preferences.currentEmail')}</div>
                   <div className="value">{user?.email || '—'}</div>
                 </div>
                 <div>
-                  <div className="label">Date de naissance</div>
+                  <div className="label">{t('preferences.dateOfBirth')}</div>
                   <div className="value">{user?.date_of_birth || '—'}</div>
                 </div>
               </div>
               <div className="row mt">
                 <button className="btn info-edit" onClick={() => setShowPersonalModal(true)}>
-                  Modifier mes informations
+                  {t('preferences.editInfo')}
                 </button>
               </div>
             </div>
 
             <div className="card">
-              <h2>🌐 Langue / Language</h2>
+              <h2>{t('preferences.languageSection')}</h2>
               <p className="hint">
-                Choisissez votre langue préférée pour l'interface.
+                {t('preferences.languageHint')}
               </p>
               <div className="row">
                 <select
@@ -219,38 +214,38 @@ const PreferencesPage: React.FC = () => {
                   <option value="zh">🇨🇳 中文</option>
                   <option value="ja">🇯🇵 日本語</option>
                 </select>
-                <button className="btn primary" onClick={onSaveLocale}>Enregistrer</button>
+                <button className="btn primary" onClick={onSaveLocale}>{t('preferences.saveLanguage')}</button>
               </div>
             </div>
 
             {isAdult ? (
               <div className="card">
-                <h2>Paiements (Stripe Connect)</h2>
+                <h2>{t('preferences.paymentsStripe')}</h2>
 
                 <div className="grid">
                   <div>
-                    <div className="label">Compte connecté</div>
+                    <div className="label">{t('preferences.connectedAccount')}</div>
                     <div className="value">
-                      {stripe.has_connect ? (stripe.account_id || connectId) : 'Aucun'}
+                      {stripe.has_connect ? (stripe.account_id || connectId) : t('preferences.none')}
                     </div>
                   </div>
                   <div>
-                    <div className="label">Encaissements (charges)</div>
+                    <div className="label">{t('preferences.charges')}</div>
                     <div className={`pill ${stripe.charges_enabled ? 'ok' : 'ko'}`}>
-                      {stripe.charges_enabled ? 'Activés' : 'À compléter'}
+                      {stripe.charges_enabled ? t('preferences.enabled') : t('preferences.toComplete')}
                     </div>
                   </div>
                   <div>
-                    <div className="label">Virements (payouts)</div>
+                    <div className="label">{t('preferences.payouts')}</div>
                     <div className={`pill ${stripe.payouts_enabled ? 'ok' : 'ko'}`}>
-                      {stripe.payouts_enabled ? 'Activés' : 'À compléter'}
+                      {stripe.payouts_enabled ? t('preferences.enabled') : t('preferences.toComplete')}
                     </div>
                   </div>
                 </div>
 
                 {stripe.currently_due?.length > 0 && (
                   <div className="due-box">
-                    <div className="label">Informations requises :</div>
+                    <div className="label">{t('preferences.requiredInfo')}</div>
                     <ul>
                       {stripe.currently_due.map((k) => <li key={k}>{k}</li>)}
                     </ul>
@@ -259,35 +254,30 @@ const PreferencesPage: React.FC = () => {
 
                 <div className="row mt">
                   <button className="btn primary" onClick={onStartOnboarding}>
-                    {needsAction ? 'Activer/Compléter mes paiements' : 'Mettre à jour mes informations'}
+                    {needsAction ? t('preferences.activatePayments') : t('preferences.updateInfo')}
                   </button>
                 </div>
 
                 <p className="hint">
-                  Astuce : si Stripe demande une vérification (2FA), ouvrez la page en navigation privée
-                  et utilisez l'adresse e-mail associée à votre compte connecté.
+                  {t('preferences.stripeHint')}
                 </p>
               </div>
             ) : (
               <div className="card">
-                <h2>⚠️ Paiements (18+)</h2>
+                <h2>{t('preferences.payments18Plus')}</h2>
                 <p className="hint">
-                  Les fonctionnalités de paiement (donations et réception de fonds via Stripe)
-                  sont réservées aux utilisateurs majeurs (18 ans et plus) conformément aux
-                  obligations légales et aux conditions d'utilisation de Stripe.
+                  {t('preferences.payments18PlusHint')}
                 </p>
                 <p className="hint" style={{ marginTop: '12px' }}>
-                  Vous pourrez accéder à ces fonctionnalités dès votre majorité.
+                  {t('preferences.payments18PlusHint2')}
                 </p>
               </div>
             )}
 
             <div className="card" style={{ borderColor: '#3b82f6' }}>
-              <h2>Mes données (RGPD)</h2>
+              <h2>{t('preferences.myDataGDPR')}</h2>
               <p className="hint">
-                Conformément au RGPD, vous avez le droit d'accéder à vos données personnelles,
-                de les télécharger dans un format structuré (Article 20 - Portabilité) et de
-                consulter un résumé de vos informations (Article 15 - Droit d'accès).
+                {t('preferences.gdprHint')}
               </p>
               <div className="row mt" style={{ gap: '10px' }}>
                 <button
@@ -296,23 +286,22 @@ const PreferencesPage: React.FC = () => {
                   onClick={handleExportData}
                   disabled={exportingData}
                 >
-                  {exportingData ? 'Export en cours...' : '📥 Télécharger mes données (JSON)'}
+                  {exportingData ? t('preferences.downloadingData') : t('preferences.downloadData')}
                 </button>
                 <button
                   className="btn"
                   style={{ background: '#10b981', color: '#fff' }}
                   onClick={handleViewDataSummary}
                 >
-                  📊 Voir le résumé de mes données
+                  {t('preferences.viewDataSummary')}
                 </button>
               </div>
             </div>
 
             <div className="card" style={{ borderColor: '#8b5cf6' }}>
-              <h2>🍪 Gestion des cookies</h2>
+              <h2>{t('preferences.cookieManagement')}</h2>
               <p className="hint">
-                Gérez vos préférences de cookies. Vous pouvez à tout moment modifier vos choix
-                concernant les cookies fonctionnels et analytiques.
+                {t('preferences.cookieHint')}
               </p>
               <div className="row mt">
                 <button
@@ -323,7 +312,7 @@ const PreferencesPage: React.FC = () => {
                     window.location.reload();
                   }}
                 >
-                  Modifier mes préférences de cookies
+                  {t('preferences.modifyCookies')}
                 </button>
               </div>
             </div>
@@ -331,103 +320,100 @@ const PreferencesPage: React.FC = () => {
             {showDataSummary && dataSummary && (
               <div className="card" style={{ borderColor: '#10b981' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h2>Résumé de mes données</h2>
+                  <h2>{t('preferences.dataSummaryTitle')}</h2>
                   <button
                     className="btn"
                     style={{ background: '#6b7280', color: '#fff', padding: '8px 16px' }}
                     onClick={() => setShowDataSummary(false)}
                   >
-                    ✕ Fermer
+                    {t('preferences.closeSummary')}
                   </button>
                 </div>
 
                 <div style={{ marginTop: '20px' }}>
-                  <h3>Informations personnelles</h3>
+                  <h3>{t('preferences.personalInformation')}</h3>
                   <div className="grid" style={{ marginBottom: '20px' }}>
                     <div>
-                      <div className="label">Nom</div>
+                      <div className="label">{t('preferences.name')}</div>
                       <div className="value">{dataSummary.personal_information?.name || '—'}</div>
                     </div>
                     <div>
-                      <div className="label">Email</div>
+                      <div className="label">{t('preferences.email')}</div>
                       <div className="value">{dataSummary.personal_information?.email || '—'}</div>
                     </div>
                     <div>
-                      <div className="label">Date de naissance</div>
+                      <div className="label">{t('preferences.dateOfBirthLabel')}</div>
                       <div className="value">{dataSummary.personal_information?.date_of_birth || '—'}</div>
                     </div>
                     <div>
-                      <div className="label">Compte créé le</div>
+                      <div className="label">{t('preferences.accountCreated')}</div>
                       <div className="value">{dataSummary.personal_information?.account_created || '—'}</div>
                     </div>
                   </div>
 
-                  <h3>Statistiques de contenu</h3>
+                  <h3>{t('preferences.contentStatistics')}</h3>
                   <div className="grid" style={{ marginBottom: '20px' }}>
                     <div>
-                      <div className="label">Musiques téléversées</div>
+                      <div className="label">{t('preferences.uploadedTracks')}</div>
                       <div className="value">{dataSummary.content_statistics?.uploaded_tracks || 0}</div>
                     </div>
                     <div>
-                      <div className="label">Albums créés</div>
+                      <div className="label">{t('preferences.createdAlbums')}</div>
                       <div className="value">{dataSummary.content_statistics?.created_albums || 0}</div>
                     </div>
                     <div>
-                      <div className="label">Playlists créées</div>
+                      <div className="label">{t('preferences.createdPlaylists')}</div>
                       <div className="value">{dataSummary.content_statistics?.created_playlists || 0}</div>
                     </div>
                     <div>
-                      <div className="label">Favoris</div>
+                      <div className="label">{t('preferences.favoriteTracks')}</div>
                       <div className="value">{dataSummary.content_statistics?.favorite_tracks || 0}</div>
                     </div>
                   </div>
 
-                  <h3>Social</h3>
+                  <h3>{t('preferences.social')}</h3>
                   <div className="grid" style={{ marginBottom: '20px' }}>
                     <div>
-                      <div className="label">Abonnements</div>
+                      <div className="label">{t('preferences.following')}</div>
                       <div className="value">{dataSummary.social?.following || 0}</div>
                     </div>
                     <div>
-                      <div className="label">Abonnés</div>
+                      <div className="label">{t('preferences.followers')}</div>
                       <div className="value">{dataSummary.social?.followers || 0}</div>
                     </div>
                   </div>
 
-                  <h3>Financier</h3>
+                  <h3>{t('preferences.financial')}</h3>
                   <div className="grid" style={{ marginBottom: '20px' }}>
                     <div>
-                      <div className="label">Paiements activés</div>
-                      <div className="value">{dataSummary.financial?.payments_enabled || 'Non'}</div>
+                      <div className="label">{t('preferences.paymentsEnabled')}</div>
+                      <div className="value">{dataSummary.financial?.payments_enabled || t('preferences.paymentsNo')}</div>
                     </div>
                     <div>
-                      <div className="label">Donations effectuées</div>
+                      <div className="label">{t('preferences.donationsMade')}</div>
                       <div className="value">{dataSummary.financial?.donations_made || 0}</div>
                     </div>
                     <div>
-                      <div className="label">Donations reçues</div>
+                      <div className="label">{t('preferences.donationsReceived')}</div>
                       <div className="value">{dataSummary.financial?.donations_received || 0}</div>
                     </div>
                   </div>
 
-                  <h3>Vos droits RGPD</h3>
+                  <h3>{t('preferences.gdprRights')}</h3>
                   <ul style={{ marginTop: '10px', lineHeight: '1.8' }}>
-                    <li>✅ <strong>Droit d'accès :</strong> {dataSummary.data_rights?.right_to_access}</li>
-                    <li>✅ <strong>Droit à la portabilité :</strong> {dataSummary.data_rights?.right_to_export}</li>
-                    <li>✅ <strong>Droit de rectification :</strong> {dataSummary.data_rights?.right_to_rectification}</li>
-                    <li>✅ <strong>Droit à l'effacement :</strong> {dataSummary.data_rights?.right_to_erasure}</li>
+                    <li>✅ <strong>{t('preferences.rightToAccess')} :</strong> {dataSummary.data_rights?.right_to_access}</li>
+                    <li>✅ <strong>{t('preferences.rightToExport')} :</strong> {dataSummary.data_rights?.right_to_export}</li>
+                    <li>✅ <strong>{t('preferences.rightToRectification')} :</strong> {dataSummary.data_rights?.right_to_rectification}</li>
+                    <li>✅ <strong>{t('preferences.rightToErasure')} :</strong> {dataSummary.data_rights?.right_to_erasure}</li>
                   </ul>
                 </div>
               </div>
             )}
 
             <div className="card" style={{ borderColor: '#ef4444' }}>
-              <h2>Supprimer mon compte</h2>
+              <h2>{t('preferences.deleteAccountTitle')}</h2>
               <p className="hint">
-                Cette opération est <strong>définitive</strong> et supprimera toutes vos données
-                (profil, musiques, albums, playlists, likes, abonnements, fichiers…).
-                Un e-mail de confirmation vous sera envoyé. La suppression ne sera effectuée
-                qu’après votre clic sur le lien de confirmation.
+                {t('preferences.deleteAccountHint')}
               </p>
               <div className="row mt">
                 <button
@@ -435,7 +421,7 @@ const PreferencesPage: React.FC = () => {
                   style={{ background: '#ef4444', color: '#fff' }}
                   onClick={onRequestDeletion}
                 >
-                  Supprimer mon compte…
+                  {t('preferences.deleteAccountButton')}
                 </button>
               </div>
             </div>

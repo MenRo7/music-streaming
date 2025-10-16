@@ -31,10 +31,11 @@ php artisan serve                    # Runs on http://localhost:8000
 php artisan queue:listen --tries=1   # Queue worker
 
 # Testing
-vendor/bin/phpunit                   # Run all tests
-vendor/bin/phpunit tests/Unit        # Unit tests only
-vendor/bin/phpunit tests/Feature     # Feature tests only
-vendor/bin/phpunit --filter TestName # Single test (e.g., --filter testUserCanLogin)
+vendor/bin/phpunit                           # Run all tests
+vendor/bin/phpunit tests/Unit                # Unit tests only
+vendor/bin/phpunit tests/Feature             # Feature tests only
+vendor/bin/phpunit --filter testUserCanLogin # Single test method
+vendor/bin/phpunit tests/Feature/AuthTest.php # Single test file
 
 # Code quality
 composer lint                        # Check code style
@@ -139,6 +140,11 @@ npm run analyze                           # Analyze bundle size (after build)
 - i18next with browser language detection
 - Locale files in `src/i18n/locales/` (en, fr, es, de, it, ja, pt, zh)
 - Backend syncs user's locale preference
+- **Current Status**: Core implementation complete (see I18N_STATUS.md)
+  - French (fr) and English (en) translations: ✅ 100% complete (~260 keys)
+  - All main components internationalized: ✅ 100% complete (13+ components)
+  - Other languages (es, de, it, pt, zh, ja): Structure ready, translations needed (use en.json as base)
+  - Language switching: ✅ Fully functional via PreferencesPage
 
 **Key Frontend Patterns**
 - TypeScript strict mode enabled
@@ -168,6 +174,12 @@ This project has been developed and tested on Windows. When working on Windows:
 - Use forward slashes or double backslashes in paths
 - Some commands may need to be run in Git Bash or PowerShell
 - Ensure line endings are set correctly (Git should handle this automatically with `.gitattributes`)
+- The `composer dev` command uses `npx concurrently` which works cross-platform
+
+### Git Workflow
+- Current branch: `main`
+- No upstream branch configured (local development)
+- When creating PRs, specify the base branch explicitly or configure an upstream remote
 
 ## Environment Configuration
 
@@ -212,6 +224,34 @@ All environment variables are validated and accessed via `src/config/env.ts`.
 4. Create page in `src/pages/` if new route needed
 5. Update routing in `src/App.tsx`
 6. Add translations to all locale files in `src/i18n/locales/`
+
+### Internationalizing a Component
+
+When adding user-facing text to components, always use i18next:
+
+```typescript
+// 1. Import the hook
+import { useTranslation } from 'react-i18next';
+
+// 2. Use in component
+const MyComponent = () => {
+  const { t } = useTranslation();
+
+  return (
+    <div>
+      <h1>{t('section.key')}</h1>
+      <button>{t('common.save')}</button>
+    </div>
+  );
+};
+```
+
+**Steps**:
+1. Add translation keys to `front/src/i18n/locales/fr.json` and `en.json`
+2. Import and use `useTranslation()` hook
+3. Replace hardcoded text with `{t('section.key')}`
+4. Test language switching via PreferencesPage
+5. See `front/I18N_GUIDE.md` for detailed patterns
 
 ### Working with Authentication
 - Backend uses session-based auth (Sanctum) - ensure CSRF protection via cookie
@@ -322,4 +362,7 @@ Example:
 - `INSTALLATION_GUIDE.md` - Setup and usage instructions
 - `SECURITY.md` - Security best practices
 - `front/src/styles/README.md` - Design system documentation
+- `front/I18N_GUIDE.md` - Internationalization guide
+- `I18N_STATUS.md` - Current i18n implementation status
+- `I18N_IMPLEMENTATION_SUMMARY.md` - i18n implementation summary
 - `.github/workflows/` - CI/CD pipeline configurations

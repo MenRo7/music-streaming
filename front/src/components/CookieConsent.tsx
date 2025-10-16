@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import '../styles/CookieConsent.css';
 
 interface CookiePreferences {
@@ -9,6 +10,7 @@ interface CookiePreferences {
 }
 
 const CookieConsent: React.FC = () => {
+  const { t } = useTranslation();
   const [showBanner, setShowBanner] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>({
@@ -32,7 +34,7 @@ const CookieConsent: React.FC = () => {
           setPreferences(parsed);
           setShowBanner(false);
         } catch (e) {
-          console.error('Failed to parse cookie consent', e);
+          console.error(t('errors.parseCookieConsent'), e);
           setShowBanner(true);
         }
       }
@@ -93,20 +95,18 @@ const CookieConsent: React.FC = () => {
     <div className="cookie-consent-overlay">
       <div className="cookie-consent-banner">
         <div className="cookie-consent-header">
-          <h2>🍪 Gestion des Cookies</h2>
+          <h2>🍪 {t('cookies.title')}</h2>
         </div>
 
         {!showDetails ? (
           <div className="cookie-consent-content">
             <p>
-              Nous utilisons des cookies pour améliorer votre expérience. Les cookies essentiels sont
-              nécessaires au fonctionnement du site (authentification, session). Les autres cookies
-              sont optionnels.
+              {t('cookies.description')}
             </p>
             <p className="cookie-consent-privacy-link">
-              Pour plus d'informations, consultez notre{' '}
+              {t('cookies.moreInfo')}{' '}
               <a href="/privacy" target="_blank" rel="noopener noreferrer">
-                Politique de Confidentialité
+                {t('cookies.privacyPolicy')}
               </a>
               .
             </p>
@@ -116,50 +116,47 @@ const CookieConsent: React.FC = () => {
                 onClick={acceptNecessaryOnly}
                 className="cookie-btn cookie-btn-secondary"
               >
-                Cookies essentiels uniquement
+                {t('cookies.essentialOnly')}
               </button>
               <button
                 onClick={() => setShowDetails(true)}
                 className="cookie-btn cookie-btn-outline"
               >
-                Personnaliser
+                {t('cookies.customize')}
               </button>
               <button onClick={acceptAll} className="cookie-btn cookie-btn-primary">
-                Tout accepter
+                {t('cookies.acceptAll')}
               </button>
             </div>
           </div>
         ) : (
           <div className="cookie-consent-content">
             <p>
-              Choisissez les catégories de cookies que vous souhaitez autoriser. Les cookies
-              essentiels ne peuvent pas être désactivés car ils sont nécessaires au fonctionnement
-              du site.
+              {t('cookies.chooseCategories')}
             </p>
 
             <div className="cookie-preferences">
               <div className="cookie-category">
                 <div className="cookie-category-header">
-                  <label className="cookie-toggle" aria-label="Cookies Essentiels (Obligatoires)">
+                  <label className="cookie-toggle" aria-label={t('cookies.essentialRequired')}>
                     <input
                       type="checkbox"
                       checked={true}
                       disabled={true}
                       readOnly
-                      aria-label="Cookies Essentiels (Obligatoires)"
+                      aria-label={t('cookies.essentialRequired')}
                     />
                     <span className="cookie-toggle-slider disabled"></span>
                   </label>
                   <div className="cookie-category-info">
-                    <h3>Cookies Essentiels (Obligatoires)</h3>
+                    <h3>{t('cookies.essentialRequired')}</h3>
                     <p className="cookie-category-description">
-                      Nécessaires au fonctionnement du site. Ils permettent l'authentification, la
-                      gestion de session, et la sécurité (protection CSRF).
+                      {t('cookies.essentialDescription')}
                     </p>
                     <ul className="cookie-examples">
-                      <li><strong>authToken</strong> - Token d'authentification (localStorage)</li>
-                      <li><strong>XSRF-TOKEN</strong> - Protection contre les attaques CSRF</li>
-                      <li><strong>laravel_session</strong> - Gestion de session (120 min)</li>
+                      <li><strong>authToken</strong> - {t('cookies.authToken')}</li>
+                      <li><strong>XSRF-TOKEN</strong> - {t('cookies.csrfProtection')}</li>
+                      <li><strong>laravel_session</strong> - {t('cookies.sessionManagement')}</li>
                     </ul>
                   </div>
                 </div>
@@ -167,26 +164,26 @@ const CookieConsent: React.FC = () => {
 
               <div className="cookie-category">
                 <div className="cookie-category-header">
-                  <label className="cookie-toggle" aria-label="Cookies Fonctionnels">
+                  <label className="cookie-toggle" aria-label={t('cookies.functional')}>
                     <input
                       type="checkbox"
                       checked={preferences.functional}
                       onChange={(e) =>
                         setPreferences({ ...preferences, functional: e.target.checked })
                       }
-                      aria-label="Cookies Fonctionnels"
+                      aria-label={t('cookies.functional')}
                     />
                     <span className="cookie-toggle-slider"></span>
                   </label>
                   <div className="cookie-category-info">
-                    <h3>Cookies Fonctionnels</h3>
+                    <h3>{t('cookies.functional')}</h3>
                     <p className="cookie-category-description">
-                      Améliorent votre expérience en mémorisant vos préférences (langue, thème, etc.).
+                      {t('cookies.functionalDescription')}
                     </p>
                     <ul className="cookie-examples">
-                      <li><strong>locale</strong> - Préférence de langue</li>
-                      <li><strong>playerState</strong> - État du lecteur audio</li>
-                      <li><strong>cookieConsent</strong> - Vos choix de cookies</li>
+                      <li><strong>locale</strong> - {t('cookies.languagePreference')}</li>
+                      <li><strong>playerState</strong> - {t('cookies.playerState')}</li>
+                      <li><strong>cookieConsent</strong> - {t('cookies.cookieChoices')}</li>
                     </ul>
                   </div>
                 </div>
@@ -194,25 +191,24 @@ const CookieConsent: React.FC = () => {
 
               <div className="cookie-category">
                 <div className="cookie-category-header">
-                  <label className="cookie-toggle" aria-label="Cookies Analytiques">
+                  <label className="cookie-toggle" aria-label={t('cookies.analytics')}>
                     <input
                       type="checkbox"
                       checked={preferences.analytics}
                       onChange={(e) =>
                         setPreferences({ ...preferences, analytics: e.target.checked })
                       }
-                      aria-label="Cookies Analytiques"
+                      aria-label={t('cookies.analytics')}
                     />
                     <span className="cookie-toggle-slider"></span>
                   </label>
                   <div className="cookie-category-info">
-                    <h3>Cookies Analytiques</h3>
+                    <h3>{t('cookies.analytics')}</h3>
                     <p className="cookie-category-description">
-                      Nous aident à comprendre comment vous utilisez le site pour l'améliorer.
-                      Actuellement non utilisés.
+                      {t('cookies.analyticsDescription')}
                     </p>
                     <ul className="cookie-examples">
-                      <li><em>Aucun cookie analytique actuellement utilisé</em></li>
+                      <li><em>{t('cookies.noAnalytics')}</em></li>
                     </ul>
                   </div>
                 </div>
@@ -224,19 +220,19 @@ const CookieConsent: React.FC = () => {
                 onClick={() => setShowDetails(false)}
                 className="cookie-btn cookie-btn-outline"
               >
-                Retour
+                {t('cookies.back')}
               </button>
               <button
                 onClick={acceptNecessaryOnly}
                 className="cookie-btn cookie-btn-secondary"
               >
-                Refuser tout (sauf essentiels)
+                {t('cookies.rejectAll')}
               </button>
               <button
                 onClick={saveCustomPreferences}
                 className="cookie-btn cookie-btn-primary"
               >
-                Enregistrer mes choix
+                {t('cookies.saveChoices')}
               </button>
             </div>
           </div>
@@ -244,8 +240,7 @@ const CookieConsent: React.FC = () => {
 
         <div className="cookie-consent-footer">
           <small>
-            Conformément au RGPD et à la directive ePrivacy. Vous pouvez modifier vos préférences à
-            tout moment dans les paramètres.
+            {t('cookies.footer')}
           </small>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import { updateUserProfile } from "../apis/UserService";
 import { useUser } from "../apis/UserContext";
@@ -18,6 +19,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   user,
   onProfileUpdate,
 }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState(user.name);
   const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       await refreshUser();
       onClose();
     } catch (error) {
-      setError("Erreur lors de la mise à jour du profil.");
+      setError(t('errors.updateProfile'));
     }
   };
 
@@ -56,11 +58,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>Modifier le Profil</h2>
+        <h2>{t('profile.editProfile')}</h2>
         {error && <div className="error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="name">Nom d'utilisateur</label>
+            <label htmlFor="name">{t('profile.username')}</label>
             <input
               id="name"
               type="text"
@@ -70,7 +72,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             />
           </div>
           <div className="form-group">
-            <label htmlFor="image">Image de Profil</label>
+            <label htmlFor="image">{t('profile.profileImage')}</label>
             <input
               id="image"
               type="file"
@@ -79,9 +81,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             />
           </div>
           <div className="modal-actions">
-            <button type="submit">Enregistrer</button>
+            <button type="submit">{t('common.save')}</button>
             <button type="button" onClick={onClose}>
-              Annuler
+              {t('common.cancel')}
             </button>
           </div>
         </form>

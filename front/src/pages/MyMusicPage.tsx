@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { getUserMusics, getUserAlbums, deleteMusic } from '../apis/MyMusicService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
@@ -18,6 +19,7 @@ const extractPlaylistIds = (val: any): number[] => {
 };
 
 const MyMusicPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
 
@@ -33,7 +35,7 @@ const MyMusicPage: React.FC = () => {
           id: Number(m.id),
           name: m.name,
           artist: m.artist,
-          album: m.album ?? 'Inconnu',
+          album: m.album ?? t('album.unknown'),
           album_image: m.album_image || '',
           audio: m.audio || '',
           dateAdded: m.date_added ? new Date(m.date_added).toLocaleDateString() : '',
@@ -46,12 +48,12 @@ const MyMusicPage: React.FC = () => {
         setSongs(formatted);
         setAlbums(albumData);
       } catch (error) {
-        console.error('Erreur lors du chargement :', error);
+        console.error(t('myMusic.errorLoading'), error);
       }
     };
 
     fetchData();
-  }, []);
+  }, [t]);
 
   const onTogglePlaylist = async (
     playlistId: number | string,
@@ -66,14 +68,14 @@ const MyMusicPage: React.FC = () => {
       if (checked) await addMusicToPlaylist(pid, sid);
       else await removeMusicFromPlaylist(pid, sid);
     } catch {
-      alert('Erreur lors de la modification de la playlist.');
+      alert(t('myMusic.errorUpdatingPlaylist'));
     }
   };
 
   return (
     <div className="media-content">
       <div className="media-page">
-        <h2>Ma musique</h2>
+        <h2>{t('myMusic.title')}</h2>
 
         <SongList
           songs={songs}
@@ -84,20 +86,20 @@ const MyMusicPage: React.FC = () => {
           getActions={(song) => {
             const s: any = song;
             const viewItems = [
-              ...(s.album_id ? [{ label: "Voir l'album", onClick: () => navigate(`/album/${s.album_id}`) }] : []),
-              ...(s.artist_user_id ? [{ label: "Voir l'artiste", onClick: () => navigate(`/profile?user=${s.artist_user_id}`) }] : []),
+              ...(s.album_id ? [{ label: t('mediaPage.viewAlbum'), onClick: () => navigate(`/album/${s.album_id}`) }] : []),
+              ...(s.artist_user_id ? [{ label: t('mediaPage.viewArtist'), onClick: () => navigate(`/profile?user=${s.artist_user_id}`) }] : []),
             ];
 
             return [
               ...viewItems,
               {
-                label: 'Ajouter aux favoris',
+                label: t('mediaPage.addToFavorites'),
                 onClick: () => {
-                  addFavorite(song.id).catch((e) => console.error('Ajout aux favoris échoué', e));
+                  addFavorite(song.id).catch((e) => console.error(t('album.errorAddingFavorites'), e));
                 },
               },
               {
-                label: 'Ajouter à une playlist',
+                label: t('music.addToPlaylist'),
                 onClick: () => {},
                 withPlaylistMenu: true,
                 songId: song.id,
@@ -105,19 +107,19 @@ const MyMusicPage: React.FC = () => {
                 onToggle: (playlistId: number, checked: boolean) =>
                   onTogglePlaylist(playlistId, checked, song.id),
               },
-              { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+              { label: t('mediaPage.addToQueue'), onClick: () => addToQueue(song) },
               {
-                label: 'Modifier la musique',
+                label: t('mediaPage.modifyMusic'),
                 onClick: () => navigate(`/edit-music/${song.id}`),
               },
               {
-                label: 'Supprimer',
+                label: t('common.delete'),
                 onClick: async () => {
                   try {
                     await deleteMusic(song.id);
                     setSongs((prev) => prev.filter((m) => m.id !== song.id));
                   } catch {
-                    alert('Erreur lors de la suppression');
+                    alert(t('myMusic.errorDeletingMusic'));
                   }
                 },
               },
@@ -125,7 +127,7 @@ const MyMusicPage: React.FC = () => {
           }}
         />
 
-        <h2 style={{ marginTop: '40px' }}>Mes Albums</h2>
+        <h2 style={{ marginTop: '40px' }}>{t('myMusic.myAlbums')}</h2>
         <div className="album-row">
           {albums.map((album: any) => (
             <PlaylistCard

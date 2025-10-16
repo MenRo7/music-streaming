@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList, faTrash, faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
@@ -19,6 +20,7 @@ const toNumberArray = (arr: any[]): number[] =>
   (Array.isArray(arr) ? arr : []).map((v) => Number(v)).filter((n) => Number.isFinite(n));
 
 const MusicQueue: React.FC = () => {
+  const { t } = useTranslation();
   const {
     currentItem,
     upNext,
@@ -140,7 +142,7 @@ const MusicQueue: React.FC = () => {
       if (checked) await addMusicToPlaylist(pid, trackId);
       else await removeMusicFromPlaylist(pid, trackId);
     } catch (err) {
-      console.error('Erreur maj playlist', { err, qid, trackId, pid, checked });
+      console.error(t('errors.updatingPlaylist'), { err, qid, trackId, pid, checked });
       setQueuePlaylists((prev) => {
         const cur = toNumberArray(prev[qid] ?? baseIds);
         const rollback = checked
@@ -191,11 +193,11 @@ const MusicQueue: React.FC = () => {
 
   if (isHydrating) {
     return (
-      <aside className="music-queue" aria-label="File d'attente">
+      <aside className="music-queue" aria-label={t('musicQueue.queue')}>
         <div className="mq-header">
           <div className="mq-title">
             <FontAwesomeIcon icon={faList} className="mq-title-icon" />
-            <span>File d'attente</span>
+            <span>{t('musicQueue.queue')}</span>
           </div>
           <div className="mq-actions">
             <button className="mq-btn mq-btn--icon mq-btn--danger" disabled>
@@ -205,8 +207,8 @@ const MusicQueue: React.FC = () => {
         </div>
 
         <div className="mq-empty">
-          <p>Chargement de la file…</p>
-          <small>Vérification des pistes supprimées…</small>
+          <p>{t('musicQueue.loadingQueue')}</p>
+          <small>{t('musicQueue.checkingDeletedTracks')}</small>
         </div>
       </aside>
     );
@@ -215,18 +217,18 @@ const MusicQueue: React.FC = () => {
   if (!isOpen) return null;
 
   return (
-    <aside className="music-queue" aria-label="File d'attente">
+    <aside className="music-queue" aria-label={t('musicQueue.queue')}>
       <div className="mq-header">
         <div className="mq-title">
           <FontAwesomeIcon icon={faList} className="mq-title-icon" />
-          <span>File d'attente</span>
+          <span>{t('musicQueue.queue')}</span>
         </div>
 
         <div className="mq-actions">
           <button
             className="mq-btn mq-btn--icon mq-btn--danger"
-            aria-label="Vider la file (sauf la piste en cours)"
-            title="Vider la file (sauf la piste en cours)"
+            aria-label={t('musicQueue.clearQueue')}
+            title={t('musicQueue.clearQueue')}
             disabled={queueManual.length + queueAuto.length === 0}
             onClick={() => clearQueue(true)}
           >
@@ -237,8 +239,8 @@ const MusicQueue: React.FC = () => {
 
       {!currentItem && queueManual.length === 0 && queueAuto.length === 0 ? (
         <div className="mq-empty">
-          <p>Aucune piste dans la file.</p>
-          <small>Ajoutez des chansons via “Ajouter à la file d’attente”.</small>
+          <p>{t('musicQueue.noTracks')}</p>
+          <small>{t('musicQueue.addTracksHint')}</small>
         </div>
       ) : (
         <div className="mq-sections" role="list">
@@ -261,8 +263,8 @@ const MusicQueue: React.FC = () => {
                   )}
                   <button
                     className="mq-cover-play"
-                    aria-label="Relire"
-                    title="Relire"
+                    aria-label={t('musicQueue.replay')}
+                    title={t('musicQueue.replay')}
                     onClick={() => playNowFromQueue(currentItem.qid)}
                   >
                     <FontAwesomeIcon icon={faPlay} />
@@ -283,28 +285,28 @@ const MusicQueue: React.FC = () => {
                   </span>
                 </div>
 
-                <span className="mq-badge" aria-label="Piste en cours">
-                  En cours
+                <span className="mq-badge" aria-label={t('musicQueue.currentTrack')}>
+                  {t('musicQueue.currentTrack')}
                 </span>
               </li>
             </ul>
           )}
 
-          {/* File d’attente manuelle */}
+          {/* File d'attente manuelle */}
           <div className="mq-section">
             <div className="mq-section-head">
-              <span>Ajoutés à la file d'attente</span>
+              <span>{t('musicQueue.manuallyAdded')}</span>
               <small>{queueManual.length}</small>
             </div>
             <ul className="mq-list">
-              {queueManual.map((t, idx) => {
-                const existingIdsRaw = getExistingIds(t, t.qid);
+              {queueManual.map((track, idx) => {
+                const existingIdsRaw = getExistingIds(track, track.qid);
                 const normalized = Array.from(new Set(existingIdsRaw.map(Number))).filter(Number.isFinite) as number[];
                 const idsKey = normalized.slice().sort((a, b) => a - b).join('_');
 
                 return (
                   <li
-                    key={t.qid}
+                    key={track.qid}
                     className={`mq-item draggable ${overIndex === idx ? 'drag-over' : ''}`}
                     draggable
                     onDragStart={(e) => handleDragStart(e, idx)}
@@ -312,13 +314,13 @@ const MusicQueue: React.FC = () => {
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => handleDrop(e, idx)}
                     onDragEnd={handleDragEnd}
-                    title="Ajouté manuellement"
+                    title={t('musicQueue.manuallyAddedTitle')}
                   >
                     <div className="mq-cover-wrap">
-                      {t.album_image ? (
+                      {track.album_image ? (
                         <img
-                          key={`queue-${t.qid}`}
-                          src={t.album_image}
+                          key={`queue-${track.qid}`}
+                          src={track.album_image}
                           alt=""
                           className="mq-cover"
                           onError={(e) => {
@@ -331,9 +333,9 @@ const MusicQueue: React.FC = () => {
 
                       <button
                         className="mq-cover-play"
-                        aria-label="Lire maintenant"
-                        title="Lire maintenant"
-                        onClick={() => playNowFromQueue(t.qid)}
+                        aria-label={t('musicQueue.playNow')}
+                        title={t('musicQueue.playNow')}
+                        onClick={() => playNowFromQueue(track.qid)}
                       >
                         <FontAwesomeIcon icon={faPlay} />
                       </button>
@@ -341,44 +343,44 @@ const MusicQueue: React.FC = () => {
 
                     <div className="mq-meta">
                       <div className="mq-title-row">
-                        <span className="mq-track" title={t.name}>
-                          {t.name}
+                        <span className="mq-track" title={track.name}>
+                          {track.name}
                         </span>
-                        {t.duration && <span className="mq-duration">{t.duration}</span>}
+                        {track.duration && <span className="mq-duration">{track.duration}</span>}
                       </div>
-                      <span className="mq-artist" title={t.artist}>
-                        {t.artist}
+                      <span className="mq-artist" title={track.artist}>
+                        {track.artist}
                       </span>
                     </div>
 
-                    <div className="mq-row-actions" role="group" aria-label="Actions piste">
+                    <div className="mq-row-actions" role="group" aria-label={t('musicQueue.trackActions')}>
                       <DropdownMenu
                         wrapperClassName="mq-ellipsis"
                         trigger={
                           <FontAwesomeIcon
                             icon={faEllipsisV}
                             className="mq-ellipsis-icon"
-                            title="Plus d’actions"
-                            aria-label="Plus d’actions"
+                            title={t('musicQueue.moreActions')}
+                            aria-label={t('musicQueue.moreActions')}
                           />
                         }
                         items={[
                           {
-                            label: 'Ajouter à une playlist',
+                            label: t('musicQueue.addToPlaylist'),
                             onClick: () => {},
                             submenuContent: (
                               <PlaylistCheckboxMenu
-                                key={`pcm-${t.qid}-${idsKey}`}
+                                key={`pcm-${track.qid}-${idsKey}`}
                                 existingPlaylistIds={normalized}
                                 onToggle={(playlistId, checked) => {
-                                  const tid = Number((t as any).id);
+                                  const tid = Number((track as any).id);
                                   if (!Number.isFinite(tid)) return;
-                                  togglePlaylist(t.qid, tid, Number(playlistId), checked, normalized);
+                                  togglePlaylist(track.qid, tid, Number(playlistId), checked, normalized);
                                 }}
                               />
                             ),
                           },
-                          { label: 'Supprimer de la file d’attente', onClick: () => removeFromQueue(t.qid) },
+                          { label: t('musicQueue.removeFromQueue'), onClick: () => removeFromQueue(track.qid) },
                         ]}
                       />
                     </div>
@@ -386,7 +388,7 @@ const MusicQueue: React.FC = () => {
                 );
               })}
               {queueManual.length === 0 && (
-                <li className="mq-empty-row">Aucun titre ajouté manuellement.</li>
+                <li className="mq-empty-row">{t('musicQueue.noManualTracks')}</li>
               )}
             </ul>
           </div>
@@ -394,22 +396,22 @@ const MusicQueue: React.FC = () => {
           {/* File automatique */}
           <div className="mq-section">
             <div className="mq-section-head">
-              <span>À lire à la suite</span>
+              <span>{t('musicQueue.upNext')}</span>
               <small>{queueAuto.length}</small>
             </div>
             <ul className="mq-list">
-              {queueAuto.map((t) => {
-                const existingIdsRaw = getExistingIds(t, t.qid);
+              {queueAuto.map((track) => {
+                const existingIdsRaw = getExistingIds(track, track.qid);
                 const normalized = Array.from(new Set(existingIdsRaw.map(Number))).filter(Number.isFinite) as number[];
                 const idsKey = normalized.slice().sort((a, b) => a - b).join('_');
 
                 return (
-                  <li key={t.qid} className="mq-item" draggable={false} title="Ajouté automatiquement">
+                  <li key={track.qid} className="mq-item" draggable={false} title={t('musicQueue.automaticallyAddedTitle')}>
                     <div className="mq-cover-wrap">
-                      {t.album_image ? (
+                      {track.album_image ? (
                         <img
-                          key={`queue-${t.qid}`}
-                          src={t.album_image}
+                          key={`queue-${track.qid}`}
+                          src={track.album_image}
                           alt=""
                           className="mq-cover"
                           onError={(e) => {
@@ -422,9 +424,9 @@ const MusicQueue: React.FC = () => {
 
                       <button
                         className="mq-cover-play"
-                        aria-label="Lire maintenant"
-                        title="Lire maintenant"
-                        onClick={() => playNowFromQueue(t.qid)}
+                        aria-label={t('musicQueue.playNow')}
+                        title={t('musicQueue.playNow')}
+                        onClick={() => playNowFromQueue(track.qid)}
                       >
                         <FontAwesomeIcon icon={faPlay} />
                       </button>
@@ -432,44 +434,44 @@ const MusicQueue: React.FC = () => {
 
                     <div className="mq-meta">
                       <div className="mq-title-row">
-                        <span className="mq-track" title={t.name}>
-                          {t.name}
+                        <span className="mq-track" title={track.name}>
+                          {track.name}
                         </span>
-                        {t.duration && <span className="mq-duration">{t.duration}</span>}
+                        {track.duration && <span className="mq-duration">{track.duration}</span>}
                       </div>
-                      <span className="mq-artist" title={t.artist}>
-                        {t.artist}
+                      <span className="mq-artist" title={track.artist}>
+                        {track.artist}
                       </span>
                     </div>
 
-                    <div className="mq-row-actions" role="group" aria-label="Actions piste">
+                    <div className="mq-row-actions" role="group" aria-label={t('musicQueue.trackActions')}>
                       <DropdownMenu
                         wrapperClassName="mq-ellipsis"
                         trigger={
                           <FontAwesomeIcon
                             icon={faEllipsisV}
                             className="mq-ellipsis-icon"
-                            title="Plus d’actions"
-                            aria-label="Plus d’actions"
+                            title={t('musicQueue.moreActions')}
+                            aria-label={t('musicQueue.moreActions')}
                           />
                         }
                         items={[
                           {
-                            label: 'Ajouter à une playlist',
+                            label: t('musicQueue.addToPlaylist'),
                             onClick: () => {},
                             submenuContent: (
                               <PlaylistCheckboxMenu
-                                key={`pcm-${t.qid}-${idsKey}`}
+                                key={`pcm-${track.qid}-${idsKey}`}
                                 existingPlaylistIds={normalized}
                                 onToggle={(playlistId, checked) => {
-                                  const tid = Number((t as any).id);
+                                  const tid = Number((track as any).id);
                                   if (!Number.isFinite(tid)) return;
-                                  togglePlaylist(t.qid, tid, Number(playlistId), checked, normalized);
+                                  togglePlaylist(track.qid, tid, Number(playlistId), checked, normalized);
                                 }}
                               />
                             ),
                           },
-                          { label: 'Supprimer de la file d’attente', onClick: () => removeFromQueue(t.qid) },
+                          { label: t('musicQueue.removeFromQueue'), onClick: () => removeFromQueue(track.qid) },
                         ]}
                       />
                     </div>
@@ -477,7 +479,7 @@ const MusicQueue: React.FC = () => {
                 );
               })}
               {queueAuto.length === 0 && (
-                <li className="mq-empty-row">Aucun titre ajouté automatiquement.</li>
+                <li className="mq-empty-row">{t('musicQueue.noAutoTracks')}</li>
               )}
             </ul>
           </div>

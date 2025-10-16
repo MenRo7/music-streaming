@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPlaylist, updatePlaylist } from '../apis/PlaylistService';
 
 import '../styles/CreateEditPlaylistModal.css';
@@ -17,7 +18,7 @@ const CreateEditPlaylistModal: React.FC<CreateEditPlaylistModalProps> = ({
   initialData,
   mode = 'create',
 }) => {
-
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState(initialData?.title || '');
@@ -54,7 +55,7 @@ const CreateEditPlaylistModal: React.FC<CreateEditPlaylistModalProps> = ({
       }
       onClose();
     } catch (error) {
-      console.error('Erreur lors de la création ou de la mise à jour de la playlist :', error);
+      console.error(t('errors.playlistCreateUpdate'), error);
     }
   };
   
@@ -75,10 +76,10 @@ const CreateEditPlaylistModal: React.FC<CreateEditPlaylistModalProps> = ({
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>{mode === 'edit' ? 'Modifier' : 'Créer'} une Playlist</h2>
+        <h2>{mode === 'edit' ? t('playlist.editPlaylist') : t('playlist.createPlaylist')}</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="title">Titre</label>
+            <label htmlFor="title">{t('playlist.title')}</label>
             <input
               id="title"
               type="text"
@@ -88,7 +89,7 @@ const CreateEditPlaylistModal: React.FC<CreateEditPlaylistModalProps> = ({
             />
           </div>
           <div className="form-group">
-            <label htmlFor="image">Image de Profil</label>
+            <label htmlFor="image">{t('playlist.image')}</label>
             <input
               id="image"
               type="file"
@@ -97,9 +98,9 @@ const CreateEditPlaylistModal: React.FC<CreateEditPlaylistModalProps> = ({
             />
           </div>
           <div className="modal-actions">
-            <button type="submit">{mode === 'edit' ? 'Modifier' : 'Créer'}</button>
+            <button type="submit">{mode === 'edit' ? t('common.save') : t('common.create')}</button>
             <button type="button" onClick={onClose} className="cancel-btn">
-              Annuler
+              {t('common.cancel')}
             </button>
           </div>
         </form>

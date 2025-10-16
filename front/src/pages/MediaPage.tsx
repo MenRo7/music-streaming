@@ -9,6 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import DropdownMenu from '../components/DropdownMenu';
 import SongList, { UISong } from '../components/SongList';
@@ -73,6 +74,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
   onArtistClick,
   headerMenuItems = [],
 }) => {
+  const { t } = useTranslation();
   const { setCollectionContext, toggleShuffle, playSong, playFromList } = usePlayer();
   const location = useLocation();
   const isAlbumPage = location.pathname.startsWith('/album');
@@ -146,10 +148,10 @@ const MediaPage: React.FC<MediaPageProps> = ({
     const extras: { label: string; onClick: () => void }[] = [];
 
     if (!isAlbumPage && onAlbumClick && s?.album_id) {
-      extras.push({ label: "Voir l'album", onClick: () => onAlbumClick(song) });
+      extras.push({ label: t('mediaPage.viewAlbum'), onClick: () => onAlbumClick(song) });
     }
     if (!isProfilePage && onArtistClick && s?.artist_user_id) {
-      extras.push({ label: "Voir l'artiste", onClick: () => onArtistClick(song) });
+      extras.push({ label: t('mediaPage.viewArtist'), onClick: () => onArtistClick(song) });
     }
 
     return [...extras, ...base];
@@ -159,8 +161,8 @@ const MediaPage: React.FC<MediaPageProps> = ({
 
   const combinedHeaderMenu: MenuItem[] = [
     ...headerMenuItems,
-    ...(onEdit ? [{ label: 'Modifier', onClick: onEdit }] : []),
-    ...(onDelete ? [{ label: 'Supprimer', onClick: onDelete }] : []),
+    ...(onEdit ? [{ label: t('common.edit'), onClick: onEdit }] : []),
+    ...(onDelete ? [{ label: t('common.delete'), onClick: onDelete }] : []),
   ];
 
   return (
@@ -183,7 +185,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
               icon={isLiked ? faHeartSolid : faHeartRegular}
               className={`control-icon heart-icon ${isLiked ? 'liked' : ''}`}
               onClick={onToggleLike}
-              title={isLiked ? 'Supprimer des favoris' : 'Ajouter aux favoris'}
+              title={isLiked ? t('mediaPage.removeFromFavorites') : t('mediaPage.addToFavorites')}
             />
           )}
 

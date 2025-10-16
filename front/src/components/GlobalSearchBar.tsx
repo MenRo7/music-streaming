@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { search, SearchResults } from '../apis/GlobalSearchService';
 import DropdownMenu from './DropdownMenu';
@@ -18,6 +19,7 @@ const emptyResults: SearchResults = {
 };
 
 const GlobalSearchBar: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [query, setQuery] = useState('');
@@ -107,7 +109,7 @@ const GlobalSearchBar: React.FC = () => {
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Rechercher une chanson, un artiste, un album…"
+            placeholder={t('search.placeholder')}
             className="global-search-input"
             onFocus={() => setShowResults(!!query.trim())}
           />
@@ -120,10 +122,10 @@ const GlobalSearchBar: React.FC = () => {
             trigger={<FontAwesomeIcon icon={faFilter} className="global-search-filter-icon" />}
             menuClassName="search-filter-menu"
             items={[
-              { label: `${filters.user ? '✅' : '☐'} Utilisateurs`, onClick: () => setFilters(prev => ({ ...prev, user: !prev.user })) },
-              { label: `${filters.playlist ? '✅' : '☐'} Playlists`, onClick: () => setFilters(prev => ({ ...prev, playlist: !prev.playlist })) },
-              { label: `${filters.music ? '✅' : '☐'} Titres`, onClick: () => setFilters(prev => ({ ...prev, music: !prev.music })) },
-              { label: `${filters.album ? '✅' : '☐'} Albums`, onClick: () => setFilters(prev => ({ ...prev, album: !prev.album })) },
+              { label: `${filters.user ? '✅' : '☐'} ${t('search.users')}`, onClick: () => setFilters(prev => ({ ...prev, user: !prev.user })) },
+              { label: `${filters.playlist ? '✅' : '☐'} ${t('search.playlists')}`, onClick: () => setFilters(prev => ({ ...prev, playlist: !prev.playlist })) },
+              { label: `${filters.music ? '✅' : '☐'} ${t('search.tracks')}`, onClick: () => setFilters(prev => ({ ...prev, music: !prev.music })) },
+              { label: `${filters.album ? '✅' : '☐'} ${t('search.albums')}`, onClick: () => setFilters(prev => ({ ...prev, album: !prev.album })) },
             ]}
           />
         </div>
@@ -146,7 +148,7 @@ const GlobalSearchBar: React.FC = () => {
             onPlaylistClick={(id) => { setShowResults(false); navigate(`/playlist/${id}`); }}
             onUserClick={(id) => { setShowResults(false); navigate(`/profile?user=${id}`); }}
           />
-          {loadingMore && <div>Chargement...</div>}
+          {loadingMore && <div>{t('common.loading')}</div>}
         </div>
       </div>
     </div>

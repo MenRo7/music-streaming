@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import '../styles/SkipToContent.css';
 
 /**
@@ -8,9 +9,11 @@ import '../styles/SkipToContent.css';
  * This is a WCAG 2.1 Level A requirement (2.4.1 Bypass Blocks)
  */
 const SkipToContent: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <a href="#main-content" className="skip-to-content">
-      Skip to main content
+      {t('skipToContent.label')}
     </a>
   );
 };

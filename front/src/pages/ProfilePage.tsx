@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import {
   fetchUser,
@@ -34,6 +35,7 @@ const extractPlaylistIds = (val: any): number[] => {
 };
 
 const ProfilePage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
 
@@ -81,7 +83,7 @@ const ProfilePage: React.FC = () => {
             id: Number(m.id),
             name: m.name,
             artist: m.artist,
-            album: m.album ?? 'Inconnu',
+            album: m.album ?? t('album.unknown'),
             album_image: m.album_image || '',
             audio: m.audio || '',
             dateAdded: m.date_added || '',
@@ -107,7 +109,7 @@ const ProfilePage: React.FC = () => {
             id: Number(m.id),
             name: m.name,
             artist: m.artist,
-            album: m.album ?? 'Inconnu',
+            album: m.album ?? t('album.unknown'),
             album_image: m.album_image || '',
             audio: m.audio || '',
             dateAdded: m.date_added || '',
@@ -132,11 +134,11 @@ const ProfilePage: React.FC = () => {
         }
       }
     } catch (e) {
-      console.error('Erreur chargement profil:', e);
+      console.error(t('profilePage.errorLoadingProfile'), e);
     } finally {
       setLoading(false);
     }
-  }, [requestedUserId]);
+  }, [requestedUserId, t]);
 
   useEffect(() => {
     void loadAll();
@@ -153,10 +155,10 @@ const ProfilePage: React.FC = () => {
         );
         setFavoriteIds(ids);
       } catch (e) {
-        console.error('Erreur chargement favoris', e);
+        console.error(t('profilePage.errorLoadingFavorites'), e);
       }
     })();
-  }, []);
+  }, [t]);
 
   const isSelf = useMemo(
     () => Boolean(viewer?.id) && Boolean(user?.id) && Number(viewer.id) === Number(user.id),
@@ -181,11 +183,11 @@ const ProfilePage: React.FC = () => {
   }, [viewerIsMinor, user?.payments_enabled, creatorIsMinor]);
 
   const donateTitle = useMemo(() => {
-    if (viewerIsMinor) return 'Vous devez avoir 18 ans pour faire un don';
-    if (creatorIsMinor) return 'Cet utilisateur n’a pas 18 ans';
-    if (!user?.payments_enabled) return 'Paiements non activés';
-    return 'Faire un don';
-  }, [viewerIsMinor, creatorIsMinor, user?.payments_enabled]);
+    if (viewerIsMinor) return t('profilePage.donateMinorViewer');
+    if (creatorIsMinor) return t('profilePage.donateMinorCreator');
+    if (!user?.payments_enabled) return t('profilePage.donateNotEnabled');
+    return t('profilePage.donateButton');
+  }, [viewerIsMinor, creatorIsMinor, user?.payments_enabled, t]);
 
   const handleTogglePlaylist = async (
     playlistId: number | string,
@@ -200,8 +202,8 @@ const ProfilePage: React.FC = () => {
       if (checked) await addMusicToPlaylist(pid, sid);
       else await removeMusicFromPlaylist(pid, sid);
     } catch (e) {
-      console.error('Maj playlist échouée', e);
-      alert('Erreur lors de la modification de la playlist.');
+      console.error(t('profilePage.errorUpdatingPlaylist'), e);
+      alert(t('profilePage.errorPlaylistUpdate'));
     }
   };
 
@@ -218,7 +220,7 @@ const ProfilePage: React.FC = () => {
       }
       window.dispatchEvent(new Event('subscriptions:changed'));
     } catch (e) {
-      console.error('Erreur abonnement/désabonnement:', e);
+      console.error(t('profilePage.errorSubscription'), e);
     } finally {
       setSubPending(false);
     }
@@ -242,24 +244,24 @@ const ProfilePage: React.FC = () => {
     (song: UISong) => {
       const s: any = song;
       const viewItems = s?.album_id
-        ? [{ label: "Voir l'album", onClick: () => navigate(`/album/${s.album_id}`) }]
+        ? [{ label: t('mediaPage.viewAlbum'), onClick: () => navigate(`/album/${s.album_id}`) }]
         : [];
 
       const base = [
         ...viewItems,
         {
-          label: isFavorite(song.id) ? 'Supprimer des favoris' : 'Ajouter aux favoris',
+          label: isFavorite(song.id) ? t('mediaPage.removeFromFavorites') : t('mediaPage.addToFavorites'),
           onClick: async () => {
             try {
               if (isFavorite(song.id)) await removeFromFavoritesLocal(song.id);
               else await addToFavoritesLocal(song.id);
             } catch (e) {
-              console.error('Maj favoris échouée', e);
+              console.error(t('profilePage.errorUpdatingFavorites'), e);
             }
           },
         },
         {
-          label: 'Ajouter à une playlist',
+          label: t('music.addToPlaylist'),
           onClick: () => {},
           withPlaylistMenu: true,
           songId: song.id,
@@ -267,23 +269,23 @@ const ProfilePage: React.FC = () => {
           onToggle: (playlistId: number, checked: boolean) =>
             handleTogglePlaylist(playlistId, checked, song.id),
         },
-        { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+        { label: t('mediaPage.addToQueue'), onClick: () => addToQueue(song) },
       ];
 
       if (isSelf) {
         base.push(
           {
-            label: 'Modifier la musique',
+            label: t('mediaPage.modifyMusic'),
             onClick: () => navigate(`/edit-music/${song.id}`),
           },
           {
-            label: 'Supprimer',
+            label: t('common.delete'),
             onClick: async () => {
               try {
                 await deleteMusic(song.id);
                 setSongs((prev) => prev.filter((m) => m.id !== song.id));
               } catch {
-                alert('Erreur lors de la suppression');
+                alert(t('profilePage.errorDeletingMusic'));
               }
             },
           }
@@ -292,7 +294,7 @@ const ProfilePage: React.FC = () => {
 
       return base;
     },
-    [addToQueue, navigate, isSelf, favoriteIds]
+    [addToQueue, navigate, isSelf, favoriteIds, t]
   );
 
   const hasAvatar = Boolean(user?.profile_image);
@@ -317,7 +319,7 @@ const ProfilePage: React.FC = () => {
     return (
       <div className="profile-page">
         <div className="profile-content">
-          <div style={{ padding: 24 }}>Chargement…</div>
+          <div style={{ padding: 24 }}>{t('profilePage.loading')}</div>
         </div>
       </div>
     );
@@ -333,10 +335,10 @@ const ProfilePage: React.FC = () => {
           >
             <span>
               {donParam === 'ok'
-                ? 'Merci ! Votre don a bien été pris en compte.'
-                : 'Le paiement a été annulé.'}
+                ? t('profilePage.donateSuccess')
+                : t('profilePage.donateCancelled')}
             </span>
-            <button className="don-banner-close" onClick={closeDonBanner} aria-label="Fermer">
+            <button className="don-banner-close" onClick={closeDonBanner} aria-label={t('profilePage.closeBanner')}>
               ×
             </button>
           </div>
@@ -350,7 +352,7 @@ const ProfilePage: React.FC = () => {
           />
 
           <div className="profile-info" style={{ flex: 1 }}>
-            <h1>{user?.name ?? 'Profil'}</h1>
+            <h1>{user?.name ?? t('profilePage.profile')}</h1>
             {isSelf && <p>{user?.email}</p>}
           </div>
 
@@ -360,9 +362,9 @@ const ProfilePage: React.FC = () => {
                 className={`subscribe-btn ${subscribed ? 'is-subscribed' : ''}`}
                 onClick={onToggleSubscribe}
                 disabled={subPending}
-                title={subscribed ? 'Se désabonner' : 'S’abonner'}
+                title={subscribed ? t('profilePage.unsubscribeTitle') : t('profilePage.subscribeTitle')}
               >
-                {subscribed ? 'Abonné' : 'S’abonner +'}
+                {subscribed ? t('profilePage.subscribed') : t('profilePage.subscribePlus')}
               </button>
 
               <div className="donate-section">
@@ -379,22 +381,22 @@ const ProfilePage: React.FC = () => {
                     (user?.age && user.age < 18)
                   }
                 >
-                  Faire un don
+                  {t('profilePage.donateButton')}
                 </button>
 
                 {viewer?.age && viewer.age < 18 && (
                   <p className="donate-hint">
-                    <em>Vous devez avoir 18 ans pour faire un don.</em>
+                    <em>{t('profilePage.donateMinorViewerHint')}</em>
                   </p>
                 )}
                 {user?.age && user.age < 18 && (
                   <p className="donate-hint">
-                    <em>Cet utilisateur n’a pas 18 ans, vous ne pouvez pas lui faire de don.</em>
+                    <em>{t('profilePage.donateMinorCreatorHint')}</em>
                   </p>
                 )}
                 {!user?.payments_enabled && !(user?.age && user.age < 18) && (
                   <p className="donate-hint">
-                    <em>Ce créateur n’a pas encore activé les paiements.</em>
+                    <em>{t('profilePage.donateNotEnabledHint')}</em>
                   </p>
                 )}
               </div>
@@ -404,29 +406,29 @@ const ProfilePage: React.FC = () => {
           {isSelf && (
             <DropdownMenu
               trigger={<FontAwesomeIcon icon={faEllipsisH} className="profile-menu-icon" />}
-              items={[{ label: 'Modifier le profil', onClick: () => setIsModalOpen(true) }]}
+              items={[{ label: t('profilePage.editProfile'), onClick: () => setIsModalOpen(true) }]}
             />
           )}
         </div>
 
         <div className="profile-stats">
           <div className="stat-card">
-            <h2>Musiques</h2>
+            <h2>{t('profilePage.musics')}</h2>
             <p>{totalStats.musics}</p>
           </div>
           <div className="stat-card">
-            <h2>Albums</h2>
+            <h2>{t('profilePage.albums')}</h2>
             <p>{totalStats.albums}</p>
           </div>
           <div className="stat-card">
-            <h2>Playlists</h2>
+            <h2>{t('profilePage.playlists')}</h2>
             <p>{totalStats.playlists}</p>
           </div>
         </div>
 
         <div className="top-section" style={{ textAlign: 'left' }}>
           <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
-            {isSelf ? 'Mes musiques' : 'Musiques'}
+            {isSelf ? t('profilePage.myMusics') : t('profilePage.musics')}
           </h2>
           <SongList
             songs={songs}
@@ -444,10 +446,10 @@ const ProfilePage: React.FC = () => {
 
         <div className="top-section" style={{ textAlign: 'left' }}>
           <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
-            {isSelf ? 'Mes albums' : 'Albums'}
+            {isSelf ? t('profilePage.myAlbums') : t('profilePage.albums')}
           </h2>
           <div className="album-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {albums.length === 0 && <div>Aucun album pour le moment.</div>}
+            {albums.length === 0 && <div>{t('profilePage.noAlbums')}</div>}
             {albums.map((album: any) => (
               <PlaylistCard
                 key={album.id}
@@ -461,10 +463,10 @@ const ProfilePage: React.FC = () => {
 
         <div className="top-section" style={{ textAlign: 'left' }}>
           <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
-            {isSelf ? 'Mes playlists' : 'Playlists'}
+            {isSelf ? t('profilePage.myPlaylists') : t('profilePage.playlists')}
           </h2>
         <div className="album-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {playlists.length === 0 && <div>Aucune playlist pour le moment.</div>}
+            {playlists.length === 0 && <div>{t('profilePage.noPlaylists')}</div>}
             {playlists.map((pl: any) => (
               <PlaylistCard
                 key={pl.id}

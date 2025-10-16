@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import MediaPage from './MediaPage';
 import { getAlbumById, Album, likeAlbum, unlikeAlbum } from '../apis/AlbumService';
@@ -28,6 +29,7 @@ const toDurationStr = (v?: string | number | null) => {
 };
 
 const AlbumPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -57,11 +59,11 @@ const AlbumPage: React.FC = () => {
       setLiked(Boolean((data as any)?.is_liked));
     } catch (e) {
       console.error(e);
-      setError('Impossible de charger cet album.');
+      setError(t('album.errorLoading'));
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => { fetchAlbum(); }, [fetchAlbum]);
 
@@ -76,10 +78,10 @@ const AlbumPage: React.FC = () => {
         );
         setFavoriteIds(ids);
       } catch (e) {
-        console.error('Erreur chargement favoris', e);
+        console.error(t('album.errorLoadingFavorites'), e);
       }
     })();
-  }, []);
+  }, [t]);
 
   const isFavorite = (songId: number) => favoriteIds.has(Number(songId));
   const addToFavorites = async (songId: number) => {
@@ -101,7 +103,7 @@ const AlbumPage: React.FC = () => {
       return album.musics.map((m) => ({
         id: m.id,
         name: m.title,
-        artist: m.artist_name || album.artist_name || 'Inconnu',
+        artist: m.artist_name || album.artist_name || t('album.unknown'),
         album: album.title,
         album_image: album.image || undefined,
         audio: m.audio || '',
@@ -110,7 +112,7 @@ const AlbumPage: React.FC = () => {
         dateAdded: album.created_at || '',
         ...(album.user_id ? { artist_user_id: Number(album.user_id) } : {}),
       }));
-    }, [album]);
+    }, [album, t]);
 
   const toggleLike = async () => {
     try {
@@ -118,7 +120,7 @@ const AlbumPage: React.FC = () => {
       else await likeAlbum(Number(id));
       setLiked(!liked);
     } catch (e) {
-      console.error('Erreur like/unlike album', e);
+      console.error(t('album.errorLike'), e);
     }
   };
 
@@ -139,7 +141,7 @@ const AlbumPage: React.FC = () => {
           );
         }
       } catch (e) {
-        console.error('Maj bulk playlist échouée', e);
+        console.error(t('album.errorBulkPlaylist'), e);
       }
     };
 
@@ -147,14 +149,14 @@ const AlbumPage: React.FC = () => {
       try {
         await Promise.allSettled(songs.map((s) => addFavorite(Number(s.id))));
       } catch (e) {
-        console.error('Ajout bulk favoris échoué', e);
+        console.error(t('album.errorAddingFavorites'), e);
       }
     };
 
     return [
-      { label: 'Ajouter à la file d’attente', onClick: addAllToQueue },
+      { label: t('mediaPage.addToQueue'), onClick: addAllToQueue },
       {
-        label: 'Ajouter à une playlist',
+        label: t('music.addToPlaylist'),
         onClick: () => {},
         submenuContent: (
           <PlaylistCheckboxMenu
@@ -163,14 +165,14 @@ const AlbumPage: React.FC = () => {
           />
         ),
       },
-      { label: 'Ajouter aux favoris', onClick: addAllToFavorites },
+      { label: t('mediaPage.addToFavorites'), onClick: addAllToFavorites },
     ];
-  }, [songs, addToQueue]);
+  }, [songs, addToQueue, t]);
 
   if (loading) {
     return (
       <div className="media-content">
-        <div style={{ padding: 24 }}>Chargement…</div>
+        <div style={{ padding: 24 }}>{t('album.loading')}</div>
       </div>
     );
   }
@@ -184,7 +186,7 @@ const AlbumPage: React.FC = () => {
   if (!album) {
     return (
       <div className="media-content">
-        <div style={{ padding: 24 }}>Album introuvable.</div>
+        <div style={{ padding: 24 }}>{t('album.notFound')}</div>
       </div>
     );
   }
@@ -192,7 +194,7 @@ const AlbumPage: React.FC = () => {
   return (
     <MediaPage
       title={album.title}
-      artist={album.artist_name || 'Artiste inconnu'}
+      artist={album.artist_name || t('album.unknownArtist')}
       image={album.image || ''}
       songs={songs}
       collectionType="album"
@@ -205,18 +207,18 @@ const AlbumPage: React.FC = () => {
         const baseline = Array.from(new Set(song.playlistIds ?? [])) as number[];
         return [
           {
-            label: isFavorite(song.id) ? 'Supprimer des favoris' : 'Ajouter aux favoris',
+            label: isFavorite(song.id) ? t('mediaPage.removeFromFavorites') : t('mediaPage.addToFavorites'),
             onClick: async () => {
               try {
                 if (isFavorite(song.id)) await removeFromFavorites(song.id);
                 else await addToFavorites(song.id);
               } catch (e) {
-                console.error('Maj favoris échouée', e);
+                console.error(t('album.errorUpdatingFavorites'), e);
               }
             },
           },
           {
-            label: 'Ajouter à une playlist',
+            label: t('music.addToPlaylist'),
             onClick: () => {},
             withPlaylistMenu: true,
             songId: song.id,
@@ -226,11 +228,11 @@ const AlbumPage: React.FC = () => {
                 if (checked) await addMusicToPlaylist(playlistId, song.id);
                 else await removeMusicFromPlaylist(playlistId, song.id);
               } catch (e) {
-                console.error('Maj playlist échouée', e);
+                console.error(t('album.errorUpdatingPlaylist'), e);
               }
             },
           },
-          { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+          { label: t('mediaPage.addToQueue'), onClick: () => addToQueue(song) },
         ];
       }}
       onArtistClick={() => {

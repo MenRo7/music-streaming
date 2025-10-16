@@ -1,11 +1,13 @@
 // src/pages/ForgotPasswordPage.tsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { forgotPassword, resetPassword } from '../apis/AuthService';
-import '../styles/AuthPage.css'; // on réutilise le même style
+import '../styles/AuthPage.css';
 
 const ForgotPasswordPage: React.FC = () => {
+  const { t } = useTranslation();
   type Step = 'request' | 'reset' | 'done';
   const [step, setStep] = useState<Step>('request');
 
@@ -24,10 +26,10 @@ const ForgotPasswordPage: React.FC = () => {
     setError(''); setInfo('');
     try {
       await forgotPassword(email);
-      setInfo('Si un compte existe pour cet e-mail, un code de réinitialisation a été envoyé.');
+      setInfo(t('forgotPassword.codeSentInfo'));
       setStep('reset');
     } catch {
-      setError("Impossible d'envoyer le code. Vérifiez l'e-mail et réessayez.");
+      setError(t('forgotPassword.errorSendingCode'));
     }
   };
 
@@ -35,15 +37,15 @@ const ForgotPasswordPage: React.FC = () => {
     e.preventDefault();
     setError(''); setInfo('');
     if (password !== passwordConf) {
-      setError('Les mots de passe ne correspondent pas.');
+      setError(t('forgotPassword.passwordMismatch'));
       return;
     }
     try {
       await resetPassword(email, code.trim().toUpperCase(), password, passwordConf);
-      setInfo('Mot de passe mis à jour. Vous pouvez maintenant vous connecter.');
+      setInfo(t('forgotPassword.successMessage'));
       setStep('done');
     } catch {
-      setError('Code invalide/expiré ou erreur de mise à jour du mot de passe.');
+      setError(t('forgotPassword.invalidCode'));
     }
   };
 
@@ -51,9 +53,9 @@ const ForgotPasswordPage: React.FC = () => {
     <div className="auth-page">
       <div className="auth-container">
         <h2>
-          {step === 'request' && 'Mot de passe oublié'}
-          {step === 'reset' && 'Réinitialiser le mot de passe'}
-          {step === 'done' && 'Mot de passe réinitialisé'}
+          {step === 'request' && t('forgotPassword.titleRequest')}
+          {step === 'reset' && t('forgotPassword.titleReset')}
+          {step === 'done' && t('forgotPassword.titleDone')}
         </h2>
 
         {error && <p className="error-message">{error}</p>}
@@ -62,7 +64,7 @@ const ForgotPasswordPage: React.FC = () => {
         {step === 'request' && (
           <form onSubmit={handleRequest}>
             <div className="input-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">{t('forgotPassword.emailLabel')}</label>
               <input
                 id="email"
                 type="email"
@@ -72,10 +74,10 @@ const ForgotPasswordPage: React.FC = () => {
               />
             </div>
 
-            <button type="submit">Envoyer le code</button>
+            <button type="submit">{t('forgotPassword.sendCodeButton')}</button>
 
             <p style={{ marginTop: 12 }}>
-              <Link className="toggle-link" to="/auth">Retour à la connexion</Link>
+              <Link className="toggle-link" to="/auth">{t('forgotPassword.backToLogin')}</Link>
             </p>
           </form>
         )}
@@ -83,7 +85,7 @@ const ForgotPasswordPage: React.FC = () => {
         {step === 'reset' && (
           <form onSubmit={handleReset}>
             <div className="input-group">
-              <label htmlFor="email2">Email</label>
+              <label htmlFor="email2">{t('forgotPassword.emailLabel')}</label>
               <input
                 id="email2"
                 type="email"
@@ -94,12 +96,12 @@ const ForgotPasswordPage: React.FC = () => {
             </div>
 
             <div className="input-group">
-              <label htmlFor="code">Code reçu par e-mail</label>
+              <label htmlFor="code">{t('forgotPassword.codeLabel')}</label>
               <input
                 id="code"
                 type="text"
                 maxLength={6}
-                placeholder="ABC123"
+                placeholder={t('forgotPassword.codePlaceholder')}
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 required
@@ -107,7 +109,7 @@ const ForgotPasswordPage: React.FC = () => {
             </div>
 
             <div className="input-group">
-              <label htmlFor="pwd">Nouveau mot de passe</label>
+              <label htmlFor="pwd">{t('forgotPassword.newPasswordLabel')}</label>
               <input
                 id="pwd"
                 type="password"
@@ -118,7 +120,7 @@ const ForgotPasswordPage: React.FC = () => {
             </div>
 
             <div className="input-group">
-              <label htmlFor="pwd2">Confirmer le mot de passe</label>
+              <label htmlFor="pwd2">{t('forgotPassword.confirmPasswordLabel')}</label>
               <input
                 id="pwd2"
                 type="password"
@@ -128,10 +130,10 @@ const ForgotPasswordPage: React.FC = () => {
               />
             </div>
 
-            <button type="submit">Réinitialiser</button>
+            <button type="submit">{t('forgotPassword.resetButton')}</button>
 
             <p style={{ marginTop: 12 }}>
-              Pas reçu ?{' '}
+              {t('forgotPassword.notReceived')}{' '}
               <span
                 className="toggle-link"
                 role="button"
@@ -139,10 +141,10 @@ const ForgotPasswordPage: React.FC = () => {
                 onClick={async () => {
                   try {
                     await forgotPassword(email);
-                    setInfo('Nouveau code envoyé.');
+                    setInfo(t('forgotPassword.resendSuccess'));
                     setError('');
                   } catch {
-                    setError("Impossible d'envoyer un nouveau code.");
+                    setError(t('forgotPassword.resendError'));
                   }
                 }}
                 onKeyDown={(e) => {
@@ -152,20 +154,20 @@ const ForgotPasswordPage: React.FC = () => {
                   }
                 }}
               >
-                Renvoyer le code
+                {t('forgotPassword.resendCode')}
               </span>
             </p>
 
             <p style={{ marginTop: 12 }}>
-              <Link className="toggle-link" to="/auth">Retour à la connexion</Link>
+              <Link className="toggle-link" to="/auth">{t('forgotPassword.backToLogin')}</Link>
             </p>
           </form>
         )}
 
         {step === 'done' && (
           <>
-            <p className="info-message">Votre mot de passe a été mis à jour.</p>
-            <button onClick={() => navigate('/auth')}>Aller à la connexion</button>
+            <p className="info-message">{t('forgotPassword.passwordUpdated')}</p>
+            <button onClick={() => navigate('/auth')}>{t('forgotPassword.goToLogin')}</button>
           </>
         )}
       </div>

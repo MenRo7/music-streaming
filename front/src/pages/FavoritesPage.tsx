@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getFavorites, removeFavorite } from '../apis/FavoritesService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import { usePlayer, Track } from '../apis/PlayerContext';
@@ -18,6 +19,7 @@ const extractPlaylistIds = (val: any): number[] => {
 };
 
 const FavoritesPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
   const [songs, setSongs] = useState<UISong[]>([]);
@@ -32,9 +34,9 @@ const FavoritesPage: React.FC = () => {
         const formatted: UISong[] = (raw as any[]).map((m: any) =>
           ({
             id: Number(m.id),
-            name: m.name ?? m.title ?? 'Sans titre',
-            artist: m.artist ?? m.artist_name ?? 'Inconnu',
-            album: m.album ?? m.album_title ?? (m.album?.title ?? 'Inconnu'),
+            name: m.name ?? m.title ?? t('album.unknown'),
+            artist: m.artist ?? m.artist_name ?? t('album.unknown'),
+            album: m.album ?? m.album_title ?? (m.album?.title ?? t('album.unknown')),
             album_image: (m.album_image ?? m.image ?? m.album?.image ?? '') || '',
             audio: m.audio ?? m.stream_url ?? '',
             dateAdded: m.dateAdded ?? m.date_added ?? m.favorited_at ?? m.created_at ?? '',
@@ -47,13 +49,13 @@ const FavoritesPage: React.FC = () => {
 
         setSongs(formatted);
       } catch (e) {
-        console.error('Erreur chargement favoris:', e);
+        console.error(t('favorites.errorLoading'), e);
         setSongs([]);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [t]);
 
   const headerMenuItems = useMemo(() => {
     if (loading || songs.length === 0) return [];
@@ -88,14 +90,14 @@ const FavoritesPage: React.FC = () => {
           })
         );
       } catch (e) {
-        console.error('Maj bulk playlist échouée', e);
+        console.error(t('album.errorBulkPlaylist'), e);
       }
     };
 
     return [
-      { label: 'Ajouter à la file d’attente', onClick: addAllToQueue },
+      { label: t('mediaPage.addToQueue'), onClick: addAllToQueue },
       {
-        label: 'Ajouter à une playlist',
+        label: t('music.addToPlaylist'),
         onClick: () => {},
         submenuContent: (
           <PlaylistCheckboxMenu
@@ -105,19 +107,19 @@ const FavoritesPage: React.FC = () => {
         ),
       },
     ];
-  }, [loading, songs, addToQueue]);
+  }, [loading, songs, addToQueue, t]);
 
   if (loading) {
     return (
       <div className="media-content">
-        <div style={{ padding: 24 }}>Chargement…</div>
+        <div style={{ padding: 24 }}>{t('favorites.loading')}</div>
       </div>
     );
   }
 
   return (
     <MediaPage
-      title="Titres favoris"
+      title={t('favorites.title')}
       image={cover}
       songs={songs as unknown as (Track & { dateAdded?: string; playlistIds?: number[] })[]}
       collectionType="favorites"
@@ -132,9 +134,9 @@ const FavoritesPage: React.FC = () => {
         if (s.artist_user_id) navigate(`/profile?user=${s.artist_user_id}`);
       }}
       getActions={(song) => [
-        { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song as any) },
+        { label: t('mediaPage.addToQueue'), onClick: () => addToQueue(song as any) },
         {
-          label: 'Ajouter à une playlist',
+          label: t('music.addToPlaylist'),
           onClick: () => {},
           withPlaylistMenu: true,
           songId: (song as any).id,
@@ -158,12 +160,12 @@ const FavoritesPage: React.FC = () => {
                 })
               );
             } catch (e) {
-              console.error('Maj playlist échouée', e);
+              console.error(t('album.errorUpdatingPlaylist'), e);
             }
           },
         },
         {
-          label: 'Supprimer des favoris',
+          label: t('mediaPage.removeFromFavorites'),
           onClick: async () => {
             await removeFavorite((song as any).id);
             setSongs((prev) => prev.filter((s2) => s2.id !== (song as any).id));
