@@ -19,6 +19,8 @@ export interface UISong {
   dateAdded?: string;
   duration?: string;
   playlistIds?: number[];
+  album_id?: number;
+  artist_user_id?: number;
 }
 
 interface DropdownAction {
@@ -68,13 +70,20 @@ const SongList = <T extends UISong>({
 
   const handlePlaySong = (song: T) => {
     if (!song.audio) return;
+    const s: any = song;
+    console.log('SongList handlePlaySong - song:', song);
+    console.log('SongList handlePlaySong - album_id:', s.album_id, 'artist_user_id:', s.artist_user_id);
     playSong(
       song.audio,
       song.name,
       song.artist,
       song.album_image || '',
       song.id,
-      { playlistIds: song.playlistIds }
+      {
+        playlistIds: song.playlistIds,
+        album_id: s.album_id,
+        artist_user_id: s.artist_user_id,
+      }
     );
   };
 

@@ -121,7 +121,7 @@ const FavoritesPage: React.FC = () => {
     <MediaPage
       title={t('favorites.title')}
       image={cover}
-      songs={songs as unknown as (Track & { dateAdded?: string; playlistIds?: number[] })[]}
+      songs={songs as unknown as (Track & { dateAdded?: string; playlistIds?: number[]; album_id?: number; artist_user_id?: number })[]}
       collectionType="favorites"
       collectionId={0}
       headerMenuItems={headerMenuItems}

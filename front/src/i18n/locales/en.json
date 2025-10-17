@@ -261,6 +261,7 @@
   },
   "import": {
     "title": "Import music or album",
+    "chooseType": "Choose import type",
     "selectType": "Choose import type",
     "typeLabel": "Select type",
     "music": "Music",
@@ -268,13 +269,17 @@
     "importMusic": "Import music",
     "importAlbum": "Import album",
     "musicTitle": "Music title",
+    "enterMusicTitle": "Enter music title",
     "musicTitlePlaceholder": "Enter music title",
     "audioFile": "Audio file",
     "musicImage": "Music image",
     "albumName": "Album name",
+    "enterAlbumName": "Enter album name",
     "albumNamePlaceholder": "Enter album name",
     "albumImage": "Album image",
     "addSongs": "Add songs to album",
+    "addTracks": "Add tracks",
+    "trackTitle": "Track title",
     "songTitle": "Song title",
     "songTitleRequired": "Song title *",
     "chooseFile": "Choose file",
@@ -459,5 +464,75 @@
     "duration": "Duration",
     "actions": "Action",
     "addToPlaylist": "Add to playlist"
+  },
+  "songPlayer": {
+    "noTitle": "No title",
+    "unknownArtist": "Unknown artist",
+    "moreActions": "More actions",
+    "addToPlaylist": "Add to playlist",
+    "viewAlbum": "View album",
+    "viewArtist": "View artist",
+    "addToQueue": "Add to queue",
+    "shuffle": "Shuffle",
+    "previous": "Previous track",
+    "play": "Play",
+    "pause": "Pause",
+    "next": "Next track",
+    "repeatOne": "Repeat this track",
+    "repeatOff": "Repeat: off",
+    "showQueue": "Show queue",
+    "hideQueue": "Hide queue",
+    "mute": "Mute",
+    "unmute": "Unmute"
+  },
+  "landing": {
+    "header": {
+      "login": "Login",
+      "signup": "Sign Up"
+    },
+    "hero": {
+      "title": "Your music, everywhere, anytime",
+      "subtitle": "Discover, listen and share your favorite tracks. Create playlists, follow artists and enjoy a unique music experience.",
+      "ctaPrimary": "Get started for free",
+      "ctaSecondary": "Learn more"
+    },
+    "features": {
+      "title": "Everything you need",
+      "streaming": {
+        "title": "Unlimited streaming",
+        "description": "Listen to your favorite tracks in high quality, anywhere, anytime."
+      },
+      "playlists": {
+        "title": "Custom playlists",
+        "description": "Create and manage your playlists for every moment of your day."
+      },
+      "upload": {
+        "title": "Upload your music",
+        "description": "Share your creations with the community and build your audience."
+      },
+      "favorites": {
+        "title": "Your favorites",
+        "description": "Easily find all your favorite tracks and albums in one place."
+      },
+      "social": {
+        "title": "Social network",
+        "description": "Follow your favorite artists and discover new talents."
+      },
+      "privacy": {
+        "title": "Security & Privacy",
+        "description": "Your data is protected. GDPR compliance guaranteed."
+      }
+    },
+    "cta": {
+      "title": "Ready to get started?",
+      "subtitle": "Join thousands of users already enjoying Rhapsody",
+      "button": "Create my free account"
+    },
+    "footer": {
+      "tagline": "Your music streaming platform.",
+      "legal": "Legal information",
+      "privacy": "Privacy policy",
+      "terms": "Terms of service"
+    }
   }
 }

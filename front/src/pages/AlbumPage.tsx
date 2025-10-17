@@ -97,7 +97,7 @@ const AlbumPage: React.FC = () => {
     });
   };
 
-  const songs: (Track & { dateAdded?: string; playlistIds?: number[]; artist_user_id?: number })[] =
+  const songs: (Track & { dateAdded?: string; playlistIds?: number[]; artist_user_id?: number; album_id?: number })[] =
     useMemo(() => {
       if (!album?.musics) return [];
       return album.musics.map((m) => ({
@@ -110,7 +110,8 @@ const AlbumPage: React.FC = () => {
         duration: toDurationStr(m.duration),
         playlistIds: extractPlaylistIds((m as any).playlist_ids ?? (m as any).playlists ?? (m as any).playlistIds ?? []),
         dateAdded: album.created_at || '',
-        ...(album.user_id ? { artist_user_id: Number(album.user_id) } : {}),
+        artist_user_id: m.artist_user_id ?? (album.user_id ? Number(album.user_id) : undefined),
+        album_id: m.album_id ?? (album.id ? Number(album.id) : undefined),
       }));
     }, [album, t]);
 

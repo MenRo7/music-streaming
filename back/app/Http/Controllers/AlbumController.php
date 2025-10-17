@@ -304,6 +304,8 @@ class AlbumController extends Controller
             'id' => (int) $m->id,
             'title' => $m->title,
             'artist_name' => optional($m->user)->name ?? $m->artist_name,
+            'artist_user_id' => $m->user_id ? (int) $m->user_id : null,
+            'album_id' => $m->album_id ? (int) $m->album_id : null,
             'duration' => $m->duration,
             'audio' => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
             'image' => $this->publicUrl($m->image),

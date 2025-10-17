@@ -261,6 +261,7 @@
   },
   "import": {
     "title": "Importer une musique ou un album",
+    "chooseType": "Choisissez le type d'importation",
     "selectType": "Choisissez le type d'importation",
     "typeLabel": "Sélectionnez le type",
     "music": "Musique",
@@ -268,13 +269,17 @@
     "importMusic": "Importer une musique",
     "importAlbum": "Importer un album",
     "musicTitle": "Titre de la musique",
+    "enterMusicTitle": "Entrez le titre de la musique",
     "musicTitlePlaceholder": "Entrez le titre de la musique",
     "audioFile": "Fichier audio",
     "musicImage": "Image de la musique",
     "albumName": "Nom de l'album",
+    "enterAlbumName": "Entrez le nom de l'album",
     "albumNamePlaceholder": "Entrez le nom de l'album",
     "albumImage": "Image de l'album",
     "addSongs": "Ajouter des morceaux à l'album",
+    "addTracks": "Ajouter des titres",
+    "trackTitle": "Titre du titre",
     "songTitle": "Titre du morceau",
     "songTitleRequired": "Titre du morceau *",
     "chooseFile": "Choisir un fichier",
@@ -459,5 +464,75 @@
     "duration": "Durée",
     "actions": "Action",
     "addToPlaylist": "Ajouter à une playlist"
+  },
+  "songPlayer": {
+    "noTitle": "Aucun titre",
+    "unknownArtist": "Artiste inconnu",
+    "moreActions": "Plus d'actions",
+    "addToPlaylist": "Ajouter à une playlist",
+    "viewAlbum": "Voir l'album",
+    "viewArtist": "Voir l'artiste",
+    "addToQueue": "Ajouter à la file d'attente",
+    "shuffle": "Lecture aléatoire",
+    "previous": "Piste précédente",
+    "play": "Lecture",
+    "pause": "Pause",
+    "next": "Piste suivante",
+    "repeatOne": "Répéter ce titre",
+    "repeatOff": "Répéter: désactivé",
+    "showQueue": "Afficher la file",
+    "hideQueue": "Masquer la file",
+    "mute": "Couper le son",
+    "unmute": "Activer le son"
+  },
+  "landing": {
+    "header": {
+      "login": "Connexion",
+      "signup": "S'inscrire"
+    },
+    "hero": {
+      "title": "Votre musique, partout, tout le temps",
+      "subtitle": "Découvrez, écoutez et partagez vos morceaux préférés. Créez vos playlists, suivez vos artistes et vivez une expérience musicale unique.",
+      "ctaPrimary": "Commencer gratuitement",
+      "ctaSecondary": "En savoir plus"
+    },
+    "features": {
+      "title": "Tout ce dont vous avez besoin",
+      "streaming": {
+        "title": "Streaming illimité",
+        "description": "Écoutez vos morceaux préférés en haute qualité, partout et à tout moment."
+      },
+      "playlists": {
+        "title": "Playlists personnalisées",
+        "description": "Créez et gérez vos playlists pour chaque moment de votre journée."
+      },
+      "upload": {
+        "title": "Uploadez votre musique",
+        "description": "Partagez vos créations avec la communauté et construisez votre audience."
+      },
+      "favorites": {
+        "title": "Vos favoris",
+        "description": "Retrouvez facilement tous vos morceaux et albums préférés en un seul endroit."
+      },
+      "social": {
+        "title": "Réseau social",
+        "description": "Suivez vos artistes préférés et découvrez de nouveaux talents."
+      },
+      "privacy": {
+        "title": "Sécurité & Confidentialité",
+        "description": "Vos données sont protégées. Conformité RGPD garantie."
+      }
+    },
+    "cta": {
+      "title": "Prêt à commencer ?",
+      "subtitle": "Rejoignez des milliers d'utilisateurs qui profitent déjà de Rhapsody",
+      "button": "Créer mon compte gratuitement"
+    },
+    "footer": {
+      "tagline": "Votre plateforme de streaming musical.",
+      "legal": "Informations légales",
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions d'utilisation"
+    }
   }
 }

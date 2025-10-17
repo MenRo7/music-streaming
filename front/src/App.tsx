@@ -26,6 +26,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import PreferencesPage from './pages/PreferencesPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
+import LandingPage from './pages/LandingPage';
 
 import { AuthProvider } from './apis/AuthContext';
 import { PlaylistProvider } from './apis/PlaylistContext';
@@ -44,16 +45,17 @@ const AppShell: React.FC = () => {
   const isAuthed = Boolean(localStorage.getItem('authToken'));
   const onAuthPage = location.pathname.startsWith('/auth');
   const onAuthFlow = location.pathname.startsWith('/auth') || location.pathname.startsWith('/forgot');
+  const onLandingPage = location.pathname === '/';
 
   return (
     <div className="app">
       <SkipToContent />
       <Routes>
+        <Route path="/" element={isAuthed ? <Navigate to="/main" replace /> : <LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/forgot" element={<ForgotPasswordPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsOfServicePage />} />
-        <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
 
         <Route
           path="/import"
@@ -217,7 +219,7 @@ const AppShell: React.FC = () => {
       </Routes>
 
       {isAuthed && !onAuthPage && <SongPlayer />}
-      {!onAuthFlow && <CookieConsent />}
+      {!onAuthFlow && !onLandingPage && <CookieConsent />}
     </div>
   );
 };

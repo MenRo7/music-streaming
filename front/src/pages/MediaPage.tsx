@@ -91,6 +91,8 @@ const MediaPage: React.FC<MediaPageProps> = ({
         audio: s.audio,
         duration: s.duration,
         playlistIds: extractPlaylistIds(s.playlistIds ?? []),
+        album_id: s.album_id,
+        artist_user_id: s.artist_user_id,
       })),
     [songs]
   );
@@ -133,7 +135,18 @@ const MediaPage: React.FC<MediaPageProps> = ({
     if (collectionType === 'favorites') {
       playFromList(tracks, first.id);
     } else {
-      playSong(first.audio, first.name, first.artist, first.album_image || '', first.id);
+      playSong(
+        first.audio,
+        first.name,
+        first.artist,
+        first.album_image || '',
+        first.id,
+        {
+          playlistIds: first.playlistIds,
+          album_id: first.album_id,
+          artist_user_id: first.artist_user_id,
+        }
+      );
     }
   };
 

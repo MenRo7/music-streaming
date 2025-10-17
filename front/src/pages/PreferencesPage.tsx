@@ -199,21 +199,25 @@ const PreferencesPage: React.FC = () => {
               <p className="hint">
                 {t('preferences.languageHint')}
               </p>
-              <div className="row">
-                <select
-                  value={locale}
-                  onChange={(e) => setLocaleState(e.target.value)}
-                  style={{ flex: 1 }}
-                >
-                  <option value="fr">🇫🇷 Français</option>
-                  <option value="en">🇬🇧 English</option>
-                  <option value="es">🇪🇸 Español</option>
-                  <option value="it">🇮🇹 Italiano</option>
-                  <option value="pt">🇵🇹 Português</option>
-                  <option value="de">🇩🇪 Deutsch</option>
-                  <option value="zh">🇨🇳 中文</option>
-                  <option value="ja">🇯🇵 日本語</option>
-                </select>
+              <div className="language-selector">
+                <div className="language-options">
+                  <button
+                    className={`language-option ${locale === 'fr' ? 'selected' : ''}`}
+                    onClick={() => setLocaleState('fr')}
+                    type="button"
+                  >
+                    <span className="flag">🇫🇷</span>
+                    <span className="language-name">Français</span>
+                  </button>
+                  <button
+                    className={`language-option ${locale === 'en' ? 'selected' : ''}`}
+                    onClick={() => setLocaleState('en')}
+                    type="button"
+                  >
+                    <span className="flag">🇬🇧</span>
+                    <span className="language-name">English</span>
+                  </button>
+                </div>
                 <button className="btn primary" onClick={onSaveLocale}>{t('preferences.saveLanguage')}</button>
               </div>
             </div>
