@@ -7,6 +7,7 @@ import { usePlayer, Track } from '../apis/PlayerContext';
 import MediaPage from './MediaPage';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { UISong } from '../components/SongList';
+import SortButton, { SortOption } from '../components/SortButton';
 
 const cover = '/favorites-cover.svg';
 
@@ -24,6 +25,7 @@ const FavoritesPage: React.FC = () => {
   const { addToQueue } = usePlayer();
   const [songs, setSongs] = useState<UISong[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<SortOption>('date_added');
 
   useEffect(() => {
     (async () => {
@@ -57,22 +59,57 @@ const FavoritesPage: React.FC = () => {
     })();
   }, [t]);
 
+  const sortedSongs = useMemo(() => {
+    const sorted = [...songs];
+    switch (sortBy) {
+      case 'title':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'artist':
+        return sorted.sort((a, b) => a.artist.localeCompare(b.artist));
+      case 'date_added':
+      default:
+        // Tri par date décroissant (plus récent en premier)
+        return sorted.sort((a, b) => {
+          const dateA = a.dateAdded || '';
+          const dateB = b.dateAdded || '';
+          return dateB.localeCompare(dateA);
+        });
+    }
+  }, [songs, sortBy]);
+
+  const totalDuration = useMemo(() => {
+    const totalSeconds = songs.reduce((acc, song) => {
+      const dur = song.duration;
+      if (typeof dur === 'number') return acc + dur;
+      if (typeof dur === 'string') {
+        const parts = dur.split(':');
+        if (parts.length === 2) {
+          return acc + (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
+        }
+      }
+      return acc;
+    }, 0);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }, [songs]);
+
   const headerMenuItems = useMemo(() => {
-    if (loading || songs.length === 0) return [];
+    if (loading || sortedSongs.length === 0) return [];
 
     const addAllToQueue = () => {
-      songs.forEach((s) => addToQueue(s as any));
+      sortedSongs.forEach((s) => addToQueue(s as any));
     };
 
     const onToggleBulkPlaylist = async (playlistId: number, checked: boolean) => {
       try {
         if (checked) {
           await Promise.allSettled(
-            songs.map((s) => addMusicToPlaylist(Number(playlistId), Number(s.id)))
+            sortedSongs.map((s) => addMusicToPlaylist(Number(playlistId), Number(s.id)))
           );
         } else {
           await Promise.allSettled(
-            songs.map((s) => removeMusicFromPlaylist(Number(playlistId), Number(s.id)))
+            sortedSongs.map((s) => removeMusicFromPlaylist(Number(playlistId), Number(s.id)))
           );
         }
 
@@ -107,7 +144,7 @@ const FavoritesPage: React.FC = () => {
         ),
       },
     ];
-  }, [loading, songs, addToQueue, t]);
+  }, [loading, sortedSongs, addToQueue, t]);
 
   if (loading) {
     return (
@@ -121,10 +158,13 @@ const FavoritesPage: React.FC = () => {
     <MediaPage
       title={t('favorites.title')}
       image={cover}
-      songs={songs as unknown as (Track & { dateAdded?: string; playlistIds?: number[]; album_id?: number; artist_user_id?: number })[]}
+      songs={sortedSongs as unknown as (Track & { dateAdded?: string; playlistIds?: number[]; album_id?: number; artist_user_id?: number })[]}
       collectionType="favorites"
       collectionId={0}
+      trackCount={sortedSongs.length}
+      totalDuration={totalDuration}
       headerMenuItems={headerMenuItems}
+      sortButton={<SortButton currentSort={sortBy} onSortChange={setSortBy} />}
       onAlbumClick={(song) => {
         const s: any = song;
         if (s.album_id) navigate(`/album/${s.album_id}`);

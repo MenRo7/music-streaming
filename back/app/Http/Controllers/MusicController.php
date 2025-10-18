@@ -24,6 +24,7 @@ class MusicController extends Controller
                     'album' => optional($m->album)->title ?? 'Inconnu',
                     'album_image' => $this->publicUrl($m->image),
                     'audio' => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+                    'duration' => $m->duration,
                     'playlist_ids' => $m->playlists->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
                     'album_id' => $m->album_id ? (int) $m->album_id : null,
                     'artist_user_id' => $m->user_id ? (int) $m->user_id : null,
@@ -48,6 +49,7 @@ class MusicController extends Controller
             'album' => optional($m->album)->title ?? 'Inconnu',
             'album_image' => $this->publicUrl($m->image),
             'audio' => $m->audio ? route('stream.music', ['filename' => $m->audio]) : null,
+            'duration' => $m->duration,
             'playlist_ids' => $m->playlists->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
             'album_id' => $m->album_id ? (int) $m->album_id : null,
             'artist_user_id' => $m->user_id ? (int) $m->user_id : null,
@@ -76,6 +78,13 @@ class MusicController extends Controller
 
         if ($request->hasFile('audio')) {
             $music->audio = $this->storePublicFile($request->file('audio'), 'musics');
+
+            // Calculate duration
+            $audioPath = Storage::disk('public')->path($music->audio);
+            $duration = $this->getAudioDuration($audioPath);
+            if ($duration !== null) {
+                $music->duration = $duration;
+            }
         }
 
         if ($request->hasFile('image')) {
@@ -124,6 +133,13 @@ class MusicController extends Controller
                 Storage::disk('public')->delete($music->audio);
             }
             $music->audio = $this->storePublicFile($request->file('audio'), 'musics');
+
+            // Recalculate duration
+            $audioPath = Storage::disk('public')->path($music->audio);
+            $duration = $this->getAudioDuration($audioPath);
+            if ($duration !== null) {
+                $music->duration = $duration;
+            }
         }
 
         if ($request->hasFile('image')) {
@@ -276,6 +292,23 @@ class MusicController extends Controller
 
         if (! $stillUsedByMusic && ! $stillUsedByAlbum && Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
+        }
+    }
+
+    private function getAudioDuration(string $filePath): ?int
+    {
+        try {
+            $getID3 = new \getID3;
+            $fileInfo = $getID3->analyze($filePath);
+
+            if (isset($fileInfo['playtime_seconds'])) {
+                return (int) round($fileInfo['playtime_seconds']);
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            \Log::warning('Failed to get audio duration: ' . $e->getMessage());
+            return null;
         }
     }
 }

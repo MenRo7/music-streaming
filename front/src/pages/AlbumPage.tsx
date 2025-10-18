@@ -115,6 +115,24 @@ const AlbumPage: React.FC = () => {
       }));
     }, [album, t]);
 
+  const totalDuration = useMemo(() => {
+    if (!album?.musics) return '0:00';
+    const totalSeconds = album.musics.reduce((acc, m) => {
+      const dur = m.duration;
+      if (typeof dur === 'number') return acc + dur;
+      if (typeof dur === 'string') {
+        const parts = dur.split(':');
+        if (parts.length === 2) {
+          return acc + (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+        }
+      }
+      return acc;
+    }, 0);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }, [album]);
+
   const toggleLike = async () => {
     try {
       if (liked) await unlikeAlbum(Number(id));
@@ -200,6 +218,9 @@ const AlbumPage: React.FC = () => {
       songs={songs}
       collectionType="album"
       collectionId={Number(id)}
+      releaseYear={(album as any).release_year}
+      trackCount={songs.length}
+      totalDuration={totalDuration}
       onEdit={canEdit ? () => navigate(`/album/${id}/edit`) : undefined}
       isLiked={!canEdit ? liked : undefined}
       onToggleLike={!canEdit ? toggleLike : undefined}

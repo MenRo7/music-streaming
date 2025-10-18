@@ -82,7 +82,7 @@ const MyMusicPage: React.FC = () => {
           showAlbum
           showArtist
           showDateAdded
-          showDuration={false}
+          showDuration={true}
           getActions={(song) => {
             const s: any = song;
             const viewItems = [

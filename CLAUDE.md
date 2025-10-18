@@ -31,11 +31,13 @@ php artisan serve                    # Runs on http://localhost:8000
 php artisan queue:listen --tries=1   # Queue worker
 
 # Testing
-vendor/bin/phpunit                           # Run all tests
-vendor/bin/phpunit tests/Unit                # Unit tests only
-vendor/bin/phpunit tests/Feature             # Feature tests only
-vendor/bin/phpunit --filter testUserCanLogin # Single test method
-vendor/bin/phpunit tests/Feature/AuthTest.php # Single test file
+vendor/bin/phpunit                                  # Run all tests
+vendor/bin/phpunit tests/Unit                       # Unit tests only
+vendor/bin/phpunit tests/Feature                    # Feature tests only
+vendor/bin/phpunit --filter testUserCanLogin        # Single test method
+vendor/bin/phpunit --filter UserTest                # All tests in UserTest class
+vendor/bin/phpunit tests/Feature/AuthTest.php       # Single test file
+vendor/bin/phpunit --testdox                        # Pretty output format
 
 # Code quality
 composer lint                        # Check code style
@@ -45,8 +47,11 @@ composer check                       # Run all checks (lint + analyse + test)
 composer test:coverage               # Run tests with coverage
 
 # Combined dev environment (with frontend + queue)
-composer dev                         # Runs server, queue, and vite concurrently
-                                     # Note: Requires npm dependencies installed in ../front
+composer dev                         # Runs 3 processes concurrently:
+                                     # 1. Laravel server (php artisan serve)
+                                     # 2. Queue worker (queue:listen --tries=1)
+                                     # 3. Vite dev server from ../front (npm run dev)
+                                     # Note: Requires npm dependencies in ../front
 ```
 
 ### Frontend (React)
@@ -92,15 +97,17 @@ npm run analyze                           # Analyze bundle size (after build)
 - Custom middleware: `EnsureUserIsAdult` for age-gated features, `SecurityHeaders` for CSP/HSTS
 - Email-based password reset and email change with token verification
 - Rate limiting on sensitive endpoints (6 requests/minute for auth, 3/minute for account deletion)
+- Audio metadata extraction using GetID3 library (duration, artist, album from uploaded files)
 
 **Database Structure**
 - Users with profile images, email verification, 2FA, password reset codes
-- Music tracks belong to Albums
+- Music tracks belong to Albums (includes title, artist_name, file_path, cover_image, duration in seconds)
 - Playlists (many-to-many with Music via `music_playlist` pivot)
 - Favorites, Album likes, Playlist likes (separate tables)
 - User follows (social feature)
 - Donations tracking
 - Account deletion requests with email confirmation
+- Schema evolves via migrations - check `database/migrations/` for latest structure
 
 **API Routing Pattern**
 - Public: `/register`, `/login`, search
@@ -259,10 +266,12 @@ const MyComponent = () => {
 - All authenticated requests require valid session cookie + CSRF token
 - Token in localStorage is for quick auth checks, actual auth is cookie-based
 
-### Audio Streaming
+### Audio Streaming & Metadata
 - Music files streamed via HLS (HTTP Live Streaming)
 - Backend handles audio file serving (check `AudioStreamController`)
 - Frontend uses HLS.js for playback
+- Audio metadata (duration, artist, title) extracted on upload using GetID3 library
+- Supported formats: MP3, M4A, WAV, FLAC, OGG
 
 ### Payment Integration
 - Stripe Checkout Sessions for donations
@@ -276,6 +285,32 @@ const MyComponent = () => {
 - Frontend uses React Testing Library + Jest
 - Mock authenticated state by setting `localStorage.authToken` in frontend tests
 - Backend uses array drivers for mail/cache in test environment (see `phpunit.xml`)
+
+## Common Debugging Scenarios
+
+### CORS Issues
+- Verify `SANCTUM_STATEFUL_DOMAINS=localhost:3000` in backend `.env`
+- Ensure `CORS_ALLOWED_ORIGINS=http://localhost:3000` is set
+- Check `axios.defaults.withCredentials = true` in frontend `src/apis/api.ts`
+- Clear browser cookies and restart both servers
+
+### Authentication Not Working
+- Run `/sanctum/csrf-cookie` endpoint before login attempts
+- Check session driver is `file` or `database` (not `array`) in production
+- Verify Sanctum middleware on protected routes: `->middleware('auth:sanctum')`
+- Check browser developer tools for session cookie presence
+
+### Audio Playback Issues
+- Verify audio file paths in database match actual storage locations
+- Check `AudioStreamController` is properly streaming with correct headers
+- Ensure HLS.js is loaded and initialized in player component
+- Check browser console for CORS errors on audio files
+
+### Migration Issues
+- Always run `php artisan migrate:fresh` when testing schema changes
+- Check for existing table conflicts with `SHOW TABLES` in MySQL
+- Verify migration file timestamps for execution order
+- Use `php artisan migrate:rollback` to undo last batch
 
 ## GDPR & Privacy Features
 

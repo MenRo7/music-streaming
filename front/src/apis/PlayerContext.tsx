@@ -18,7 +18,7 @@ export type Track = {
   album?: string;
   album_image?: string;
   audio: string;
-  duration?: string;
+  duration?: number | string;  // Durée en secondes (number) ou formatée (string)
   playlistIds?: number[];
   dateAdded?: string;
   album_id?: number;

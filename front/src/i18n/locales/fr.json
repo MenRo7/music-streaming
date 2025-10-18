@@ -363,7 +363,9 @@
     "removeFromFavorites": "Supprimer des favoris",
     "addToAnotherPlaylist": "Ajouter à une autre playlist",
     "removeFromThisPlaylist": "Supprimer de cette playlist",
-    "modifyMusic": "Modifier la musique"
+    "modifyMusic": "Modifier la musique",
+    "tracks": "titres",
+    "allRightsReserved": "Tous droits réservés"
   },
   "album": {
     "loading": "Chargement…",
@@ -454,6 +456,11 @@
     "upNext": "À suivre",
     "automaticallyAddedTitle": "Morceau ajouté automatiquement",
     "noAutoTracks": "Aucun morceau à suivre"
+  },
+  "sort": {
+    "byTitle": "Par titre",
+    "byArtist": "Par artiste",
+    "byDateAdded": "Par date d'ajout"
   },
   "songList": {
     "index": "#",

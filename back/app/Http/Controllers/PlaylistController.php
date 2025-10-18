@@ -25,6 +25,7 @@ class PlaylistController extends Controller
     public function show($id)
     {
         $playlist = Playlist::with([
+            'user:id,name',
             'musics' => function ($q) {
                 $q->with([
                     'user:id,name',
@@ -45,6 +46,7 @@ class PlaylistController extends Controller
         return response()->json([
             'id' => $playlist->id,
             'user_id' => (int) $playlist->user_id,
+            'creator_name' => optional($playlist->user)->name,
             'title' => $playlist->title,
             'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
             'is_liked' => $isLiked,
@@ -59,6 +61,7 @@ class PlaylistController extends Controller
                     'album_id' => optional($music->album)->id ? (int) $music->album->id : null,
                     'album_image' => $music->image ? asset('storage/' . $music->image) : null,
                     'audio' => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
+                    'duration' => $music->duration,
                     'dateAdded' => optional($music->pivot->created_at)->format('d/m/Y'),
                     'playlistIds' => $music->playlists->pluck('id'),
                 ];

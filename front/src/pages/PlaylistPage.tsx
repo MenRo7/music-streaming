@@ -17,6 +17,7 @@ import { usePlayer } from '../apis/PlayerContext';
 import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
 import { useUser } from '../apis/UserContext';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
+import SortButton, { SortOption } from '../components/SortButton';
 
 const extractPlaylistIds = (val: any): number[] => {
   if (!Array.isArray(val)) return [];
@@ -38,6 +39,7 @@ const PlaylistPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [liked, setLiked] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [sortBy, setSortBy] = useState<SortOption>('date_added');
 
   const fetchPlaylist = async () => {
     if (!id) return;
@@ -142,8 +144,44 @@ const PlaylistPage: React.FC = () => {
     }));
   }, [playlist?.songs]);
 
+  const songsSorted = useMemo(() => {
+    const sorted = [...songsNormalized];
+    switch (sortBy) {
+      case 'title':
+        return sorted.sort((a, b) => (a.name || a.title || '').localeCompare(b.name || b.title || ''));
+      case 'artist':
+        return sorted.sort((a, b) => (a.artist || '').localeCompare(b.artist || ''));
+      case 'date_added':
+      default:
+        return sorted.sort((a, b) => {
+          const dateA = a.dateAdded || a.date_added || '';
+          const dateB = b.dateAdded || b.date_added || '';
+          return dateB.localeCompare(dateA);
+        });
+    }
+  }, [songsNormalized, sortBy]);
+
+  const totalDuration = useMemo(() => {
+    const raw = Array.isArray(playlist?.songs) ? playlist!.songs : [];
+    if (raw.length === 0) return '0:00';
+    const totalSeconds = raw.reduce((acc: number, s: any) => {
+      const dur = s.duration;
+      if (typeof dur === 'number') return acc + dur;
+      if (typeof dur === 'string') {
+        const parts = dur.split(':');
+        if (parts.length === 2) {
+          return acc + (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+        }
+      }
+      return acc;
+    }, 0);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }, [playlist?.songs]);
+
   const headerMenuItems = useMemo(() => {
-    const songs = songsNormalized as Array<{ id: number }>;
+    const songs = songsSorted as Array<{ id: number }>;
     if (!songs.length) return [];
 
     const addAllToQueue = () => songs.forEach((s) => addToQueue(s as any));
@@ -186,21 +224,25 @@ const PlaylistPage: React.FC = () => {
       },
       { label: t('mediaPage.addToFavorites'), onClick: addAllToFavorites },
     ];
-  }, [songsNormalized, addToQueue, t]);
+  }, [songsSorted, addToQueue, t]);
 
   return (
     <MediaPage
       title={playlist?.title}
       image={playlist?.image}
-      songs={songsNormalized}
+      songs={songsSorted}
       isPlaylist={true}
       collectionType="playlist"
       collectionId={playlist?.id}
+      creatorName={playlist?.creator_name}
+      trackCount={songsSorted.length}
+      totalDuration={totalDuration}
       onEdit={canEdit ? handleEditPlaylist : undefined}
       onDelete={canEdit ? handleDeletePlaylist : undefined}
       isLiked={!canEdit ? liked : undefined}
       onToggleLike={!canEdit ? toggleLike : undefined}
       headerMenuItems={headerMenuItems}
+      sortButton={<SortButton currentSort={sortBy} onSortChange={setSortBy} />}
       renderModal={
         canEdit ? (
           <CreateEditPlaylistModal

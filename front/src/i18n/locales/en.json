@@ -363,7 +363,9 @@
     "removeFromFavorites": "Remove from favorites",
     "addToAnotherPlaylist": "Add to another playlist",
     "removeFromThisPlaylist": "Remove from this playlist",
-    "modifyMusic": "Edit music"
+    "modifyMusic": "Edit music",
+    "tracks": "tracks",
+    "allRightsReserved": "All rights reserved"
   },
   "album": {
     "loading": "Loading…",
@@ -454,6 +456,11 @@
     "upNext": "Up next",
     "automaticallyAddedTitle": "Automatically added track",
     "noAutoTracks": "No upcoming tracks"
+  },
+  "sort": {
+    "byTitle": "By title",
+    "byArtist": "By artist",
+    "byDateAdded": "By date added"
   },
   "songList": {
     "index": "#",

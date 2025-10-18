@@ -4,7 +4,6 @@ import {
   faPlay,
   faRandom,
   faEllipsisH,
-  faBars,
   faHeart as faHeartSolid,
 } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
@@ -37,6 +36,11 @@ interface MediaPageProps {
   isPlaylist?: boolean;
   collectionType?: 'playlist' | 'album' | 'favorites';
   collectionId?: number | string;
+  releaseDate?: string;
+  releaseYear?: number;
+  creatorName?: string;
+  trackCount?: number;
+  totalDuration?: string;
   onEdit?: () => void;
   onDelete?: () => void;
   renderModal?: React.ReactNode;
@@ -46,6 +50,7 @@ interface MediaPageProps {
   onAlbumClick?: (song: UISong) => void;
   onArtistClick?: (song: UISong) => void;
   headerMenuItems?: MenuItem[];
+  sortButton?: React.ReactNode;
 }
 
 // ✅ Utilitaire commun: supporte un tableau d'ids ou d'objets { id }
@@ -64,6 +69,11 @@ const MediaPage: React.FC<MediaPageProps> = ({
   songs,
   collectionType,
   collectionId,
+  releaseDate,
+  releaseYear,
+  creatorName,
+  trackCount,
+  totalDuration,
   onEdit,
   onDelete,
   renderModal,
@@ -73,6 +83,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
   onAlbumClick,
   onArtistClick,
   headerMenuItems = [],
+  sortButton,
 }) => {
   const { t } = useTranslation();
   const { setCollectionContext, toggleShuffle, playSong, playFromList } = usePlayer();
@@ -186,6 +197,18 @@ const MediaPage: React.FC<MediaPageProps> = ({
           <div className="media-texts">
             <h1>{title}</h1>
             {artist && <p className="media-artist">{artist}</p>}
+            {(creatorName || trackCount !== undefined || totalDuration) && (
+              <p className="media-metadata">
+                {creatorName && <span className="metadata-creator">{creatorName}</span>}
+                {trackCount !== undefined && <span className="metadata-count">{trackCount} {t('mediaPage.tracks')}</span>}
+                {totalDuration && <span className="metadata-duration">{totalDuration}</span>}
+              </p>
+            )}
+            {releaseYear && (
+              <p className="media-copyright">
+                © {releaseYear} {artist || t('mediaPage.allRightsReserved')}
+              </p>
+            )}
           </div>
         </div>
 
@@ -209,7 +232,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
             />
           )}
 
-          <FontAwesomeIcon icon={faBars} className="control-icon burger-menu" />
+          {sortButton && <div className="sort-button-wrapper">{sortButton}</div>}
         </div>
 
         <SongList
@@ -217,7 +240,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
           showAlbum
           showArtist
           showDateAdded
-          showDuration={false}
+          showDuration={true}
           getActions={composedGetActions as any}
           onAlbumClick={onAlbumClick}
           onArtistClick={onArtistClick}

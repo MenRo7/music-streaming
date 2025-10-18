@@ -9,6 +9,17 @@ import { usePlayer } from '../apis/PlayerContext';
 
 import '../styles/SongList.css';
 
+// Fonction utilitaire pour formater la durée en secondes vers mm:ss
+const formatDuration = (seconds: number | string | null | undefined): string => {
+  if (seconds == null) return '—';
+  const numSeconds = typeof seconds === 'string' ? parseInt(seconds, 10) : seconds;
+  if (!Number.isFinite(numSeconds) || numSeconds < 0) return '—';
+
+  const mins = Math.floor(numSeconds / 60);
+  const secs = Math.floor(numSeconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
 export interface UISong {
   id: number;
   name: string;
@@ -17,7 +28,7 @@ export interface UISong {
   album_image?: string;
   audio: string;
   dateAdded?: string;
-  duration?: string;
+  duration?: number | string;  // Durée en secondes (number) ou formatée (string)
   playlistIds?: number[];
   album_id?: number;
   artist_user_id?: number;
@@ -229,7 +240,7 @@ const SongList = <T extends UISong>({
                   <td className="col-date">{song.dateAdded}</td>
                 )}
                 {showDuration && (
-                  <td className="col-duration">{song.duration || '—'}</td>
+                  <td className="col-duration">{formatDuration(song.duration)}</td>
                 )}
 
                 <td className="col-actions">

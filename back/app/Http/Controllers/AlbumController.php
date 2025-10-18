@@ -81,8 +81,20 @@ class AlbumController extends Controller
 
             if (isset($songData['audio']) && $songData['audio'] instanceof UploadedFile) {
                 $music->audio = $this->storePublicFile($songData['audio'], 'musics');
+                // Calculate duration
+                $audioPath = Storage::disk('public')->path($music->audio);
+                $duration = $this->getAudioDuration($audioPath);
+                if ($duration !== null) {
+                    $music->duration = $duration;
+                }
             } elseif ($request->hasFile("songs.$idx.audio")) {
                 $music->audio = $this->storePublicFile($request->file("songs.$idx.audio"), 'musics');
+                // Calculate duration
+                $audioPath = Storage::disk('public')->path($music->audio);
+                $duration = $this->getAudioDuration($audioPath);
+                if ($duration !== null) {
+                    $music->duration = $duration;
+                }
             }
 
             if (isset($songData['image']) && $songData['image'] instanceof UploadedFile) {
@@ -292,6 +304,7 @@ class AlbumController extends Controller
             'user_id' => (int) $album->user_id,
             'artist_name' => optional($album->user)->name ?? $album->artist_name,
             'created_at' => optional($album->created_at)?->format('d/m/Y'),
+            'release_year' => optional($album->created_at)?->year,
             'updated_at' => optional($album->updated_at)?->toDateTimeString(),
             'musics' => $musics,
             'is_liked' => $isLiked,
@@ -362,6 +375,23 @@ class AlbumController extends Controller
 
         if (! $stillUsedByMusic && ! $stillUsedByAlbum && Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
+        }
+    }
+
+    private function getAudioDuration(string $filePath): ?int
+    {
+        try {
+            $getID3 = new \getID3;
+            $fileInfo = $getID3->analyze($filePath);
+
+            if (isset($fileInfo['playtime_seconds'])) {
+                return (int) round($fileInfo['playtime_seconds']);
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            \Log::warning('Failed to get audio duration: ' . $e->getMessage());
+            return null;
         }
     }
 }

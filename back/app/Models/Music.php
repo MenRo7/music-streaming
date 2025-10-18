@@ -9,7 +9,7 @@ class Music extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'album_id', 'title', 'audio', 'image', 'artist_name'];
+    protected $fillable = ['user_id', 'album_id', 'title', 'audio', 'image', 'artist_name', 'duration'];
 
     protected $appends = ['artist'];
 

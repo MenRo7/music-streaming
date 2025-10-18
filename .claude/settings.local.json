@@ -1,10 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run type-check:*)",
-      "Bash(npm start)",
-      "Bash(timeout 10 bash:*)",
-      "Bash(npm run lint:*)"
+      "Bash(php check_duration.php:*)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "ask": []

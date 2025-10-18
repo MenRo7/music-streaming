@@ -435,7 +435,7 @@ const ProfilePage: React.FC = () => {
             showAlbum
             showArtist
             showDateAdded
-            showDuration={false}
+            showDuration={true}
             getActions={songActions as any}
             onAlbumClick={(song) => {
               const s: any = song;
