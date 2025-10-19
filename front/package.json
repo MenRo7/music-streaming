@@ -74,6 +74,9 @@
       "!src/**/*.d.ts",
       "!src/index.tsx",
       "!src/react-app-env.d.ts"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(axios)/)"
     ]
   }
 }

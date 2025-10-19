@@ -14,10 +14,10 @@ use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-
-Route::middleware('throttle:6,1')->group(function () {
+// Auth endpoints - Rate limiting strict (OWASP: 3-5 tentatives max pour brute force)
+Route::middleware('throttle:3,1')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
     Route::post('/resend-email-code', [AuthController::class, 'resendEmailCode']);
     Route::post('/login/verify', [AuthController::class, 'verify2fa']);

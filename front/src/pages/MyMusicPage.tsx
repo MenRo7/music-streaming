@@ -6,6 +6,7 @@ import { getUserMusics, getUserAlbums, deleteMusic } from '../apis/MyMusicServic
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import { addFavorite } from '../apis/FavoritesService';
 import { usePlayer } from '../apis/PlayerContext';
+import { useDialogContext } from '../contexts/DialogContext';
 
 import PlaylistCard from '../components/PlaylistCard';
 import SongList, { UISong } from '../components/SongList';
@@ -22,6 +23,7 @@ const MyMusicPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
+  const { showToast } = useDialogContext();
 
   const [songs, setSongs] = useState<UISong[]>([]);
   const [albums, setAlbums] = useState<any[]>([]);
@@ -68,7 +70,7 @@ const MyMusicPage: React.FC = () => {
       if (checked) await addMusicToPlaylist(pid, sid);
       else await removeMusicFromPlaylist(pid, sid);
     } catch {
-      alert(t('myMusic.errorUpdatingPlaylist'));
+      showToast(t('myMusic.errorUpdatingPlaylist'), 'error');
     }
   };
 
@@ -118,8 +120,9 @@ const MyMusicPage: React.FC = () => {
                   try {
                     await deleteMusic(song.id);
                     setSongs((prev) => prev.filter((m) => m.id !== song.id));
+                    showToast(t('myMusic.successDeletingMusic'), 'success');
                   } catch {
-                    alert(t('myMusic.errorDeletingMusic'));
+                    showToast(t('myMusic.errorDeletingMusic'), 'error');
                   }
                 },
               },

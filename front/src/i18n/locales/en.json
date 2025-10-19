@@ -220,10 +220,16 @@
   "cookies": {
     "title": "Cookie Management",
     "description": "We use cookies to improve your experience. Essential cookies are necessary for the site to function (authentication, session). Other cookies are optional.",
+    "moreInfo": "For more information, see our",
+    "privacyPolicy": "Privacy Policy",
     "detailedDescription": "Choose which categories of cookies you want to allow. Essential cookies cannot be disabled as they are necessary for the site to function.",
+    "chooseCategories": "Choose which categories of cookies you want to allow.",
     "acceptAll": "Accept all",
     "rejectAll": "Reject all (except essential)",
+    "essentialOnly": "Essential only",
     "customize": "Customize",
+    "back": "Back",
+    "saveChoices": "Save my preferences",
     "essential": "Essential Cookies (Required)",
     "essentialRequired": "Essential Cookies (Required)",
     "functional": "Functional Cookies",
@@ -234,11 +240,17 @@
     "analyticsDescription": "Help us understand how you use the site to improve it. Currently not used.",
     "authToken": "Authentication token (localStorage)",
     "csrfToken": "CSRF attack protection",
+    "csrfProtection": "CSRF protection",
+    "sessionManagement": "Session management",
     "session": "Session management (120 min)",
     "locale": "Language preference",
+    "languagePreference": "Language preference",
     "playerState": "Audio player state",
     "cookieConsent": "Your cookie choices",
-    "notUsed": "No analytics cookies currently used"
+    "cookieChoices": "Your cookie choices",
+    "notUsed": "No analytics cookies currently used",
+    "noAnalytics": "No analytics cookies currently used",
+    "footer": "You can modify your preferences at any time in settings."
   },
   "sidebar": {
     "library": "Library",
@@ -324,8 +336,10 @@
     "searching": "Searching...",
     "loadingMore": "Loading...",
     "songs": "Songs",
+    "tracks": "Tracks",
     "albums": "Albums",
     "artists": "Artists",
+    "users": "Users",
     "playlists": "Playlists"
   },
   "skipToContent": {
@@ -348,7 +362,8 @@
     "loadingMainPage": "Error loading main page",
     "updatingPlaylist": "Error updating playlist",
     "addingMusic": "Error adding music",
-    "addingAlbum": "Error adding album"
+    "addingAlbum": "Error adding album",
+    "parseCookieConsent": "Error parsing cookie consent preferences"
   },
   "accessibility": {
     "closeModal": "Close dialog",

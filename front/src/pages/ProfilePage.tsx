@@ -14,6 +14,7 @@ import { getUserMusics, getUserAlbums, deleteMusic } from '../apis/MyMusicServic
 import { getPlaylists, addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
 import { usePlayer } from '../apis/PlayerContext';
+import { useDialogContext } from '../contexts/DialogContext';
 
 import EditProfileModal from '../components/EditProfileModal';
 import DropdownMenu from '../components/DropdownMenu';
@@ -38,6 +39,7 @@ const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
+  const { showToast } = useDialogContext();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedUserId = searchParams.get('user');
@@ -203,7 +205,7 @@ const ProfilePage: React.FC = () => {
       else await removeMusicFromPlaylist(pid, sid);
     } catch (e) {
       console.error(t('profilePage.errorUpdatingPlaylist'), e);
-      alert(t('profilePage.errorPlaylistUpdate'));
+      showToast(t('profilePage.errorPlaylistUpdate'), 'error');
     }
   };
 
@@ -284,8 +286,9 @@ const ProfilePage: React.FC = () => {
               try {
                 await deleteMusic(song.id);
                 setSongs((prev) => prev.filter((m) => m.id !== song.id));
+                showToast(t('profilePage.successDeletingMusic'), 'success');
               } catch {
-                alert(t('profilePage.errorDeletingMusic'));
+                showToast(t('profilePage.errorDeletingMusic'), 'error');
               }
             },
           }

@@ -220,10 +220,16 @@
   "cookies": {
     "title": "Gestion des Cookies",
     "description": "Nous utilisons des cookies pour améliorer votre expérience. Les cookies essentiels sont nécessaires au fonctionnement du site (authentification, session). Les autres cookies sont optionnels.",
+    "moreInfo": "Pour en savoir plus, consultez notre",
+    "privacyPolicy": "Politique de Confidentialité",
     "detailedDescription": "Choisissez les catégories de cookies que vous souhaitez autoriser. Les cookies essentiels ne peuvent pas être désactivés car ils sont nécessaires au fonctionnement du site.",
+    "chooseCategories": "Choisissez les catégories de cookies que vous souhaitez autoriser.",
     "acceptAll": "Tout accepter",
     "rejectAll": "Refuser tout (sauf essentiels)",
+    "essentialOnly": "Essentiels uniquement",
     "customize": "Personnaliser",
+    "back": "Retour",
+    "saveChoices": "Enregistrer mes préférences",
     "essential": "Cookies Essentiels (Obligatoires)",
     "essentialRequired": "Cookies Essentiels (Obligatoires)",
     "functional": "Cookies Fonctionnels",
@@ -234,11 +240,17 @@
     "analyticsDescription": "Nous aident à comprendre comment vous utilisez le site pour l'améliorer. Actuellement non utilisés.",
     "authToken": "Token d'authentification (localStorage)",
     "csrfToken": "Protection contre les attaques CSRF",
+    "csrfProtection": "Protection CSRF",
+    "sessionManagement": "Gestion de session",
     "session": "Gestion de session (120 min)",
     "locale": "Préférence de langue",
+    "languagePreference": "Préférence de langue",
     "playerState": "État du lecteur audio",
     "cookieConsent": "Vos choix de cookies",
-    "notUsed": "Aucun cookie analytique actuellement utilisé"
+    "cookieChoices": "Vos choix de cookies",
+    "notUsed": "Aucun cookie analytique actuellement utilisé",
+    "noAnalytics": "Aucun cookie analytique actuellement utilisé",
+    "footer": "Vous pouvez modifier vos préférences à tout moment dans les paramètres."
   },
   "sidebar": {
     "library": "Bibliothèque",
@@ -324,8 +336,10 @@
     "searching": "Recherche...",
     "loadingMore": "Chargement...",
     "songs": "Morceaux",
+    "tracks": "Morceaux",
     "albums": "Albums",
     "artists": "Artistes",
+    "users": "Utilisateurs",
     "playlists": "Playlists"
   },
   "skipToContent": {
@@ -348,7 +362,8 @@
     "loadingMainPage": "Erreur lors du chargement de la page principale",
     "updatingPlaylist": "Erreur lors de la mise à jour de la playlist",
     "addingMusic": "Erreur lors de l'ajout de la musique",
-    "addingAlbum": "Erreur lors de l'ajout de l'album"
+    "addingAlbum": "Erreur lors de l'ajout de l'album",
+    "parseCookieConsent": "Erreur lors de l'analyse des préférences de cookies"
   },
   "accessibility": {
     "closeModal": "Fermer la fenêtre",
@@ -390,6 +405,7 @@
     "myAlbums": "Mes Albums",
     "errorLoading": "Erreur lors du chargement",
     "errorDeletingMusic": "Erreur lors de la suppression",
+    "successDeletingMusic": "Musique supprimée avec succès",
     "errorUpdatingPlaylist": "Erreur lors de la modification de la playlist."
   },
   "profilePage": {
@@ -429,6 +445,7 @@
   "playlistPage": {
     "errorLoading": "Erreur de chargement de la playlist",
     "errorDeletingMusic": "Erreur lors de la suppression de la musique de la playlist.",
+    "successDeletingMusic": "Musique retirée de la playlist avec succès",
     "errorDeleting": "Erreur lors de la suppression",
     "errorLike": "Erreur like/unlike playlist",
     "errorBulkPlaylist": "Maj bulk playlist échouée",

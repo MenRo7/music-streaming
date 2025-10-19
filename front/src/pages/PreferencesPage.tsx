@@ -10,6 +10,8 @@ import {
 import { fetchUser, requestAccountDeletion } from '../apis/UserService';
 import { exportUserData, getUserDataSummary } from '../apis/DataExportService';
 import PersonalInfoModal from '../components/PersonalInfoModal';
+import ConfirmDialog from '../components/ConfirmDialog';
+import Toast from '../components/Toast';
 import { isAdult as checkIsAdult } from '../utils/ageCalculator';
 
 import '../styles/PreferencesPage.css';
@@ -52,12 +54,56 @@ const PreferencesPage: React.FC = () => {
   const [showDataSummary, setShowDataSummary] = useState(false);
   const [dataSummary, setDataSummary] = useState<any>(null);
 
+  // Confirm Dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    onConfirm: () => {},
+    variant: 'info' as 'danger' | 'warning' | 'info',
+  });
+
+  // Toast state
+  const [toast, setToast] = useState({
+    isOpen: false,
+    message: '',
+    type: 'info' as 'success' | 'error' | 'info' | 'warning',
+  });
+
   const isAdult = useMemo(() => {
     return checkIsAdult(user?.date_of_birth);
   }, [user?.date_of_birth]);
 
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const onboardingState = params.get('onboarding');
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setToast({ isOpen: true, message, type });
+  };
+
+  const showConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    variant: 'danger' | 'warning' | 'info' = 'info',
+    confirmText: string = t('common.confirm'),
+    cancelText: string = t('common.cancel')
+  ) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      cancelText,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+      },
+      variant,
+    });
+  };
 
   useEffect(() => {
     (async () => {
@@ -75,12 +121,13 @@ const PreferencesPage: React.FC = () => {
         setUser(ures.data);
       } catch (e) {
         console.error(t('preferences.errorLoading'), e);
-        alert(t('preferences.errorLoadingPreferences'));
+        showToast(t('preferences.errorLoadingPreferences'), 'error');
       } finally {
         setLoading(false);
       }
     })();
-  }, [location.key, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   const onSaveLocale = async () => {
     try {
@@ -92,10 +139,10 @@ const PreferencesPage: React.FC = () => {
         await setLocalePref(locale);
       }
 
-      alert(t('preferences.languageSaved'));
+      showToast(t('preferences.languageSaved'), 'success');
     } catch (e) {
       console.error(e);
-      alert(t('preferences.errorSavingLanguage'));
+      showToast(t('preferences.errorSavingLanguage'), 'error');
     }
   };
 
@@ -105,7 +152,7 @@ const PreferencesPage: React.FC = () => {
       window.location.href = onboarding_url;
     } catch (e) {
       console.error(e);
-      alert(t('preferences.errorStartingOnboarding'));
+      showToast(t('preferences.errorStartingOnboarding'), 'error');
     }
   };
 
@@ -118,27 +165,33 @@ const PreferencesPage: React.FC = () => {
     );
   }, [stripe]);
 
-  const onRequestDeletion = async () => {
-    const ok = window.confirm(t('preferences.deleteAccountConfirm').replace(/\\n/g, '\n'));
-    if (!ok) return;
-
-    try {
-      await requestAccountDeletion();
-      alert(t('preferences.deleteAccountEmailSent'));
-    } catch (e) {
-      console.error(e);
-      alert(t('preferences.errorSendingDeleteEmail'));
-    }
+  const onRequestDeletion = () => {
+    showConfirm(
+      t('preferences.deleteAccountTitle'),
+      t('preferences.deleteAccountConfirm').replace(/\\n/g, '\n'),
+      async () => {
+        try {
+          await requestAccountDeletion();
+          showToast(t('preferences.deleteAccountEmailSent'), 'success');
+        } catch (e) {
+          console.error(e);
+          showToast(t('preferences.errorSendingDeleteEmail'), 'error');
+        }
+      },
+      'danger',
+      t('preferences.deleteAccountButton'),
+      t('common.cancel')
+    );
   };
 
   const handleExportData = async () => {
     setExportingData(true);
     try {
       await exportUserData();
-      alert(t('preferences.dataExported'));
+      showToast(t('preferences.dataExported'), 'success');
     } catch (e) {
       console.error(e);
-      alert(t('preferences.errorExportingData'));
+      showToast(t('preferences.errorExportingData'), 'error');
     } finally {
       setExportingData(false);
     }
@@ -151,7 +204,7 @@ const PreferencesPage: React.FC = () => {
       setShowDataSummary(true);
     } catch (e) {
       console.error(e);
-      alert(t('preferences.errorViewingSummary'));
+      showToast(t('preferences.errorViewingSummary'), 'error');
     }
   };
 
@@ -441,6 +494,24 @@ const PreferencesPage: React.FC = () => {
           onProfileUpdate={(u) => setUser(u)}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+        variant={confirmDialog.variant}
+      />
+
+      <Toast
+        isOpen={toast.isOpen}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

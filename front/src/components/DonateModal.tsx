@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDialogContext } from '../contexts/DialogContext';
 import ENV from '../config/env';
 
 type Props = {
@@ -10,12 +11,16 @@ type Props = {
 
 const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
   const { t } = useTranslation();
+  const { showToast } = useDialogContext();
   const [amount, setAmount] = useState('5');
   const [loading, setLoading] = useState(false);
 
   const onConfirm = async () => {
     const a = Math.round(parseFloat(amount.replace(',', '.')) * 100);
-    if (!Number.isFinite(a) || a < 100) { alert('Montant minimal: 1€'); return; }
+    if (!Number.isFinite(a) || a < 100) {
+      showToast(t('donate.minAmount', { min: '1€' }), 'warning');
+      return;
+    }
     setLoading(true);
     try {
       const { createDonationCheckoutSession } = await import('../apis/DonateService');
@@ -32,9 +37,9 @@ const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
           ? Object.values(data.errors).flat()[0]
           : null) ||
         e?.message ||
-        "Erreur inconnue";
+        t('donate.unknownError');
 
-      alert(msg);
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
     }

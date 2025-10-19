@@ -32,6 +32,7 @@ import { AuthProvider } from './apis/AuthContext';
 import { PlaylistProvider } from './apis/PlaylistContext';
 import { UserProvider } from './apis/UserContext';
 import { PlayerProvider } from './apis/PlayerContext';
+import { DialogProvider } from './contexts/DialogContext';
 
 import './App.css';
 
@@ -230,9 +231,11 @@ const App: React.FC = () => {
       <AuthProvider>
         <PlaylistProvider>
           <UserProvider>
-            <Router>
-              <AppShell />
-            </Router>
+            <DialogProvider>
+              <Router>
+                <AppShell />
+              </Router>
+            </DialogProvider>
           </UserProvider>
         </PlaylistProvider>
       </AuthProvider>

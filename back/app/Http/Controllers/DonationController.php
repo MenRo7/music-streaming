@@ -22,13 +22,13 @@ class DonationController extends Controller
         $viewer = Auth::user();
         if (! $viewer || ! $viewer->date_of_birth || $viewer->date_of_birth->age < 18) {
             return response()->json([
-                'error' => 'Les dons sont réservés aux utilisateurs majeurs (18+).',
+                'error' => 'Donations are reserved for adult users (18+).',
             ], 403);
         }
         $artist = User::findOrFail($userId);
 
         if (! $artist->stripe_connect_id) {
-            return response()->json(['error' => "L'artiste n'a pas encore de compte de paiement actif."], 422);
+            return response()->json(['error' => 'The artist does not have an active payment account yet.'], 422);
         }
 
         Stripe::setApiKey(config('services.stripe.secret') ?? env('STRIPE_SECRET'));
@@ -36,7 +36,7 @@ class DonationController extends Controller
             $acct = Account::retrieve($artist->stripe_connect_id);
         } catch (\Throwable $e) {
             return response()->json([
-                'error' => "Impossible de vérifier le compte de paiement de l'artiste.",
+                'error' => 'Unable to verify the artist\'s payment account.',
             ], 422);
         }
 
@@ -51,7 +51,7 @@ class DonationController extends Controller
             $due = $acct->requirements->currently_due ?? [];
 
             return response()->json([
-                'error' => 'Les paiements de cet artiste ne sont pas encore activés.',
+                'error' => 'Payments for this artist are not yet enabled.',
                 'currently_due' => $due,
                 'account_id' => $acct->id,
                 'charges_enabled' => (bool) $acct->charges_enabled,
@@ -81,7 +81,7 @@ class DonationController extends Controller
                         'currency' => $currency,
                         'unit_amount' => $donation->amount_cents,
                         'product_data' => [
-                            'name' => "Don à {$artist->name}",
+                            'name' => "Donation to {$artist->name}",
                         ],
                     ],
                 ]],
@@ -103,7 +103,7 @@ class DonationController extends Controller
             ]);
         } catch (\Throwable $e) {
             return response()->json([
-                'error' => "Impossible d'initialiser le paiement Stripe.",
+                'error' => 'Unable to initialize Stripe payment.',
             ], 422);
         }
 

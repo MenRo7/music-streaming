@@ -14,6 +14,7 @@ import {
 import { usePlaylists } from '../apis/PlaylistContext';
 import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
 import { usePlayer } from '../apis/PlayerContext';
+import { useDialogContext } from '../contexts/DialogContext';
 import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
 import { useUser } from '../apis/UserContext';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
@@ -34,6 +35,7 @@ const PlaylistPage: React.FC = () => {
   const { fetchPlaylists } = usePlaylists();
   const { addToQueue } = usePlayer();
   const { user: viewer } = useUser();
+  const { showToast } = useDialogContext();
 
   const [playlist, setPlaylist] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,8 +101,9 @@ const PlaylistPage: React.FC = () => {
         ...prev,
         songs: prev.songs.filter((song: any) => song.id !== songId),
       }));
+      showToast(t('playlistPage.successDeletingMusic'), 'success');
     } catch {
-      alert(t('playlistPage.errorDeletingMusic'));
+      showToast(t('playlistPage.errorDeletingMusic'), 'error');
     }
   };
 

@@ -14,7 +14,7 @@ class UserController extends Controller
     {
         $user = \App\Models\User::find($id);
         if (! $user) {
-            return response()->json(['message' => 'Utilisateur non trouvé'], 404);
+            return response()->json(['message' => 'User not found'], 404);
         }
 
         return response()->json([
@@ -34,7 +34,7 @@ class UserController extends Controller
     {
         $user = \App\Models\User::find($id);
         if (! $user) {
-            return response()->json(['message' => 'Utilisateur non trouvé'], 404);
+            return response()->json(['message' => 'User not found'], 404);
         }
 
         $musics = \App\Models\Music::where('user_id', $user->id)
@@ -46,7 +46,7 @@ class UserController extends Controller
                     'id' => (int) $m->id,
                     'name' => $m->title,
                     'artist' => optional($m->user)->name ?? $m->artist_name,
-                    'album' => optional($m->album)->title ?? 'Inconnu',
+                    'album' => optional($m->album)->title ?? 'Unknown',
                     'album_image' => $m->image
                         ? asset('storage/' . $m->image) . '?v=' . optional($m->updated_at)->timestamp
                         : null,
@@ -119,7 +119,7 @@ class UserController extends Controller
                 'age' => $user->age ?? null,
             ]);
         } else {
-            return response()->json(['message' => 'Non authentifié'], 401);
+            return response()->json(['message' => 'Not authenticated'], 401);
         }
     }
 
@@ -156,7 +156,7 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'message' => 'Profil mis à jour avec succès',
+            'message' => 'Profile updated successfully',
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -218,7 +218,7 @@ class UserController extends Controller
     {
         $viewer = Auth::user();
         if ((int) $viewer->id === (int) $id) {
-            return response()->json(['message' => 'Impossible de vous abonner à vous-même'], 422);
+            return response()->json(['message' => 'Cannot subscribe to yourself'], 422);
         }
         $target = \App\Models\User::find($id);
         if (! $target) {

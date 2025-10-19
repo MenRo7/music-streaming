@@ -47,10 +47,20 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => [
+                'required',
+                'string',
+                'min:12', // CNIL 2022 - 12 caractères minimum
+                'regex:/[a-z]/', // Au moins une minuscule
+                'regex:/[A-Z]/', // Au moins une majuscule
+                'regex:/[0-9]/', // Au moins un chiffre
+                'regex:/[@$!%*#?&]/', // Au moins un caractère spécial
+            ],
             'date_of_birth' => 'required|date|before:today',
         ], [
             'date_of_birth.before' => 'La date de naissance doit être antérieure à aujourd\'hui.',
+            'password.min' => 'Le mot de passe doit contenir au moins 12 caractères.',
+            'password.regex' => 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*#?&).',
         ]);
 
         $user = User::create([
@@ -233,7 +243,19 @@ class AuthController extends Controller
         $data = $request->validate([
             'email' => 'required|email',
             'code' => 'required|string|size:6',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'min:12', // CNIL 2022 - 12 caractères minimum
+                'regex:/[a-z]/', // Au moins une minuscule
+                'regex:/[A-Z]/', // Au moins une majuscule
+                'regex:/[0-9]/', // Au moins un chiffre
+                'regex:/[@$!%*#?&]/', // Au moins un caractère spécial
+                'confirmed',
+            ],
+        ], [
+            'password.min' => 'Le mot de passe doit contenir au moins 12 caractères.',
+            'password.regex' => 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*#?&).',
         ]);
 
         $user = User::where('email', $data['email'])->firstOrFail();
