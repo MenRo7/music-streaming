@@ -59,8 +59,7 @@ const LandingPage: React.FC = () => {
       <header className="landing-header">
         <div className="landing-container">
           <div className="landing-logo">
-            <FontAwesomeIcon icon={faMusic} />
-            <span>Rhapsody</span>
+            <img src="/logo.png" alt="Rhapsody Logo" className="landing-logo-img" />
           </div>
           <nav className="landing-nav">
             <div className="language-switcher">
