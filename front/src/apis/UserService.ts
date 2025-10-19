@@ -56,3 +56,27 @@ export const isSubscribedToUser = async (userId: number) => {
   const res = await axios.get(`${API_URL}/users/${userId}/subscribe`, getAuthHeader());
   return Boolean(res.data?.subscribed);
 };
+
+export const requestEmailChange = async (newEmail: string, currentPassword: string) => {
+  return axios.post(
+    `${API_URL}/account/email/change/request`,
+    { new_email: newEmail, current_password: currentPassword },
+    getAuthHeader()
+  );
+};
+
+export const confirmEmailChange = async (token: string) => {
+  return axios.get(`${API_URL}/account/email/change/confirm?token=${encodeURIComponent(token)}`);
+};
+
+export const changePassword = async (currentPassword: string, newPassword: string) => {
+  return axios.post(
+    `${API_URL}/account/password/change`,
+    { current_password: currentPassword, new_password: newPassword },
+    getAuthHeader()
+  );
+};
+
+export const requestAccountDeletion = async () => {
+  return axios.post(`${API_URL}/account/delete/request`, {}, getAuthHeader());
+};

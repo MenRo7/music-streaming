@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import MediaPage from './MediaPage';
 import {
@@ -13,21 +14,34 @@ import {
 import { usePlaylists } from '../apis/PlaylistContext';
 import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
 import { usePlayer } from '../apis/PlayerContext';
+import { useDialogContext } from '../contexts/DialogContext';
 import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
 import { useUser } from '../apis/UserContext';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
+import SortButton, { SortOption } from '../components/SortButton';
+
+const extractPlaylistIds = (val: any): number[] => {
+  if (!Array.isArray(val)) return [];
+  return val
+    .map((x) => (x && typeof x === 'object' ? x.id : x))
+    .map(Number)
+    .filter(Number.isFinite);
+};
 
 const PlaylistPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { fetchPlaylists } = usePlaylists();
   const { addToQueue } = usePlayer();
   const { user: viewer } = useUser();
+  const { showToast } = useDialogContext();
 
   const [playlist, setPlaylist] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [liked, setLiked] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [sortBy, setSortBy] = useState<SortOption>('date_added');
 
   const fetchPlaylist = async () => {
     if (!id) return;
@@ -36,13 +50,13 @@ const PlaylistPage: React.FC = () => {
       setPlaylist(data);
       setLiked(Boolean((data as any)?.is_liked));
     } catch (error) {
-      console.error('Erreur de chargement de la playlist:', error);
+      console.error(t('playlistPage.errorLoading'), error);
     }
   };
 
   useEffect(() => {
     fetchPlaylist();
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     (async () => {
@@ -55,56 +69,57 @@ const PlaylistPage: React.FC = () => {
         );
         setFavoriteIds(ids);
       } catch (e) {
-        console.error('Erreur chargement favoris', e);
+        console.error(t('album.errorLoadingFavorites'), e);
       }
     })();
-  }, []);
+  }, [t]);
 
   const isFavorite = (songId: number) => favoriteIds.has(Number(songId));
   const addToFavorites = async (songId: number) => {
     await addFavorite(songId);
-    setFavoriteIds(prev => new Set(prev).add(Number(songId)));
+    setFavoriteIds((prev) => new Set(prev).add(Number(songId)));
   };
   const removeFromFavorites = async (songId: number) => {
     await removeFavorite(songId);
-    setFavoriteIds(prev => {
+    setFavoriteIds((prev) => {
       const s = new Set(prev);
       s.delete(Number(songId));
       return s;
     });
   };
 
-  const isOwner = useMemo(() => {
+  const canEdit = useMemo(() => {
     if (!playlist || !viewer) return false;
     return Number(playlist.user_id) === Number(viewer.id);
   }, [playlist, viewer]);
 
   const handleRemoveMusicFromPlaylist = async (songId: number) => {
-    if (!playlist || !isOwner) return;
+    if (!playlist || !canEdit) return;
     try {
       await removeMusicFromPlaylist(playlist.id, songId);
       setPlaylist((prev: any) => ({
         ...prev,
         songs: prev.songs.filter((song: any) => song.id !== songId),
       }));
+      showToast(t('playlistPage.successDeletingMusic'), 'success');
     } catch {
-      alert('Erreur lors de la suppression de la musique de la playlist.');
+      showToast(t('playlistPage.errorDeletingMusic'), 'error');
     }
   };
 
   const handleEditPlaylist = () => {
-    if (!isOwner) return;
+    if (!canEdit) return;
     setIsModalOpen(true);
   };
 
   const handleDeletePlaylist = async () => {
-    if (!playlist || !isOwner) return;
+    if (!playlist || !canEdit) return;
     try {
       await deletePlaylist(playlist.id);
       fetchPlaylists();
       navigate('/main');
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+      console.error(t('playlistPage.errorDeleting'), error);
     }
   };
 
@@ -120,12 +135,56 @@ const PlaylistPage: React.FC = () => {
       else await likePlaylist(playlist.id);
       setLiked(!liked);
     } catch (e) {
-      console.error('Erreur like/unlike playlist', e);
+      console.error(t('playlistPage.errorLike'), e);
     }
   };
 
+  const songsNormalized = useMemo(() => {
+    const raw = Array.isArray(playlist?.songs) ? playlist!.songs : [];
+    return raw.map((s: any) => ({
+      ...s,
+      playlistIds: extractPlaylistIds(s.playlistIds ?? s.playlists ?? s.playlist_ids ?? []),
+    }));
+  }, [playlist?.songs]);
+
+  const songsSorted = useMemo(() => {
+    const sorted = [...songsNormalized];
+    switch (sortBy) {
+      case 'title':
+        return sorted.sort((a, b) => (a.name || a.title || '').localeCompare(b.name || b.title || ''));
+      case 'artist':
+        return sorted.sort((a, b) => (a.artist || '').localeCompare(b.artist || ''));
+      case 'date_added':
+      default:
+        return sorted.sort((a, b) => {
+          const dateA = a.dateAdded || a.date_added || '';
+          const dateB = b.dateAdded || b.date_added || '';
+          return dateB.localeCompare(dateA);
+        });
+    }
+  }, [songsNormalized, sortBy]);
+
+  const totalDuration = useMemo(() => {
+    const raw = Array.isArray(playlist?.songs) ? playlist!.songs : [];
+    if (raw.length === 0) return '0:00';
+    const totalSeconds = raw.reduce((acc: number, s: any) => {
+      const dur = s.duration;
+      if (typeof dur === 'number') return acc + dur;
+      if (typeof dur === 'string') {
+        const parts = dur.split(':');
+        if (parts.length === 2) {
+          return acc + (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+        }
+      }
+      return acc;
+    }, 0);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }, [playlist?.songs]);
+
   const headerMenuItems = useMemo(() => {
-    const songs = (playlist?.songs || []) as Array<{ id: number }>;
+    const songs = songsSorted as Array<{ id: number }>;
     if (!songs.length) return [];
 
     const addAllToQueue = () => songs.forEach((s) => addToQueue(s as any));
@@ -142,7 +201,7 @@ const PlaylistPage: React.FC = () => {
           );
         }
       } catch (e) {
-        console.error('Maj bulk playlist échouée', e);
+        console.error(t('playlistPage.errorBulkPlaylist'), e);
       }
     };
 
@@ -150,14 +209,14 @@ const PlaylistPage: React.FC = () => {
       try {
         await Promise.allSettled(songs.map((s) => addFavorite(Number(s.id))));
       } catch (e) {
-        console.error('Ajout bulk favoris échoué', e);
+        console.error(t('playlistPage.errorAddingFavorites'), e);
       }
     };
 
     return [
-      { label: 'Ajouter à la file d’attente', onClick: addAllToQueue },
+      { label: t('mediaPage.addToQueue'), onClick: addAllToQueue },
       {
-        label: 'Ajouter à une playlist',
+        label: t('music.addToPlaylist'),
         onClick: () => {},
         submenuContent: (
           <PlaylistCheckboxMenu
@@ -166,25 +225,29 @@ const PlaylistPage: React.FC = () => {
           />
         ),
       },
-      { label: 'Ajouter aux favoris', onClick: addAllToFavorites },
+      { label: t('mediaPage.addToFavorites'), onClick: addAllToFavorites },
     ];
-  }, [playlist?.songs, addToQueue]);
+  }, [songsSorted, addToQueue, t]);
 
   return (
     <MediaPage
       title={playlist?.title}
       image={playlist?.image}
-      songs={playlist?.songs || []}
+      songs={songsSorted}
       isPlaylist={true}
       collectionType="playlist"
       collectionId={playlist?.id}
-      onEdit={isOwner ? handleEditPlaylist : undefined}
-      onDelete={isOwner ? handleDeletePlaylist : undefined}
-      isLiked={!isOwner ? liked : undefined}
-      onToggleLike={!isOwner ? toggleLike : undefined}
+      creatorName={playlist?.creator_name}
+      trackCount={songsSorted.length}
+      totalDuration={totalDuration}
+      onEdit={canEdit ? handleEditPlaylist : undefined}
+      onDelete={canEdit ? handleDeletePlaylist : undefined}
+      isLiked={!canEdit ? liked : undefined}
+      onToggleLike={!canEdit ? toggleLike : undefined}
       headerMenuItems={headerMenuItems}
+      sortButton={<SortButton currentSort={sortBy} onSortChange={setSortBy} />}
       renderModal={
-        isOwner ? (
+        canEdit ? (
           <CreateEditPlaylistModal
             isOpen={isModalOpen}
             onClose={closeModal}
@@ -200,18 +263,18 @@ const PlaylistPage: React.FC = () => {
 
         const base = [
           {
-            label: isFavorite(song.id) ? 'Supprimer des favoris' : 'Ajouter aux favoris',
+            label: isFavorite(song.id) ? t('mediaPage.removeFromFavorites') : t('mediaPage.addToFavorites'),
             onClick: async () => {
               try {
                 if (isFavorite(song.id)) await removeFromFavorites(song.id);
                 else await addToFavorites(song.id);
               } catch (e) {
-                console.error('Maj favoris échouée', e);
+                console.error(t('playlistPage.errorUpdatingFavorites'), e);
               }
             },
           },
           {
-            label: 'Ajouter à une autre playlist',
+            label: t('mediaPage.addToAnotherPlaylist'),
             onClick: () => {},
             withPlaylistMenu: true,
             songId: song.id,
@@ -221,16 +284,16 @@ const PlaylistPage: React.FC = () => {
                 if (checked) await addMusicToPlaylist(playlistId, song.id);
                 else await removeMusicFromPlaylist(playlistId, song.id);
               } catch (e) {
-                console.error('Maj playlist échouée', e);
+                console.error(t('playlistPage.errorUpdatingPlaylist'), e);
               }
             },
           },
-          { label: 'Ajouter à la file d’attente', onClick: () => addToQueue(song) },
+          { label: t('mediaPage.addToQueue'), onClick: () => addToQueue(song) },
         ];
 
-        if (isOwner) {
+        if (canEdit) {
           base.push({
-            label: 'Supprimer de cette playlist',
+            label: t('mediaPage.removeFromThisPlaylist'),
             onClick: () => handleRemoveMusicFromPlaylist(song.id),
           } as any);
         }

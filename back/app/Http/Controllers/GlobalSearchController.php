@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Playlist;
-use App\Models\Music;
 use App\Models\Album;
+use App\Models\Music;
+use App\Models\Playlist;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class GlobalSearchController extends Controller
@@ -39,6 +38,7 @@ class GlobalSearchController extends Controller
 
             $users->getCollection()->transform(function ($user) {
                 $user->profile_image = $user->profile_image ? asset('storage/' . $user->profile_image) : null;
+
                 return $user;
             });
 
@@ -52,6 +52,7 @@ class GlobalSearchController extends Controller
 
             $playlists->getCollection()->transform(function ($playlist) {
                 $playlist->image = $playlist->image ? asset('storage/' . $playlist->image) : null;
+
                 return $playlist;
             });
 
@@ -66,6 +67,7 @@ class GlobalSearchController extends Controller
             $musics->getCollection()->transform(function ($music) {
                 $music->audio = $music->audio ? route('stream.music', ['filename' => $music->audio]) : null;
                 $music->image = $music->image ? asset('storage/' . $music->image) : null;
+
                 return $music;
             });
 
@@ -79,6 +81,7 @@ class GlobalSearchController extends Controller
 
             $albums->getCollection()->transform(function ($album) {
                 $album->image = $album->image ? asset('storage/' . $album->image) : null;
+
                 return $album;
             });
 

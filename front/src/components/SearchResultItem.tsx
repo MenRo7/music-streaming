@@ -14,18 +14,24 @@ const DEFAULT_IMAGE = '/default-playlist-image.png';
 
 const SearchResultItem: React.FC<SearchResultItemProps> = ({ image, label, isRounded, onClick, children }) => {
   return (
-    <li className="search-result-item" onClick={onClick}>
-      {image && (
-        <img
-          src={image || DEFAULT_IMAGE}
-          alt={label}
-          className={`search-result-item-image ${isRounded ? 'rounded' : ''}`}
-        />
-      )}
-      <div className="search-result-content">
-        <span className="search-result-item-label">{label}</span>
-        {children}
-      </div>
+    <li className="search-result-item">
+      <button
+        className="search-result-item-button"
+        onClick={onClick}
+        type="button"
+      >
+        {image && (
+          <img
+            src={image || DEFAULT_IMAGE}
+            alt={label}
+            className={`search-result-item-image ${isRounded ? 'rounded' : ''}`}
+          />
+        )}
+        <div className="search-result-content">
+          <span className="search-result-item-label">{label}</span>
+          {children}
+        </div>
+      </button>
     </li>
   );
 };

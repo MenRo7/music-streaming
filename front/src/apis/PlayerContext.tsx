@@ -18,9 +18,11 @@ export type Track = {
   album?: string;
   album_image?: string;
   audio: string;
-  duration?: string;
+  duration?: number | string;  // Durée en secondes (number) ou formatée (string)
   playlistIds?: number[];
   dateAdded?: string;
+  album_id?: number;
+  artist_user_id?: number;
 };
 
 type SourceRef =
@@ -38,6 +40,8 @@ type RepeatMode = 'off' | 'one';
 
 type PlaySongOpts = {
   playlistIds?: Array<number | string>;
+  album_id?: number;
+  artist_user_id?: number;
 };
 
 export interface PlayerContextType {
@@ -80,14 +84,16 @@ export interface PlayerContextType {
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const shuffleArray = <T,>(arr: T[]) => {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i++) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+const shuffleArray = <T,>(arr: ReadonlyArray<T> | null | undefined): T[] => {
+  const base = Array.isArray(arr) ? arr : (arr ? Array.from(arr as any) : []);
+  const a = base.slice(0, (base.length >>> 0));
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = (Math.random() * (i + 1)) | 0;
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
   }
   return a;
 };
+
 
 const sameSource = (a: SourceRef, b: SourceRef) =>
   a.type === b.type && ('id' in a ? a.id : undefined) === ('id' in b ? b.id : undefined);
@@ -183,6 +189,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const now = tracks[startIndex];
       const before = tracks.slice(0, startIndex);
 
+      console.log('PlayerContext rebuildAutoFromIndex - track being set as current:', now);
+      console.log('PlayerContext rebuildAutoFromIndex - album_id:', now.album_id, 'artist_user_id:', now.artist_user_id);
+
       let tail: Track[];
       if (useShuf) {
         const pool = tracks.filter((_, i) => i !== startIndex);
@@ -192,6 +201,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
 
       const nowItem: QueueItem = { ...now, qid: uid(), origin: 'auto', from: src };
+      console.log('PlayerContext rebuildAutoFromIndex - nowItem created:', nowItem);
       setCurrentItem(nowItem);
       setHistory(useShuf ? [] : before.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
       setQueueAuto(tail.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
@@ -201,10 +211,10 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   );
 
   const setCollectionContext = useCallback<PlayerContextType['setCollectionContext']>((src, tracks) => {
-    const t = tracks || [];
-    if (sameSource(sourceRef.current, src) && sameTracks(collectionRef.current, t)) {
-      return;
-    }
+    const t = Array.isArray(tracks) ? tracks.slice() : [];
+    console.log('PlayerContext setCollectionContext - setting collection with', t.length, 'tracks');
+    console.log('PlayerContext setCollectionContext - first track:', t[0]);
+    if (sameSource(sourceRef.current, src) && sameTracks(collectionRef.current, t)) return;
     setSource(src);
     setCollection(t);
   }, []);
@@ -213,10 +223,12 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     if (trackId != null) {
       const idx = collectionRef.current.findIndex(t => t.id === trackId);
       if (idx >= 0 && sourceRef.current.type !== 'none') {
+        console.log('PlayerContext playSong - using collection, track at index:', idx, collectionRef.current[idx]);
         rebuildAutoFromIndex(collectionRef.current, idx, sourceRef.current);
         return;
       }
     }
+    console.log('PlayerContext playSong - creating manual track with opts:', opts);
     const t: Track = {
       id: trackId ?? -Date.now(),
       name,
@@ -224,6 +236,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       album_image: img,
       audio: url,
       playlistIds: toNumArr(opts?.playlistIds),
+      album_id: opts?.album_id,
+      artist_user_id: opts?.artist_user_id,
     };
     setCurrentItem({ ...t, qid: uid(), origin: 'manual', from: sourceRef.current });
     setIsPlaying(true);
@@ -365,15 +379,21 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const src = sourceRef.current;
       const cols = collectionRef.current;
 
-      if (src.type !== 'none' && cols.length > 0 && cur) {
-        const idx = cols.findIndex(t => t.id === cur.id);
-        if (idx >= 0) {
-          rebuildAutoFromIndex(cols, idx, src, { forceShuffle: ns });
-          return ns;
-        }
+      if (!cur || src.type === 'none' || !Array.isArray(cols) || cols.length === 0) {
+        setQueueAuto(a => ns ? shuffleArray(a ?? []) : (Array.isArray(a) ? a : []));
+        return ns;
       }
 
-      setQueueAuto(a => (ns ? shuffleArray(a) : a));
+      if (cols.length === 1) {
+        return ns;
+      }
+
+      const idx = cols.findIndex(t => t?.id === cur.id);
+      if (idx >= 0) {
+        rebuildAutoFromIndex(cols, idx, src, { forceShuffle: ns });
+      } else {
+        setQueueAuto(a => ns ? shuffleArray(a ?? []) : (Array.isArray(a) ? a : []));
+      }
       return ns;
     });
   }, [rebuildAutoFromIndex]);
@@ -541,6 +561,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       album_image: u.album_image ?? item.album_image,
       audio: u.audio ?? item.audio,
       duration: u.duration ?? item.duration,
+      album_id: u.album_id ?? item.album_id,
+      artist_user_id: u.artist_user_id ?? item.artist_user_id,
     };
     return merged;
   }, []);
@@ -571,6 +593,8 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           album_image: u.album_image ?? c.album_image,
           audio: u.audio ?? c.audio,
           duration: u.duration ?? c.duration,
+          album_id: u.album_id ?? c.album_id,
+          artist_user_id: u.artist_user_id ?? c.artist_user_id,
         } : c;
       }));
     };

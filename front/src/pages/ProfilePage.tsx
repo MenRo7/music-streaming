@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import {
   fetchUser,
@@ -7,32 +8,41 @@ import {
   isSubscribedToUser,
   subscribeToUser,
   unsubscribeFromUser,
-} from "../apis/UserService";
+} from '../apis/UserService';
 
-import { getUserMusics, getUserAlbums, deleteMusic } from "../apis/MyMusicService";
-import { getPlaylists, addMusicToPlaylist, removeMusicFromPlaylist } from "../apis/PlaylistService";
-import { addFavorite, removeFavorite, getFavorites } from "../apis/FavoritesService";
-import { usePlayer } from "../apis/PlayerContext";
+import { getUserMusics, getUserAlbums, deleteMusic } from '../apis/MyMusicService';
+import { getPlaylists, addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
+import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
+import { usePlayer } from '../apis/PlayerContext';
+import { useDialogContext } from '../contexts/DialogContext';
 
-import EditProfileModal from "../components/EditProfileModal";
-import DropdownMenu from "../components/DropdownMenu";
-import PlaylistCard from "../components/PlaylistCard";
-import SongList, { UISong } from "../components/SongList";
+import EditProfileModal from '../components/EditProfileModal';
+import DropdownMenu from '../components/DropdownMenu';
+import PlaylistCard from '../components/PlaylistCard';
+import SongList, { UISong } from '../components/SongList';
+import DonateModal from '../components/DonateModal';
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisH } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEllipsisH } from '@fortawesome/free-solid-svg-icons';
 
-import "../styles/ProfilePage.css";
+import '../styles/ProfilePage.css';
 
-const toNumberArray = (arr: any[]): number[] =>
-  (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
+const extractPlaylistIds = (val: any): number[] => {
+  if (!Array.isArray(val)) return [];
+  return val
+    .map((x) => (x && typeof x === 'object' ? x.id : x))
+    .map(Number)
+    .filter(Number.isFinite);
+};
 
 const ProfilePage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { addToQueue } = usePlayer();
+  const { showToast } = useDialogContext();
 
-  const [searchParams] = useSearchParams();
-  const requestedUserId = searchParams.get("user");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedUserId = searchParams.get('user');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -46,6 +56,10 @@ const ProfilePage: React.FC = () => {
   const [subscribed, setSubscribed] = useState<boolean>(false);
   const [subPending, setSubPending] = useState<boolean>(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [donateOpen, setDonateOpen] = useState(false);
+
+  const donParam = searchParams.get('don');
+  const [showDonBanner, setShowDonBanner] = useState<boolean>(!!donParam);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -71,12 +85,12 @@ const ProfilePage: React.FC = () => {
             id: Number(m.id),
             name: m.name,
             artist: m.artist,
-            album: m.album ?? "Inconnu",
-            album_image: m.album_image || "",
-            audio: m.audio || "",
-            dateAdded: m.date_added || "",
+            album: m.album ?? t('album.unknown'),
+            album_image: m.album_image || '',
+            audio: m.audio || '',
+            dateAdded: m.date_added || '',
             duration: m.duration ?? undefined,
-            playlistIds: toNumberArray(m.playlist_ids || []),
+            playlistIds: extractPlaylistIds(m.playlist_ids || []),
             ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
             artist_user_id: Number(v?.id),
           } as any)
@@ -85,7 +99,7 @@ const ProfilePage: React.FC = () => {
         setSongs(formattedSongs);
         setAlbums(myAlbums || []);
         setPlaylists(myPlaylists || []);
-        setSubscribed(false)
+        setSubscribed(false);
       } else {
         const summaryRes = await fetchUserSummary(targetId!);
         const summary = summaryRes.data;
@@ -97,12 +111,12 @@ const ProfilePage: React.FC = () => {
             id: Number(m.id),
             name: m.name,
             artist: m.artist,
-            album: m.album ?? "Inconnu",
-            album_image: m.album_image || "",
-            audio: m.audio || "",
-            dateAdded: m.date_added || "",
+            album: m.album ?? t('album.unknown'),
+            album_image: m.album_image || '',
+            audio: m.audio || '',
+            dateAdded: m.date_added || '',
             duration: m.duration ?? undefined,
-            playlistIds: toNumberArray(m.playlist_ids || []),
+            playlistIds: extractPlaylistIds(m.playlist_ids || []),
             ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
             ...(m.artist_user_id != null
               ? { artist_user_id: Number(m.artist_user_id) }
@@ -122,11 +136,11 @@ const ProfilePage: React.FC = () => {
         }
       }
     } catch (e) {
-      console.error("Erreur chargement profil:", e);
+      console.error(t('profilePage.errorLoadingProfile'), e);
     } finally {
       setLoading(false);
     }
-  }, [requestedUserId]);
+  }, [requestedUserId, t]);
 
   useEffect(() => {
     void loadAll();
@@ -143,19 +157,39 @@ const ProfilePage: React.FC = () => {
         );
         setFavoriteIds(ids);
       } catch (e) {
-        console.error("Erreur chargement favoris", e);
+        console.error(t('profilePage.errorLoadingFavorites'), e);
       }
     })();
-  }, []);
+  }, [t]);
 
   const isSelf = useMemo(
     () => Boolean(viewer?.id) && Boolean(user?.id) && Number(viewer.id) === Number(user.id),
     [viewer, user]
   );
 
-  const openProfileModal = () => setIsModalOpen(true);
-  const closeProfileModal = () => setIsModalOpen(false);
-  const handleProfileUpdate = (updatedUser: any) => setUser(updatedUser);
+  const viewerIsMinor = useMemo(() => {
+    const a = Number(viewer?.age ?? 0);
+    return Number.isFinite(a) && a < 18;
+  }, [viewer]);
+
+  const creatorIsMinor = useMemo(() => {
+    const a = Number(user?.age ?? 0);
+    return Number.isFinite(a) && a < 18;
+  }, [user]);
+
+  const donateDisabled = useMemo(() => {
+    if (viewerIsMinor) return true;
+    if (!user?.payments_enabled) return true;
+    if (creatorIsMinor) return true;
+    return false;
+  }, [viewerIsMinor, user?.payments_enabled, creatorIsMinor]);
+
+  const donateTitle = useMemo(() => {
+    if (viewerIsMinor) return t('profilePage.donateMinorViewer');
+    if (creatorIsMinor) return t('profilePage.donateMinorCreator');
+    if (!user?.payments_enabled) return t('profilePage.donateNotEnabled');
+    return t('profilePage.donateButton');
+  }, [viewerIsMinor, creatorIsMinor, user?.payments_enabled, t]);
 
   const handleTogglePlaylist = async (
     playlistId: number | string,
@@ -170,8 +204,8 @@ const ProfilePage: React.FC = () => {
       if (checked) await addMusicToPlaylist(pid, sid);
       else await removeMusicFromPlaylist(pid, sid);
     } catch (e) {
-      console.error("Maj playlist échouée", e);
-      alert("Erreur lors de la modification de la playlist.");
+      console.error(t('profilePage.errorUpdatingPlaylist'), e);
+      showToast(t('profilePage.errorPlaylistUpdate'), 'error');
     }
   };
 
@@ -186,9 +220,9 @@ const ProfilePage: React.FC = () => {
         await subscribeToUser(Number(user.id));
         setSubscribed(true);
       }
-      window.dispatchEvent(new Event("subscriptions:changed"));
+      window.dispatchEvent(new Event('subscriptions:changed'));
     } catch (e) {
-      console.error("Erreur abonnement/désabonnement:", e);
+      console.error(t('profilePage.errorSubscription'), e);
     } finally {
       setSubPending(false);
     }
@@ -196,11 +230,11 @@ const ProfilePage: React.FC = () => {
 
   const addToFavoritesLocal = async (id: number) => {
     await addFavorite(id);
-    setFavoriteIds(prev => new Set(prev).add(Number(id)));
+    setFavoriteIds((prev) => new Set(prev).add(Number(id)));
   };
   const removeFromFavoritesLocal = async (id: number) => {
     await removeFavorite(id);
-    setFavoriteIds(prev => {
+    setFavoriteIds((prev) => {
       const s = new Set(prev);
       s.delete(Number(id));
       return s;
@@ -212,24 +246,24 @@ const ProfilePage: React.FC = () => {
     (song: UISong) => {
       const s: any = song;
       const viewItems = s?.album_id
-        ? [{ label: "Voir l'album", onClick: () => navigate(`/album/${s.album_id}`) }]
+        ? [{ label: t('mediaPage.viewAlbum'), onClick: () => navigate(`/album/${s.album_id}`) }]
         : [];
 
       const base = [
         ...viewItems,
         {
-          label: isFavorite(song.id) ? "Supprimer des favoris" : "Ajouter aux favoris",
+          label: isFavorite(song.id) ? t('mediaPage.removeFromFavorites') : t('mediaPage.addToFavorites'),
           onClick: async () => {
             try {
               if (isFavorite(song.id)) await removeFromFavoritesLocal(song.id);
               else await addToFavoritesLocal(song.id);
             } catch (e) {
-              console.error("Maj favoris échouée", e);
+              console.error(t('profilePage.errorUpdatingFavorites'), e);
             }
           },
         },
         {
-          label: "Ajouter à une playlist",
+          label: t('music.addToPlaylist'),
           onClick: () => {},
           withPlaylistMenu: true,
           songId: song.id,
@@ -237,23 +271,24 @@ const ProfilePage: React.FC = () => {
           onToggle: (playlistId: number, checked: boolean) =>
             handleTogglePlaylist(playlistId, checked, song.id),
         },
-        { label: "Ajouter à la file d’attente", onClick: () => addToQueue(song) },
+        { label: t('mediaPage.addToQueue'), onClick: () => addToQueue(song) },
       ];
 
       if (isSelf) {
         base.push(
           {
-            label: "Modifier la musique",
+            label: t('mediaPage.modifyMusic'),
             onClick: () => navigate(`/edit-music/${song.id}`),
           },
           {
-            label: "Supprimer",
+            label: t('common.delete'),
             onClick: async () => {
               try {
                 await deleteMusic(song.id);
                 setSongs((prev) => prev.filter((m) => m.id !== song.id));
+                showToast(t('profilePage.successDeletingMusic'), 'success');
               } catch {
-                alert("Erreur lors de la suppression");
+                showToast(t('profilePage.errorDeletingMusic'), 'error');
               }
             },
           }
@@ -262,7 +297,7 @@ const ProfilePage: React.FC = () => {
 
       return base;
     },
-    [addToQueue, navigate, isSelf, favoriteIds]
+    [addToQueue, navigate, isSelf, favoriteIds, t]
   );
 
   const hasAvatar = Boolean(user?.profile_image);
@@ -275,11 +310,19 @@ const ProfilePage: React.FC = () => {
     };
   }, [songs.length, albums.length, playlists.length]);
 
+  const closeDonBanner = () => {
+    setShowDonBanner(false);
+    if (searchParams.has('don')) {
+      searchParams.delete('don');
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
+
   if (loading) {
     return (
       <div className="profile-page">
         <div className="profile-content">
-          <div style={{ padding: 24 }}>Chargement…</div>
+          <div style={{ padding: 24 }}>{t('profilePage.loading')}</div>
         </div>
       </div>
     );
@@ -288,62 +331,114 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="profile-page">
       <div className="profile-content">
+        {showDonBanner && (
+          <div
+            className={`don-banner ${donParam === 'ok' ? 'success' : 'error'}`}
+            role="status"
+          >
+            <span>
+              {donParam === 'ok'
+                ? t('profilePage.donateSuccess')
+                : t('profilePage.donateCancelled')}
+            </span>
+            <button className="don-banner-close" onClick={closeDonBanner} aria-label={t('profilePage.closeBanner')}>
+              ×
+            </button>
+          </div>
+        )}
+
         <div className="profile-header">
           <img
             className="profile-image"
-            src={hasAvatar ? user.profile_image : "/placeholder-avatar.png"}
+            src={hasAvatar ? user.profile_image : '/placeholder-avatar.png'}
             alt="User Profile"
           />
 
           <div className="profile-info" style={{ flex: 1 }}>
-            <h1>{user?.name ?? "Profil"}</h1>
+            <h1>{user?.name ?? t('profilePage.profile')}</h1>
             {isSelf && <p>{user?.email}</p>}
           </div>
 
           {!isSelf && (
-            <button
-              className={`subscribe-btn ${subscribed ? "is-subscribed" : ""}`}
-              onClick={onToggleSubscribe}
-              disabled={subPending}
-              title={subscribed ? "Se désabonner" : "S’abonner"}
-            >
-              {subscribed ? "Abonné" : "S’abonner +"}
-            </button>
+            <div className="actions-right">
+              <button
+                className={`subscribe-btn ${subscribed ? 'is-subscribed' : ''}`}
+                onClick={onToggleSubscribe}
+                disabled={subPending}
+                title={subscribed ? t('profilePage.unsubscribeTitle') : t('profilePage.subscribeTitle')}
+              >
+                {subscribed ? t('profilePage.subscribed') : t('profilePage.subscribePlus')}
+              </button>
+
+              <div className="donate-section">
+                <button
+                  className="donate-btn"
+                  onClick={() => {
+                    if (viewer?.age && viewer.age < 18) return;
+                    if (!user?.payments_enabled || (user?.age && user.age < 18)) return;
+                    setDonateOpen(true);
+                  }}
+                  disabled={
+                    (viewer?.age && viewer.age < 18) ||
+                    !user?.payments_enabled ||
+                    (user?.age && user.age < 18)
+                  }
+                >
+                  {t('profilePage.donateButton')}
+                </button>
+
+                {viewer?.age && viewer.age < 18 && (
+                  <p className="donate-hint">
+                    <em>{t('profilePage.donateMinorViewerHint')}</em>
+                  </p>
+                )}
+                {user?.age && user.age < 18 && (
+                  <p className="donate-hint">
+                    <em>{t('profilePage.donateMinorCreatorHint')}</em>
+                  </p>
+                )}
+                {!user?.payments_enabled && !(user?.age && user.age < 18) && (
+                  <p className="donate-hint">
+                    <em>{t('profilePage.donateNotEnabledHint')}</em>
+                  </p>
+                )}
+              </div>
+            </div>
           )}
 
           {isSelf && (
             <DropdownMenu
               trigger={<FontAwesomeIcon icon={faEllipsisH} className="profile-menu-icon" />}
-              items={[{ label: "Modifier le profil", onClick: openProfileModal }]}
+              items={[{ label: t('profilePage.editProfile'), onClick: () => setIsModalOpen(true) }]}
             />
           )}
         </div>
 
         <div className="profile-stats">
           <div className="stat-card">
-            <h2>Musiques</h2>
+            <h2>{t('profilePage.musics')}</h2>
             <p>{totalStats.musics}</p>
           </div>
           <div className="stat-card">
-            <h2>Albums</h2>
+            <h2>{t('profilePage.albums')}</h2>
             <p>{totalStats.albums}</p>
           </div>
           <div className="stat-card">
-            <h2>Playlists</h2>
+            <h2>{t('profilePage.playlists')}</h2>
             <p>{totalStats.playlists}</p>
           </div>
         </div>
 
-        <div className="top-section" style={{ textAlign: "left" }}>
-          <h2 style={{ textAlign: "left", marginBottom: 16 }}>
-            {isSelf ? "Mes musiques" : "Musiques"}
+        <div className="top-section" style={{ textAlign: 'left' }}>
+          <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
+            {isSelf ? t('profilePage.myMusics') : t('profilePage.musics')}
           </h2>
           <SongList
             songs={songs}
             showAlbum
             showArtist
             showDateAdded
-            showDuration={false}
+            showDuration={true}
             getActions={songActions as any}
             onAlbumClick={(song) => {
               const s: any = song;
@@ -352,12 +447,12 @@ const ProfilePage: React.FC = () => {
           />
         </div>
 
-        <div className="top-section" style={{ textAlign: "left" }}>
-          <h2 style={{ textAlign: "left", marginBottom: 16 }}>
-            {isSelf ? "Mes albums" : "Albums"}
+        <div className="top-section" style={{ textAlign: 'left' }}>
+          <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
+            {isSelf ? t('profilePage.myAlbums') : t('profilePage.albums')}
           </h2>
-          <div className="album-row" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            {albums.length === 0 && <div>Aucun album pour le moment.</div>}
+          <div className="album-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            {albums.length === 0 && <div>{t('profilePage.noAlbums')}</div>}
             {albums.map((album: any) => (
               <PlaylistCard
                 key={album.id}
@@ -369,12 +464,12 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="top-section" style={{ textAlign: "left" }}>
-          <h2 style={{ textAlign: "left", marginBottom: 16 }}>
-            {isSelf ? "Mes playlists" : "Playlists"}
+        <div className="top-section" style={{ textAlign: 'left' }}>
+          <h2 style={{ textAlign: 'left', marginBottom: 16 }}>
+            {isSelf ? t('profilePage.myPlaylists') : t('profilePage.playlists')}
           </h2>
-          <div className="album-row" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            {playlists.length === 0 && <div>Aucune playlist pour le moment.</div>}
+        <div className="album-row" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            {playlists.length === 0 && <div>{t('profilePage.noPlaylists')}</div>}
             {playlists.map((pl: any) => (
               <PlaylistCard
                 key={pl.id}
@@ -389,9 +484,17 @@ const ProfilePage: React.FC = () => {
         {isSelf && isModalOpen && (
           <EditProfileModal
             isOpen={isModalOpen}
-            onClose={closeProfileModal}
+            onClose={() => setIsModalOpen(false)}
             user={user}
-            onProfileUpdate={handleProfileUpdate}
+            onProfileUpdate={(u) => setUser(u)}
+          />
+        )}
+
+        {!isSelf && (
+          <DonateModal
+            isOpen={donateOpen}
+            onClose={() => setDonateOpen(false)}
+            toUserId={Number(user?.id)}
           />
         )}
       </div>

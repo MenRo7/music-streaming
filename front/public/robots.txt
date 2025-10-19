@@ -1,0 +1,16 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow private pages
+Disallow: /preferences
+Disallow: /my-music
+Disallow: /import
+Disallow: /api/
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://yourdomain.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1

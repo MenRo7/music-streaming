@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Playlist extends Model
 {
@@ -19,7 +19,7 @@ class Playlist extends Model
     public function musics()
     {
         return $this->belongsToMany(Music::class, 'music_playlist', 'playlist_id', 'music_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     public function likedBy()

@@ -25,5 +25,3 @@ class CreateMusicsTable extends Migration
         Schema::dropIfExists('musics');
     }
 }
-
-

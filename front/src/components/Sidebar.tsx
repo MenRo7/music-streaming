@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { usePlaylists } from '../apis/PlaylistContext';
 import { getLikesSummary } from '../apis/UserService';
@@ -20,15 +21,16 @@ type SubscribedProfile = { id: number; name: string; image: string | null };
 
 type MainFilter = 'playlists' | 'albums' | 'artists';
 
-const LABELS: Record<MainFilter, string> = {
-  playlists: 'Playlists',
-  albums: 'Albums',
-  artists: 'Artistes',
-};
-
 const Sidebar: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { playlists, fetchPlaylists } = usePlaylists();
+
+  const LABELS: Record<MainFilter, string> = {
+    playlists: t('sidebar.playlists'),
+    albums: t('sidebar.albums'),
+    artists: t('sidebar.artists'),
+  };
 
   const [activeFilters, setActiveFilters] = useState<Set<MainFilter>>(new Set());
   const [mineOnly, setMineOnly] = useState<boolean>(false); // demi-pilule "par vous"
@@ -79,7 +81,7 @@ const Sidebar: React.FC = () => {
       setLikedPlaylists(res.playlists ?? []);
       setSubs(res.profiles ?? []);
     } catch (e) {
-      console.error('Erreur chargement likes:', e);
+      console.error(t('errors.loadingLikes'), e);
     } finally {
       setLoadingLikes(false);
     }
@@ -107,14 +109,12 @@ const Sidebar: React.FC = () => {
     };
   }, [activeFilters, showAll]);
 
-  // contenu playlists selon sous-filtre
   const playlistsToShow = useMemo(() => {
     if (!show.playlists) return { fav: false, mine: [], liked: [] };
 
     if (mineOnly) {
       return { fav: false, mine: playlists, liked: [] };
     }
-    // tout: favoris + mes playlists + playlists likées
     return { fav: true, mine: playlists, liked: likedPlaylists };
   }, [show.playlists, mineOnly, playlists, likedPlaylists]);
 
@@ -136,9 +136,9 @@ const Sidebar: React.FC = () => {
                 className={`link-button half-pill ${mineOnly ? 'active' : ''}`}
                 onClick={() => setMineOnly(v => !v)}
                 aria-pressed={mineOnly}
-                title="Afficher uniquement vos playlists"
+                title={t('sidebar.showOnlyYours')}
               >
-                par vous
+                {t('sidebar.byYou')}
               </button>
             )}
           </li>
@@ -166,14 +166,21 @@ const Sidebar: React.FC = () => {
             <button
               className="link-button create-button"
               onClick={openPlaylistModal}
-              title="Créer une playlist"
+              title={t('sidebar.createPlaylist')}
             >
               <FontAwesomeIcon icon={faPlus} />
             </button>
           </li>
             {activeFilters.size > 0 && (
-              <li className="reset-filters" onClick={resetFilters}>
-                <FontAwesomeIcon icon={faTimes} className="filter-clear-icon" />
+              <li className="reset-filters">
+                <button
+                  onClick={resetFilters}
+                  className="link-button"
+                  title={t('sidebar.resetFilters')}
+                  aria-label={t('sidebar.resetFilters')}
+                >
+                  <FontAwesomeIcon icon={faTimes} className="filter-clear-icon" />
+                </button>
               </li>
             )}
         </ul>
@@ -181,11 +188,11 @@ const Sidebar: React.FC = () => {
 
       {show.playlists && (
         <>
-          <div className="sidebar-section-separator">Bibliothèque</div>
+          <div className="sidebar-section-separator">{t('sidebar.library')}</div>
           <div className="playlist-grid">
             {playlistsToShow.fav && (
               <Link to="/favorites" key="favorites">
-                <PlaylistCard title="Titres favoris" image="/favorites-cover.svg" />
+                <PlaylistCard title={t('sidebar.favoriteTracks')} image="/favorites-cover.svg" />
               </Link>
             )}
 
@@ -197,7 +204,18 @@ const Sidebar: React.FC = () => {
 
             {!mineOnly &&
               playlistsToShow.liked.map((pl) => (
-                <div key={`lp-${pl.id}`} role="button" onClick={() => navigate(`/playlist/${pl.id}`)}>
+                <div
+                  key={`lp-${pl.id}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/playlist/${pl.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/playlist/${pl.id}`);
+                    }
+                  }}
+                >
                   <PlaylistCard title={pl.title} image={pl.image} />
                 </div>
               ))}
@@ -207,9 +225,9 @@ const Sidebar: React.FC = () => {
 
       {show.artists && (
         <>
-          <div className="sidebar-section-separator">Artistes suivis</div>
+          <div className="sidebar-section-separator">{t('sidebar.followedArtists')}</div>
           <div className="liked-section">
-            {loadingLikes && <div className="liked-loading">Chargement…</div>}
+            {loadingLikes && <div className="liked-loading">{t('common.loading')}</div>}
             {subs.length > 0 ? (
               <div className="subs-grid">
                 {subs.map((u) => (
@@ -222,7 +240,7 @@ const Sidebar: React.FC = () => {
                 ))}
               </div>
             ) : (
-              !loadingLikes && <div className="empty-hint">Vous ne suivez encore aucun artiste.</div>
+              !loadingLikes && <div className="empty-hint">{t('sidebar.noFollowedArtists')}</div>
             )}
           </div>
         </>
@@ -230,23 +248,30 @@ const Sidebar: React.FC = () => {
 
       {show.albums && (
         <>
-          <div className="sidebar-section-separator">Albums aimés</div>
+          <div className="sidebar-section-separator">{t('sidebar.likedAlbums')}</div>
           <div className="liked-section">
-            {loadingLikes && <div className="liked-loading">Chargement…</div>}
+            {loadingLikes && <div className="liked-loading">{t('common.loading')}</div>}
             {likedAlbums.length > 0 ? (
               <div className="playlist-grid">
                 {likedAlbums.map((al) => (
                   <div
                     key={`la-${al.id}`}
                     role="button"
+                    tabIndex={0}
                     onClick={() => navigate(`/album/${al.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate(`/album/${al.id}`);
+                      }
+                    }}
                   >
                     <PlaylistCard title={al.title} image={al.image} />
                   </div>
                 ))}
               </div>
             ) : (
-              !loadingLikes && <div className="empty-hint">Pas encore d’albums likés.</div>
+              !loadingLikes && <div className="empty-hint">{t('sidebar.noLikedAlbums')}</div>
             )}
           </div>
         </>

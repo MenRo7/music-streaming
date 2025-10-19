@@ -5,6 +5,8 @@ export interface AlbumMusic {
   id: number;
   title: string;
   artist_name?: string;
+  artist_user_id?: number | null;
+  album_id?: number | null;
   duration?: number | string;
   audio?: string;
   image?: string | null;

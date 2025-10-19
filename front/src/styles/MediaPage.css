@@ -82,6 +82,46 @@
   margin-top: 4px;
 }
 
+.media-metadata {
+  font-size: 0.85rem;
+  color: #999;
+  margin-left: 20px;
+  margin-top: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.metadata-creator,
+.metadata-count,
+.metadata-duration {
+  display: inline-block;
+}
+
+.metadata-creator {
+  font-weight: 600;
+}
+
+.metadata-count::before {
+  content: '•';
+  margin-right: 12px;
+  color: #666;
+}
+
+.metadata-duration::before {
+  content: '•';
+  margin-right: 12px;
+  color: #666;
+}
+
+.media-copyright {
+  font-size: 0.75rem;
+  color: #888;
+  margin-left: 20px;
+  margin-top: 12px;
+  font-style: italic;
+}
+
 .media-controls {
   display: flex;
   justify-content: start;
@@ -100,8 +140,20 @@
   color: #5e2d91;
 }
 
-.burger-menu {
+.burger-menu,
+.sort-button-wrapper {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.sort-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
 }
 
 .media-page h2 {

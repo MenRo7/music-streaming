@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlay, faPause, faStepBackward, faStepForward, faRedo, faListUl,
@@ -16,6 +18,8 @@ type CSSVars = React.CSSProperties & Record<string, string>;
 const DEFAULT_IMAGE = '/default-playlist-image.png';
 
 const SongPlayer: React.FC = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const {
     audioUrl, title, artist, albumImage, isPlaying, setIsPlaying,
     next, prev, toggleShuffle, cycleRepeat, repeat, shuffle,
@@ -97,6 +101,7 @@ const SongPlayer: React.FC = () => {
     const isNewSource = lastUrlRef.current !== audioUrl;
     if (isNewSource) {
       audio.src = audioUrl;
+      audio.load();
       lastUrlRef.current = audioUrl;
       audio.currentTime = 0;
       seekingRef.current = false;
@@ -125,9 +130,6 @@ const SongPlayer: React.FC = () => {
     };
 
     const onEnded = () => {
-      // Si repeat actif, on laisse la boucle native (audio.loop) faire son job.
-      // Par sécurité, si une implémentation déclenche quand même 'ended',
-      // on relance instantanément et on ne passe PAS au titre suivant.
       if (audio.loop || repeatRef.current === 'one') {
         if (!audio.loop) {
           audio.currentTime = 0;
@@ -314,9 +316,39 @@ const SongPlayer: React.FC = () => {
   const baselineIds = (selectedPlaylists.length ? selectedPlaylists : getExistingIds()).map(Number);
   const idsKey = baselineIds.slice().sort((a,b)=>a-b).join('_');
 
+  const handleViewAlbum = () => {
+    if (!currentItem) {
+      console.log('SongPlayer: No currentItem');
+      return;
+    }
+    const anyItem = currentItem as any;
+    console.log('SongPlayer handleViewAlbum - currentItem:', currentItem);
+    console.log('SongPlayer handleViewAlbum - album_id:', anyItem.album_id);
+    if (anyItem.album_id) {
+      navigate(`/album/${anyItem.album_id}`);
+    } else {
+      console.warn('SongPlayer: No album_id found in currentItem');
+    }
+  };
+
+  const handleViewArtist = () => {
+    if (!currentItem) {
+      console.log('SongPlayer: No currentItem');
+      return;
+    }
+    const anyItem = currentItem as any;
+    console.log('SongPlayer handleViewArtist - currentItem:', currentItem);
+    console.log('SongPlayer handleViewArtist - artist_user_id:', anyItem.artist_user_id);
+    if (anyItem.artist_user_id) {
+      navigate(`/profile?user=${anyItem.artist_user_id}`);
+    } else {
+      console.warn('SongPlayer: No artist_user_id found in currentItem');
+    }
+  };
+
   const plusMenuItems = [
     {
-      label: 'Ajouter à une playlist',
+      label: t('songPlayer.addToPlaylist'),
       onClick: () => {},
       submenuContent: (
         <PlaylistCheckboxMenu
@@ -326,9 +358,9 @@ const SongPlayer: React.FC = () => {
         />
       ),
     },
-    { label: "Voir l’album", onClick: () => {} },
-    { label: "Voir l’artiste", onClick: () => {} },
-    { label: 'Ajouter à la file d’attente', onClick: handleAddToQueue },
+    { label: t('songPlayer.viewAlbum'), onClick: handleViewAlbum },
+    { label: t('songPlayer.viewArtist'), onClick: handleViewArtist },
+    { label: t('songPlayer.addToQueue'), onClick: handleAddToQueue },
   ];
 
   return (
@@ -342,12 +374,12 @@ const SongPlayer: React.FC = () => {
           onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
         />
         <div className="song-info">
-          <p className="song-title">{title || 'Aucun titre'}</p>
-          <p className="song-artist">{artist || 'Artiste inconnu'}</p>
+          <p className="song-title">{title || t('songPlayer.noTitle')}</p>
+          <p className="song-artist">{artist || t('songPlayer.unknownArtist')}</p>
         </div>
 
         <DropdownMenu
-          trigger={<FontAwesomeIcon icon={faPlus} className="player-icon" title="Plus d'actions" />}
+          trigger={<FontAwesomeIcon icon={faPlus} className="player-icon" title={t('songPlayer.moreActions')} />}
           items={plusMenuItems}
           wrapperClassName="player-plus-wrapper"
           menuClassName="player-plus-menu"
@@ -361,18 +393,17 @@ const SongPlayer: React.FC = () => {
           <FontAwesomeIcon
             icon={faShuffle}
             className={`player-icon ${shuffle ? 'is-active' : ''}`}
-            title="Lecture aléatoire"
+            title={t('songPlayer.shuffle')}
             onClick={toggleShuffle}
           />
-          <FontAwesomeIcon icon={faStepBackward} className="player-icon" title="Piste précédente" onClick={onPrevClick} />
-          <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} className="player-icon main-control" onClick={togglePlay} title={isPlaying ? 'Pause' : 'Lecture'} />
-          <FontAwesomeIcon icon={faStepForward} className="player-icon" title="Piste suivante" onClick={next} />
+          <FontAwesomeIcon icon={faStepBackward} className="player-icon" title={t('songPlayer.previous')} onClick={onPrevClick} />
+          <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} className="player-icon main-control" onClick={togglePlay} title={isPlaying ? t('songPlayer.pause') : t('songPlayer.play')} />
+          <FontAwesomeIcon icon={faStepForward} className="player-icon" title={t('songPlayer.next')} onClick={next} />
 
-          {/* Repeat: off ↔ one (actif = violet), pas de badge "1" */}
           <FontAwesomeIcon
             icon={faRedo}
             className={`player-icon ${repeat === 'one' ? 'is-active' : ''}`}
-            title={repeat === 'one' ? 'Répéter ce titre' : 'Répéter: désactivé'}
+            title={repeat === 'one' ? t('songPlayer.repeatOne') : t('songPlayer.repeatOff')}
             onClick={cycleRepeat}
           />
         </div>
@@ -401,14 +432,14 @@ const SongPlayer: React.FC = () => {
         <FontAwesomeIcon
           icon={faListUl}
           className={`player-icon ${isQueueOpen ? 'is-active' : ''}`}
-          title={isQueueOpen ? 'Masquer la file' : 'Afficher la file'}
+          title={isQueueOpen ? t('songPlayer.hideQueue') : t('songPlayer.showQueue')}
           onClick={toggleQueue}
         />
 
         <FontAwesomeIcon
           icon={isMuted || volume === 0 ? faVolumeMute : faVolumeUp}
           className={`player-icon ${isMuted || volume === 0 ? 'is-active' : ''}`}
-          title={isMuted || volume === 0 ? 'Activer le son' : 'Couper le son'}
+          title={isMuted || volume === 0 ? t('songPlayer.unmute') : t('songPlayer.mute')}
           onClick={toggleMute}
         />
 
