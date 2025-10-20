@@ -317,13 +317,7 @@ const SongPlayer: React.FC = () => {
   const idsKey = baselineIds.slice().sort((a,b)=>a-b).join('_');
 
   const handleViewAlbum = () => {
-    if (!currentItem) {
-      console.log('SongPlayer: No currentItem');
-      return;
-    }
     const anyItem = currentItem as any;
-    console.log('SongPlayer handleViewAlbum - currentItem:', currentItem);
-    console.log('SongPlayer handleViewAlbum - album_id:', anyItem.album_id);
     if (anyItem.album_id) {
       navigate(`/album/${anyItem.album_id}`);
     } else {
@@ -332,13 +326,7 @@ const SongPlayer: React.FC = () => {
   };
 
   const handleViewArtist = () => {
-    if (!currentItem) {
-      console.log('SongPlayer: No currentItem');
-      return;
-    }
     const anyItem = currentItem as any;
-    console.log('SongPlayer handleViewArtist - currentItem:', currentItem);
-    console.log('SongPlayer handleViewArtist - artist_user_id:', anyItem.artist_user_id);
     if (anyItem.artist_user_id) {
       navigate(`/profile?user=${anyItem.artist_user_id}`);
     } else {
