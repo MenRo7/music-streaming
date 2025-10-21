@@ -54,7 +54,6 @@ const PreferencesPage: React.FC = () => {
   const [showDataSummary, setShowDataSummary] = useState(false);
   const [dataSummary, setDataSummary] = useState<any>(null);
 
-  // Confirm Dialog state
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     title: '',
@@ -65,7 +64,6 @@ const PreferencesPage: React.FC = () => {
     variant: 'info' as 'danger' | 'warning' | 'info',
   });
 
-  // Toast state
   const [toast, setToast] = useState({
     isOpen: false,
     message: '',
@@ -131,10 +129,8 @@ const PreferencesPage: React.FC = () => {
 
   const onSaveLocale = async () => {
     try {
-      // Update i18next language
       await i18n.changeLanguage(locale);
 
-      // Save to backend if locale is 'fr' or 'en' (backend only supports these two)
       if (locale === 'fr' || locale === 'en') {
         await setLocalePref(locale);
       }
@@ -189,9 +185,13 @@ const PreferencesPage: React.FC = () => {
     try {
       await exportUserData();
       showToast(t('preferences.dataExported'), 'success');
-    } catch (e) {
-      console.error(e);
-      showToast(t('preferences.errorExportingData'), 'error');
+    } catch (e: any) {
+      if (e?.message === 'Unauthenticated' || e?.response?.status === 401) {
+        showToast(t('auth.sessionExpired') || 'Session expirée. Merci de vous reconnecter.', 'error');
+      } else {
+        console.error(e);
+        showToast(t('preferences.errorExportingData'), 'error');
+      }
     } finally {
       setExportingData(false);
     }
@@ -355,25 +355,6 @@ const PreferencesPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="card" style={{ borderColor: '#8b5cf6' }}>
-              <h2>{t('preferences.cookieManagement')}</h2>
-              <p className="hint">
-                {t('preferences.cookieHint')}
-              </p>
-              <div className="row mt">
-                <button
-                  className="btn"
-                  style={{ background: '#8b5cf6', color: '#fff' }}
-                  onClick={() => {
-                    localStorage.removeItem('cookieConsent');
-                    window.location.reload();
-                  }}
-                >
-                  {t('preferences.modifyCookies')}
-                </button>
-              </div>
-            </div>
-
             {showDataSummary && dataSummary && (
               <div className="card" style={{ borderColor: '#10b981' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -466,6 +447,25 @@ const PreferencesPage: React.FC = () => {
                 </div>
               </div>
             )}
+
+            <div className="card" style={{ borderColor: '#8b5cf6' }}>
+              <h2>{t('preferences.cookieManagement')}</h2>
+              <p className="hint">
+                {t('preferences.cookieHint')}
+              </p>
+              <div className="row mt">
+                <button
+                  className="btn"
+                  style={{ background: '#8b5cf6', color: '#fff' }}
+                  onClick={() => {
+                    localStorage.removeItem('cookieConsent');
+                    window.location.reload();
+                  }}
+                >
+                  {t('preferences.modifyCookies')}
+                </button>
+              </div>
+            </div>
 
             <div className="card" style={{ borderColor: '#ef4444' }}>
               <h2>{t('preferences.deleteAccountTitle')}</h2>

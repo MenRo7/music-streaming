@@ -331,6 +331,14 @@
     "noFile": "Aucun fichier"
   },
   "editAlbum": {
+    "addRow": "Ajouter un titre",
+    "chooseFileRequired": "Choisir un fichier",
+    "deleteAlbum": "Supprimer l'album",
+    "backToAlbum": "Retour à l'album",
+    "changeFile": "Changer le fichier",
+    "trackTitleRequired": "Titre du morceau",
+    "imageAppliesAll": "Cette image s'applique automatiquement à toutes les musiques de l'album.",
+    "deleting": "Suppression…",
     "title": "Modifier l'album",
     "albumInfo": "Infos de l'album",
     "albumTitle": "Titre",
