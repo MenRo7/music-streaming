@@ -27,4 +27,3 @@ class Album extends Model
             ->withTimestamps();
     }
 }
-

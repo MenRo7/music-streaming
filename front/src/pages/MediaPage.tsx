@@ -4,11 +4,11 @@ import {
   faPlay,
   faRandom,
   faEllipsisH,
-  faBars,
   faHeart as faHeartSolid,
 } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import DropdownMenu from '../components/DropdownMenu';
 import SongList, { UISong } from '../components/SongList';
@@ -36,6 +36,11 @@ interface MediaPageProps {
   isPlaylist?: boolean;
   collectionType?: 'playlist' | 'album' | 'favorites';
   collectionId?: number | string;
+  releaseDate?: string;
+  releaseYear?: number;
+  creatorName?: string;
+  trackCount?: number;
+  totalDuration?: string;
   onEdit?: () => void;
   onDelete?: () => void;
   renderModal?: React.ReactNode;
@@ -45,10 +50,17 @@ interface MediaPageProps {
   onAlbumClick?: (song: UISong) => void;
   onArtistClick?: (song: UISong) => void;
   headerMenuItems?: MenuItem[];
+  sortButton?: React.ReactNode;
 }
 
-const toNumberArray = (arr: any[]): number[] =>
-  (Array.isArray(arr) ? arr : []).map(Number).filter(Number.isFinite);
+// ✅ Utilitaire commun: supporte un tableau d'ids ou d'objets { id }
+const extractPlaylistIds = (val: any): number[] => {
+  if (!Array.isArray(val)) return [];
+  return val
+    .map((x) => (x && typeof x === 'object' ? x.id : x))
+    .map(Number)
+    .filter(Number.isFinite);
+};
 
 const MediaPage: React.FC<MediaPageProps> = ({
   title,
@@ -57,6 +69,11 @@ const MediaPage: React.FC<MediaPageProps> = ({
   songs,
   collectionType,
   collectionId,
+  releaseDate,
+  releaseYear,
+  creatorName,
+  trackCount,
+  totalDuration,
   onEdit,
   onDelete,
   renderModal,
@@ -66,7 +83,9 @@ const MediaPage: React.FC<MediaPageProps> = ({
   onAlbumClick,
   onArtistClick,
   headerMenuItems = [],
+  sortButton,
 }) => {
+  const { t } = useTranslation();
   const { setCollectionContext, toggleShuffle, playSong, playFromList } = usePlayer();
   const location = useLocation();
   const isAlbumPage = location.pathname.startsWith('/album');
@@ -82,7 +101,9 @@ const MediaPage: React.FC<MediaPageProps> = ({
         album_image: s.album_image,
         audio: s.audio,
         duration: s.duration,
-        playlistIds: toNumberArray(s.playlistIds ?? []),
+        playlistIds: extractPlaylistIds(s.playlistIds ?? []),
+        album_id: s.album_id,
+        artist_user_id: s.artist_user_id,
       })),
     [songs]
   );
@@ -100,7 +121,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
             audio: s.audio,
             dateAdded: s.dateAdded,
             duration: s.duration,
-            playlistIds: toNumberArray(s.playlistIds ?? []),
+            playlistIds: extractPlaylistIds(s.playlistIds ?? []),
             ...(s as any).album_id != null ? { album_id: (s as any).album_id } : {},
             ...(s as any).artist_user_id != null ? { artist_user_id: (s as any).artist_user_id } : {},
           } as any)
@@ -125,7 +146,18 @@ const MediaPage: React.FC<MediaPageProps> = ({
     if (collectionType === 'favorites') {
       playFromList(tracks, first.id);
     } else {
-      playSong(first.audio, first.name, first.artist, first.album_image || '', first.id);
+      playSong(
+        first.audio,
+        first.name,
+        first.artist,
+        first.album_image || '',
+        first.id,
+        {
+          playlistIds: first.playlistIds,
+          album_id: first.album_id,
+          artist_user_id: first.artist_user_id,
+        }
+      );
     }
   };
 
@@ -140,10 +172,10 @@ const MediaPage: React.FC<MediaPageProps> = ({
     const extras: { label: string; onClick: () => void }[] = [];
 
     if (!isAlbumPage && onAlbumClick && s?.album_id) {
-      extras.push({ label: "Voir l'album", onClick: () => onAlbumClick(song) });
+      extras.push({ label: t('mediaPage.viewAlbum'), onClick: () => onAlbumClick(song) });
     }
     if (!isProfilePage && onArtistClick && s?.artist_user_id) {
-      extras.push({ label: "Voir l'artiste", onClick: () => onArtistClick(song) });
+      extras.push({ label: t('mediaPage.viewArtist'), onClick: () => onArtistClick(song) });
     }
 
     return [...extras, ...base];
@@ -153,8 +185,8 @@ const MediaPage: React.FC<MediaPageProps> = ({
 
   const combinedHeaderMenu: MenuItem[] = [
     ...headerMenuItems,
-    ...(onEdit ? [{ label: 'Modifier', onClick: onEdit }] : []),
-    ...(onDelete ? [{ label: 'Supprimer', onClick: onDelete }] : []),
+    ...(onEdit ? [{ label: t('common.edit'), onClick: onEdit }] : []),
+    ...(onDelete ? [{ label: t('common.delete'), onClick: onDelete }] : []),
   ];
 
   return (
@@ -165,6 +197,18 @@ const MediaPage: React.FC<MediaPageProps> = ({
           <div className="media-texts">
             <h1>{title}</h1>
             {artist && <p className="media-artist">{artist}</p>}
+            {(creatorName || trackCount !== undefined || totalDuration) && (
+              <p className="media-metadata">
+                {creatorName && <span className="metadata-creator">{creatorName}</span>}
+                {trackCount !== undefined && <span className="metadata-count">{trackCount} {t('mediaPage.tracks')}</span>}
+                {totalDuration && <span className="metadata-duration">{totalDuration}</span>}
+              </p>
+            )}
+            {releaseYear && (
+              <p className="media-copyright">
+                © {releaseYear} {artist || t('mediaPage.allRightsReserved')}
+              </p>
+            )}
           </div>
         </div>
 
@@ -177,7 +221,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
               icon={isLiked ? faHeartSolid : faHeartRegular}
               className={`control-icon heart-icon ${isLiked ? 'liked' : ''}`}
               onClick={onToggleLike}
-              title={isLiked ? 'Supprimer des favoris' : 'Ajouter aux favoris'}
+              title={isLiked ? t('mediaPage.removeFromFavorites') : t('mediaPage.addToFavorites')}
             />
           )}
 
@@ -188,7 +232,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
             />
           )}
 
-          <FontAwesomeIcon icon={faBars} className="control-icon burger-menu" />
+          {sortButton && <div className="sort-button-wrapper">{sortButton}</div>}
         </div>
 
         <SongList
@@ -196,7 +240,7 @@ const MediaPage: React.FC<MediaPageProps> = ({
           showAlbum
           showArtist
           showDateAdded
-          showDuration={false}
+          showDuration={true}
           getActions={composedGetActions as any}
           onAlbumClick={onAlbumClick}
           onArtistClick={onArtistClick}

@@ -20,4 +20,3 @@ class AddAlbumIdToMusicTable extends Migration
         });
     }
 }
-

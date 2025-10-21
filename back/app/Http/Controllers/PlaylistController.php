@@ -13,7 +13,7 @@ class PlaylistController extends Controller
     {
         $playlists = Auth::user()->playlists->map(function ($playlist) {
             return [
-                'id'    => $playlist->id,
+                'id' => $playlist->id,
                 'title' => $playlist->title,
                 'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
             ];
@@ -25,16 +25,17 @@ class PlaylistController extends Controller
     public function show($id)
     {
         $playlist = Playlist::with([
+            'user:id,name',
             'musics' => function ($q) {
                 $q->with([
                     'user:id,name',
                     'album:id,title,image',
                     'playlists:id',
                 ]);
-            }
+            },
         ])->find($id);
 
-        if (!$playlist) {
+        if (! $playlist) {
             return response()->json(['message' => 'Playlist non trouvée'], 404);
         }
 
@@ -43,24 +44,26 @@ class PlaylistController extends Controller
             : false;
 
         return response()->json([
-            'id'       => $playlist->id,
-            'user_id'  => (int) $playlist->user_id,
-            'title'    => $playlist->title,
-            'image'    => $playlist->image ? asset('storage/' . $playlist->image) : null,
+            'id' => $playlist->id,
+            'user_id' => (int) $playlist->user_id,
+            'creator_name' => optional($playlist->user)->name,
+            'title' => $playlist->title,
+            'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
             'is_liked' => $isLiked,
 
-            'songs'    => $playlist->musics->map(function ($music) {
+            'songs' => $playlist->musics->map(function ($music) {
                 return [
-                    'id'              => (int) $music->id,
-                    'name'            => $music->title,
-                    'artist'          => optional($music->user)->name ?? $music->artist_name,
-                    'artist_user_id'  => optional($music->user)->id ? (int) $music->user->id : null,
-                    'album'           => optional($music->album)->title ?? 'Inconnu',
-                    'album_id'        => optional($music->album)->id ? (int) $music->album->id : null,
-                    'album_image'     => $music->image ? asset('storage/' . $music->image) : null,
-                    'audio'           => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
-                    'dateAdded'       => optional($music->pivot->created_at)->format('d/m/Y'),
-                    'playlistIds'     => $music->playlists->pluck('id'),
+                    'id' => (int) $music->id,
+                    'name' => $music->title,
+                    'artist' => optional($music->user)->name ?? $music->artist_name,
+                    'artist_user_id' => optional($music->user)->id ? (int) $music->user->id : null,
+                    'album' => optional($music->album)->title ?? 'Inconnu',
+                    'album_id' => optional($music->album)->id ? (int) $music->album->id : null,
+                    'album_image' => $music->image ? asset('storage/' . $music->image) : null,
+                    'audio' => $music->audio ? route('stream.music', ['filename' => $music->audio]) : null,
+                    'duration' => $music->duration,
+                    'dateAdded' => optional($music->pivot->created_at)->format('d/m/Y'),
+                    'playlistIds' => $music->playlists->pluck('id'),
                 ];
             }),
         ]);
@@ -85,9 +88,9 @@ class PlaylistController extends Controller
         Auth::user()->playlists()->save($playlist);
 
         return response()->json([
-            'message'  => 'Playlist créée avec succès',
+            'message' => 'Playlist créée avec succès',
             'playlist' => [
-                'id'    => $playlist->id,
+                'id' => $playlist->id,
                 'title' => $playlist->title,
                 'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
             ],
@@ -120,9 +123,9 @@ class PlaylistController extends Controller
         $playlist->save();
 
         return response()->json([
-            'message'  => 'Playlist mise à jour avec succès',
+            'message' => 'Playlist mise à jour avec succès',
             'playlist' => [
-                'id'    => $playlist->id,
+                'id' => $playlist->id,
                 'title' => $playlist->title,
                 'image' => $playlist->image ? asset('storage/' . $playlist->image) : null,
             ],
@@ -145,6 +148,7 @@ class PlaylistController extends Controller
 
         $musicId = $request->input('music_id');
         $playlist->musics()->syncWithoutDetaching([$musicId]);
+
         return response()->json(['message' => 'Musique ajoutée']);
     }
 
@@ -156,6 +160,7 @@ class PlaylistController extends Controller
 
         $musicId = $request->input('music_id');
         $playlist->musics()->detach($musicId);
+
         return response()->json(['message' => 'Musique retirée']);
     }
 
@@ -164,6 +169,7 @@ class PlaylistController extends Controller
         $pl = Playlist::findOrFail($id);
         $user = Auth::user();
         $user->likedPlaylists()->syncWithoutDetaching([$pl->id]);
+
         return response()->json(['status' => 'ok']);
     }
 
@@ -172,6 +178,7 @@ class PlaylistController extends Controller
         $pl = Playlist::findOrFail($id);
         $user = Auth::user();
         $user->likedPlaylists()->detach($pl->id);
+
         return response()->json(['status' => 'ok']);
     }
 }

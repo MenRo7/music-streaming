@@ -1,0 +1,31 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - routes
+        - config
+        - database
+
+    # Rule level (0-9, higher is stricter)
+    level: 5
+
+    # Ignore specific errors patterns
+    ignoreErrors:
+        - '#Unsafe usage of new static#'
+
+    # Check missing types
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+
+    # Exclude paths
+    excludePaths:
+        - app/Http/Middleware/TrustProxies.php
+        - app/Http/Middleware/RedirectIfAuthenticated.php
+        - bootstrap/*
+        - storage/*
+        - vendor/*
+
+    # Report unused variables
+    reportUnmatchedIgnoredErrors: false

@@ -1,22 +1,39 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AccountDeletionController;
+use App\Http\Controllers\AlbumController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\PlaylistController;
+use App\Http\Controllers\DataExportController;
+use App\Http\Controllers\DonationController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\MusicController;
-use App\Http\Controllers\AlbumController;
-use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\PlaylistController;
+use App\Http\Controllers\PreferencesController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+// Auth endpoints - Rate limiting strict (OWASP: 3-5 tentatives max pour brute force)
+Route::middleware('throttle:3,1')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+    Route::post('/resend-email-code', [AuthController::class, 'resendEmailCode']);
+    Route::post('/login/verify', [AuthController::class, 'verify2fa']);
+    Route::post('/login/resend', [AuthController::class, 'resend2fa']);
+    Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
+    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+});
+
+Route::get('/account/email/change/confirm/{token}', [AccountController::class, 'confirmEmailChange'])
+    ->name('account.email.confirm');
+
+Route::get('/account/delete/confirm/{token}', [AccountDeletionController::class, 'confirmDeletion'])
+    ->name('account.delete.confirm');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/user', [AuthController::class, 'user']);
 
     Route::get('/my-musics', [MusicController::class, 'myMusic']);
     Route::post('/music', [MusicController::class, 'store']);
@@ -60,6 +77,29 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/likes/summary', [UserController::class, 'likesSummary']);
     Route::get('/search', [GlobalSearchController::class, 'search']);
+    Route::post('/users/{id}/donate/checkout', [DonationController::class, 'createCheckoutSession'])
+        ->middleware('adult');
+
+    Route::get('/preferences', [PreferencesController::class, 'index']);
+    Route::post('/preferences/locale', [PreferencesController::class, 'setLocale']);
+    Route::post('/preferences/stripe/onboarding', [PreferencesController::class, 'createStripeOnboarding']);
+    Route::get('/preferences/stripe/status', [PreferencesController::class, 'stripeStatus']);
+
+    Route::post('/account/email/change/request', [AccountController::class, 'requestEmailChange'])
+        ->name('account.email.request');
+    Route::post('/account/password/change', [AccountController::class, 'changePassword'])
+        ->name('account.password.change');
+
+    Route::post('/account/delete/request', [AccountDeletionController::class, 'requestDeletion'])
+        ->name('account.delete.request')
+        ->middleware('throttle:3,1');
+
+    // GDPR Data Export & Access (Articles 15 & 20)
+    Route::get('/account/data/export', [DataExportController::class, 'exportData'])
+        ->name('account.data.export');
+    Route::get('/account/data/summary', [DataExportController::class, 'showDataSummary'])
+        ->name('account.data.summary');
 });
 
 Route::get('/search', [GlobalSearchController::class, 'search']);
+Route::post('/stripe/webhook', [DonationController::class, 'webhook']);

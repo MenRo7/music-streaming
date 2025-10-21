@@ -1,16 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-import { getPlaylists } from "../apis/PlaylistService";
-import { getLikesSummary } from "../apis/UserService";
-import { getFavorites } from "../apis/FavoritesService";
-import { getUserAlbums } from "../apis/MyMusicService";
+import { getPlaylists } from '../apis/PlaylistService';
+import { getLikesSummary } from '../apis/UserService';
+import { getFavorites } from '../apis/FavoritesService';
+import { getUserAlbums } from '../apis/MyMusicService';
 
-import PlaylistCard from "../components/PlaylistCard";
-import ProfileCircleCard from "../components/ProfileCircleCard";
-import { usePlayer } from "../apis/PlayerContext";
+import PlaylistCard from '../components/PlaylistCard';
+import ProfileCircleCard from '../components/ProfileCircleCard';
+import { usePlayer } from '../apis/PlayerContext';
 
-import "../styles/MainPage.css";
+import '../styles/MainPage.css';
 
 const TrackCard: React.FC<{
   id: number;
@@ -20,24 +21,29 @@ const TrackCard: React.FC<{
   audio?: string;
   onPlay?: () => void;
   onOpenAlbum?: () => void;
-}> = ({ title, artist, image, onPlay, onOpenAlbum }) => (
-  <div className="mp-track-card" role={onPlay ? "button" : undefined}>
-    <div className="mp-track-cover" onClick={onOpenAlbum}>
-      {image ? <img src={image} alt={title} /> : <div className="mp-cover-ph" />}
-    </div>
-    <div className="mp-track-infos">
-      <div className="mp-track-title" title={title}>
-        {title}
+}> = ({ title, artist, image, onPlay, onOpenAlbum }) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="mp-track-card" role={onPlay ? 'button' : undefined}>
+      <div className="mp-track-cover" onClick={onOpenAlbum}>
+        {image ? <img src={image} alt={title} /> : <div className="mp-cover-ph" />}
       </div>
-      <div className="mp-track-artist" title={artist}>
-        {artist}
+      <div className="mp-track-infos">
+        <div className="mp-track-title" title={title}>
+          {title}
+        </div>
+        <div className="mp-track-artist" title={artist}>
+          {artist}
+        </div>
       </div>
+      <button className="mp-play-btn" onClick={onPlay} aria-label={t('mainPage.playTrack', { title })}>
+        ▶
+      </button>
     </div>
-    <button className="mp-play-btn" onClick={onPlay} aria-label={`Lire ${title}`}>
-      ▶
-    </button>
-  </div>
-);
+  );
+};
+
 interface LikedProfile {
   id: number;
   name: string;
@@ -64,6 +70,7 @@ interface FavoriteItem {
 }
 
 const MainPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { playSong } = usePlayer();
 
@@ -90,7 +97,7 @@ const MainPage: React.FC = () => {
       setRecentFavorites(Array.isArray(favs) ? favs.slice(0, 12) : []);
       setMyAlbums(Array.isArray(albums) ? albums.slice(0, 12) : []);
     } catch (e) {
-      console.error("Chargement MainPage échoué", e);
+      console.error(t('errors.loadingMainPage'), e);
       setPlaylists([]);
       setFollowing([]);
       setLikedAlbums([]);
@@ -117,28 +124,28 @@ const MainPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="main-content">
+      <main id="main-content" className="main-content">
         <div className="main-page">
-          <div className="mp-loading">Chargement…</div>
+          <div className="mp-loading">{t('common.loading')}</div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="main-content">
+    <main id="main-content" className="main-content">
       <div className="main-page">
-        <h1>Page principale</h1>
+        <h1>{t('mainPage.title')}</h1>
 
         {!hasAny && (
           <div className="mp-empty">
-            Rien à afficher pour l’instant. Ajoute des favoris, des playlists et des albums ✨
+            {t('mainPage.emptyState')}
           </div>
         )}
 
         {playlists.length > 0 && (
           <div className="top-section">
-            <h2>Vos playlists</h2>
+            <h2>{t('mainPage.yourPlaylists')}</h2>
             <div className="album-row">
               {playlists.slice(0, 12).map((pl) => (
                 <PlaylistCard
@@ -154,7 +161,7 @@ const MainPage: React.FC = () => {
 
         {following.length > 0 && (
           <div className="top-section">
-            <h2>Vos artistes suivis</h2>
+            <h2>{t('mainPage.yourFollowedArtists')}</h2>
             <div className="album-row">
               {following.slice(0, 16).map((p) => (
                 <ProfileCircleCard
@@ -170,7 +177,7 @@ const MainPage: React.FC = () => {
 
         {recentFavorites.length > 0 && (
           <div className="top-section">
-            <h2>Récemment écoutés</h2>
+            <h2>{t('mainPage.recentlyListened')}</h2>
             <div className="album-row">
               {recentFavorites.map((m) => (
                 <TrackCard
@@ -180,7 +187,7 @@ const MainPage: React.FC = () => {
                   artist={m.artist}
                   image={m.album_image || undefined}
                   onPlay={() =>
-                    playSong(m.audio || "", m.name, m.artist, m.album_image || "", m.id)
+                    playSong(m.audio || '', m.name, m.artist, m.album_image || '', m.id)
                   }
                   onOpenAlbum={() =>
                     navigate(`/search?query=${encodeURIComponent(m.name)}`)
@@ -193,7 +200,7 @@ const MainPage: React.FC = () => {
 
         {myAlbums.length > 0 && (
           <div className="top-section">
-            <h2>Nouveautés</h2>
+            <h2>{t('mainPage.newReleases')}</h2>
             <div className="album-row">
               {myAlbums.map((a) => (
                 <PlaylistCard
@@ -209,7 +216,7 @@ const MainPage: React.FC = () => {
 
         {likedAlbums.length > 0 && (
           <div className="top-section">
-            <h2>Albums que vous aimez</h2>
+            <h2>{t('mainPage.albumsYouLike')}</h2>
             <div className="album-row">
               {likedAlbums.slice(0, 12).map((a) => (
                 <PlaylistCard
@@ -223,7 +230,7 @@ const MainPage: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 };
 

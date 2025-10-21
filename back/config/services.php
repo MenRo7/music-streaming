@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'webhook' => env('STRIPE_WEBHOOK_SECRET'),
+        'fee_bps' => env('STRIPE_CONNECT_APP_FEE_BPS', 0),
+        'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+    ],
+
 ];

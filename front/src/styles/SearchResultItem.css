@@ -1,4 +1,8 @@
 .search-result-item {
+  list-style: none;
+}
+
+.search-result-item-button {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -9,10 +13,20 @@
   transition: background-color 0.3s ease;
   width: 100%;
   box-sizing: border-box;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
 }
 
-.search-result-item:hover {
+.search-result-item-button:hover,
+.search-result-item-button:focus {
   background-color: #333;
+}
+
+.search-result-item-button:focus {
+  outline: 2px solid #7c3aed;
+  outline-offset: -2px;
 }
 
 .search-result-item-image {

@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { AuthContext } from '../apis/AuthContext';
 import { useUser } from '../apis/UserContext';
@@ -13,6 +14,7 @@ import { faHome, faUpload, faMusic } from '@fortawesome/free-solid-svg-icons'; /
 import '../styles/Navbar.css';
 
 const Navbar: React.FC = () => {
+  const { t } = useTranslation();
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const { user: currentUser, setUser } = useUser();
@@ -27,7 +29,7 @@ const Navbar: React.FC = () => {
       setUser(null);
       navigate('/auth');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion', error);
+      console.error(t('errors.logout'), error);
     }
   };
 
@@ -44,19 +46,19 @@ const Navbar: React.FC = () => {
         <GlobalSearchBar />
         <ul>
           <li>
-            <Link to="/main" aria-label="Accueil" title="Accueil">
+            <Link to="/main" aria-label={t('nav.home')} title={t('nav.home')}>
               <FontAwesomeIcon icon={faHome} />
             </Link>
           </li>
 
           <li>
-            <Link to="/my-music" aria-label="Ma musique" title="Ma musique">
+            <Link to="/my-music" aria-label={t('nav.myMusic')} title={t('nav.myMusic')}>
               <FontAwesomeIcon icon={faMusic} />
             </Link>
           </li>
 
           <li>
-            <Link to="/import" aria-label="Importer" title="Importer">
+            <Link to="/import" aria-label={t('nav.import')} title={t('nav.import')}>
               <FontAwesomeIcon icon={faUpload} />
             </Link>
           </li>
@@ -64,14 +66,14 @@ const Navbar: React.FC = () => {
           <li className="navbar-profile">
             <DropdownMenu
               items={[
-                { label: 'Profil', onClick: () => navigate('/profile') },
-                { label: 'Préférences', onClick: () => navigate('/preferences') },
-                { label: 'Déconnexion', onClick: handleLogout },
+                { label: t('nav.profile'), onClick: () => navigate('/profile') },
+                { label: t('nav.preferences'), onClick: () => navigate('/preferences') },
+                { label: t('nav.logout'), onClick: handleLogout },
               ]}
               trigger={
                 <img
                   src={avatarSrc}
-                  alt="User Profile"
+                  alt={t('nav.userProfile')}
                   className="navbar-profile-image"
                 />
               }

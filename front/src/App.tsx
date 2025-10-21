@@ -11,6 +11,8 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import MusicQueue from './components/MusicQueue';
 import SongPlayer from './components/SongPlayer';
+import CookieConsent from './components/CookieConsent';
+import SkipToContent from './components/SkipToContent';
 import PlaylistPage from './pages/PlaylistPage';
 import ProfilePage from './pages/ProfilePage';
 import MainPage from './pages/MainPage';
@@ -20,12 +22,17 @@ import ImportPage from './pages/ImportPage';
 import MyMusicPage from './pages/MyMusicPage';
 import FavoritesPage from './pages/FavoritesPage';
 import EditAlbumPage from './pages/EditAlbumPage';
-
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import PreferencesPage from './pages/PreferencesPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import LandingPage from './pages/LandingPage';
 
 import { AuthProvider } from './apis/AuthContext';
 import { PlaylistProvider } from './apis/PlaylistContext';
 import { UserProvider } from './apis/UserContext';
 import { PlayerProvider } from './apis/PlayerContext';
+import { DialogProvider } from './contexts/DialogContext';
 
 import './App.css';
 
@@ -38,13 +45,18 @@ const AppShell: React.FC = () => {
   const location = useLocation();
   const isAuthed = Boolean(localStorage.getItem('authToken'));
   const onAuthPage = location.pathname.startsWith('/auth');
+  const onAuthFlow = location.pathname.startsWith('/auth') || location.pathname.startsWith('/forgot');
+  const onLandingPage = location.pathname === '/';
 
   return (
     <div className="app">
+      <SkipToContent />
       <Routes>
+        <Route path="/" element={isAuthed ? <Navigate to="/main" replace /> : <LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
-
-        <Route path="/" element={<PrivateRoute element={<Navigate to="/main" replace />} />} />
+        <Route path="/forgot" element={<ForgotPasswordPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsOfServicePage />} />
 
         <Route
           path="/import"
@@ -175,6 +187,22 @@ const AppShell: React.FC = () => {
         />
 
         <Route
+          path="/preferences"
+          element={
+            <PrivateRoute
+              element={
+                <>
+                  <Navbar />
+                  <Sidebar />
+                  <MusicQueue />
+                  <PreferencesPage />
+                </>
+              }
+            />
+          }
+        />
+
+        <Route
           path="/main"
           element={
             <PrivateRoute
@@ -192,6 +220,7 @@ const AppShell: React.FC = () => {
       </Routes>
 
       {isAuthed && !onAuthPage && <SongPlayer />}
+      {!onAuthFlow && !onLandingPage && <CookieConsent />}
     </div>
   );
 };
@@ -202,9 +231,11 @@ const App: React.FC = () => {
       <AuthProvider>
         <PlaylistProvider>
           <UserProvider>
-            <Router>
-              <AppShell />
-            </Router>
+            <DialogProvider>
+              <Router>
+                <AppShell />
+              </Router>
+            </DialogProvider>
           </UserProvider>
         </PlaylistProvider>
       </AuthProvider>

@@ -1,0 +1,646 @@
+/**
+ * Landing Page Styles
+ * Uses application's real color scheme: black (#000, #1e1e1e), gray (#252525, #4f4c52), purple (#5e2d91, #d1b3ff)
+ */
+
+/* ========================================
+   Root Container
+   ======================================== */
+.landing-page {
+  min-height: 100vh;
+  /* Dark background with subtle purple gradient - matching app theme */
+  background: linear-gradient(135deg, #000000 0%, #1e1e1e 50%, #252525 100%);
+  color: #f3f0ff;
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.landing-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Subtle purple radial overlays for depth - using app's purple (#5e2d91, #d1b3ff) */
+  background:
+    radial-gradient(circle at 20% 50%, rgba(94, 45, 145, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(209, 179, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Container */
+.landing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.landing-header {
+  padding: 20px 0;
+  background: rgba(0, 0, 0, 0.85); /* Black with opacity */
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(94, 45, 145, 0.3); /* Purple accent border */
+}
+
+.landing-header .landing-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.landing-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  /* Purple gradient for logo - using app's purple (#5e2d91 → #d1b3ff) */
+  background: linear-gradient(135deg, #d1b3ff 0%, #5e2d91 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: transform 0.3s ease;
+}
+
+.landing-logo:hover {
+  transform: scale(1.05);
+}
+
+.landing-logo-img {
+  height: 40px;
+  width: auto;
+  transition: transform 0.3s ease;
+}
+
+.landing-logo:hover .landing-logo-img {
+  transform: scale(1.05);
+}
+
+.landing-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.language-switcher {
+  display: flex;
+  gap: 0.5rem;
+  margin-right: 0.75rem;
+  background: rgba(79, 76, 82, 0.4); /* App's gray #4f4c52 */
+  padding: 4px;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(209, 179, 255, 0.2); /* Purple border */
+}
+
+.language-switcher button {
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  padding: 6px 12px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #f3f0ff;
+}
+
+.language-switcher button:hover {
+  background: rgba(209, 179, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.language-switcher button.active {
+  background: rgba(94, 45, 145, 0.5); /* App's purple #5e2d91 */
+  border-color: #d1b3ff;
+  box-shadow: 0 0 12px rgba(209, 179, 255, 0.4);
+}
+
+/* Buttons */
+.btn-secondary,
+.btn-primary,
+.btn-cta-primary,
+.btn-cta-secondary,
+.btn-cta-large {
+  padding: 12px 28px;
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid rgba(209, 179, 255, 0.6); /* Light purple border */
+  color: #f3f0ff;
+}
+
+.btn-secondary:hover {
+  background: rgba(94, 45, 145, 0.3); /* Purple hover */
+  border-color: #d1b3ff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(94, 45, 145, 0.4);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #5e2d91 0%, #7c3aed 100%); /* App's purple gradient */
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(94, 45, 145, 0.5);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #5e2d91 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(94, 45, 145, 0.6);
+}
+
+/* Hero Section */
+.landing-hero {
+  padding: 80px 0 100px;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.landing-hero .landing-container {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.hero-content {
+  animation: fadeInUp 0.8s ease;
+}
+
+.hero-title {
+  font-size: 3.75rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
+  /* White to light purple gradient */
+  background: linear-gradient(135deg, #fff 0%, #f3f0ff 50%, #d1b3ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.025em;
+  text-shadow: 0 0 40px rgba(209, 179, 255, 0.1);
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  margin-bottom: 2.5rem;
+  color: rgba(243, 240, 255, 0.9); /* App's text color #f3f0ff */
+  line-height: 1.75;
+  max-width: 90%;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-cta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-cta-primary {
+  background: linear-gradient(135deg, #5e2d91 0%, #7c3aed 100%); /* Purple gradient */
+  color: #fff;
+  padding: 1rem 2.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  box-shadow: 0 10px 25px -5px rgba(94, 45, 145, 0.5);
+}
+
+.btn-cta-primary:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #d1b3ff 100%);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 20px 30px -5px rgba(94, 45, 145, 0.6);
+}
+
+.btn-cta-secondary {
+  background: rgba(79, 76, 82, 0.5); /* App's gray #4f4c52 */
+  backdrop-filter: blur(10px);
+  color: #f3f0ff;
+  border: 2px solid rgba(209, 179, 255, 0.4);
+  padding: 1rem 2.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.btn-cta-secondary:hover {
+  background: rgba(94, 45, 145, 0.5); /* Purple hover */
+  border-color: #d1b3ff;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(94, 45, 145, 0.4);
+}
+
+.hero-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeInRight 1s ease, float 6s ease-in-out infinite;
+}
+
+.hero-image-placeholder {
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 1;
+  /* Dark gray with purple tint - using app colors */
+  background: linear-gradient(135deg, rgba(37, 37, 37, 0.9) 0%, rgba(94, 45, 145, 0.3) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(209, 179, 255, 0.3);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    inset 0 0 60px rgba(94, 45, 145, 0.2);
+  border: 2px solid rgba(209, 179, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-image-placeholder::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(209, 179, 255, 0.15) 50%, /* Purple shimmer */
+    transparent 70%
+  );
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+/* Features Section */
+.landing-features {
+  padding: 6rem 0;
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.6) 0%, rgba(37, 37, 37, 0.8) 100%); /* App's dark grays */
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(94, 45, 145, 0.3); /* Purple border */
+  border-bottom: 1px solid rgba(94, 45, 145, 0.3);
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 3.75rem;
+  /* White to light purple gradient */
+  background: linear-gradient(135deg, #fff 0%, #d1b3ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  /* Dark gray background with purple accent - using app's colors */
+  background: linear-gradient(135deg, rgba(37, 37, 37, 0.8) 0%, rgba(79, 76, 82, 0.6) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(94, 45, 145, 0.2); /* Purple border */
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #5e2d91 0%, #d1b3ff 100%); /* Purple gradient */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  background: linear-gradient(135deg, rgba(94, 45, 145, 0.3) 0%, rgba(79, 76, 82, 0.8) 100%);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  border-color: rgba(209, 179, 255, 0.5);
+}
+
+.feature-icon {
+  margin-bottom: 1.5rem;
+  color: #d1b3ff; /* App's light purple */
+  filter: drop-shadow(0 0 12px rgba(209, 179, 255, 0.5));
+}
+
+.feature-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #f3f0ff; /* App's text color */
+}
+
+.feature-description {
+  font-size: 0.9375rem;
+  color: rgba(243, 240, 255, 0.8);
+  line-height: 1.6;
+}
+
+/* CTA Section */
+.landing-cta {
+  padding: 6rem 0;
+  text-align: center;
+  position: relative;
+}
+
+.cta-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  /* White to purple gradient */
+  background: linear-gradient(135deg, #fff 0%, #d1b3ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cta-subtitle {
+  font-size: 1.25rem;
+  margin-bottom: 2.5rem;
+  color: rgba(243, 240, 255, 0.9);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn-cta-large {
+  background: linear-gradient(135deg, #5e2d91 0%, #7c3aed 100%); /* Purple gradient */
+  color: #fff;
+  padding: 1.25rem 3.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  box-shadow: 0 20px 30px -5px rgba(94, 45, 145, 0.5);
+  border: 2px solid transparent;
+}
+
+.btn-cta-large:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #d1b3ff 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 25px 40px -5px rgba(94, 45, 145, 0.7);
+  border-color: rgba(209, 179, 255, 0.3);
+}
+
+/* Footer */
+.landing-footer {
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.8) 0%, rgba(0, 0, 0, 0.95) 100%); /* Dark background */
+  padding: 3.75rem 0 1.25rem;
+  border-top: 2px solid rgba(94, 45, 145, 0.3); /* Purple border */
+  backdrop-filter: blur(16px);
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.footer-section h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #d1b3ff; /* Light purple */
+}
+
+.footer-section p {
+  color: rgba(243, 240, 255, 0.8);
+  line-height: 1.625;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 0.75rem;
+}
+
+.footer-section button {
+  background: none;
+  border: none;
+  color: rgba(243, 240, 255, 0.8);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+}
+
+.footer-section button:hover {
+  color: #d1b3ff; /* Light purple hover */
+  transform: translateX(4px);
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(94, 45, 145, 0.2);
+  color: rgba(243, 240, 255, 0.6);
+  font-size: 0.875rem;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .landing-hero .landing-container {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .hero-image {
+    order: -1;
+  }
+
+  .hero-image-placeholder {
+    max-width: 400px;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.125rem;
+    max-width: 100%;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .cta-title {
+    font-size: 2.5rem;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-nav {
+    gap: 0.5rem;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+  }
+
+  .hero-title {
+    font-size: 2.25rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-cta-primary,
+  .btn-cta-secondary {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.875rem;
+  }
+
+  .cta-title {
+    font-size: 1.875rem;
+  }
+
+  .cta-subtitle {
+    font-size: 1rem;
+  }
+
+  .btn-cta-large {
+    padding: 1rem 2.5rem;
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-logo {
+    font-size: 1.25rem;
+  }
+
+  .landing-logo svg {
+    font-size: 1.5rem;
+  }
+
+  .language-switcher {
+    margin-right: 0.5rem;
+  }
+
+  .language-switcher button {
+    padding: 4px 8px;
+    font-size: 1rem;
+  }
+
+  .hero-title {
+    font-size: 1.875rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9375rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .cta-title {
+    font-size: 1.5rem;
+  }
+}

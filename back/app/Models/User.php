@@ -6,13 +6,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasRoles, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -24,6 +24,13 @@ class User extends Authenticatable
         'email',
         'password',
         'profile_image',
+        'email_verification_code',
+        'email_verification_expires_at',
+        'two_factor_code',
+        'two_factor_expires_at',
+        'password_reset_code',
+        'password_reset_expires_at',
+        'date_of_birth',
     ];
 
     /**
@@ -45,8 +52,19 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_verification_expires_at' => 'datetime',
+            'two_factor_expires_at' => 'datetime',
             'password' => 'hashed',
+            'password_reset_expires_at' => 'datetime',
+            'payments_enabled' => 'boolean',
+            'email_verified_at' => 'datetime',
+            'date_of_birth' => 'date',
         ];
+    }
+
+    public function getAgeAttribute(): ?int
+    {
+        return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 
     public function playlists()
@@ -54,7 +72,7 @@ class User extends Authenticatable
         return $this->hasMany(Playlist::class);
     }
 
-        public function favorites()
+    public function favorites()
     {
         return $this->belongsToMany(\App\Models\Music::class, 'favorites')
             ->withTimestamps();
