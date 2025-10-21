@@ -1,7 +1,7 @@
 import React, { createContext, useState } from 'react';
 import axios from 'axios';
-import { API_URL } from './api';
-import { loginRequest, verify2fa } from './AuthService';
+import { API_URL } from '../apis/api';
+import { loginRequest, verify2fa } from '../apis/AuthService';
 
 interface AuthContextType {
   user: any;

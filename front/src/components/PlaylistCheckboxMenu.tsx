@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { usePlaylists } from '../apis/PlaylistContext';
+import { usePlaylists } from '../contexts/PlaylistContext';
 import '../styles/PlaylistCheckboxMenu.css';
 
 interface PlaylistCheckboxMenuProps {

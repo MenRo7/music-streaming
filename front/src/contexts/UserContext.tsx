@@ -7,7 +7,7 @@ import React, {
   useMemo,
 } from 'react';
 import debounce from 'lodash.debounce';
-import { fetchUser } from './UserService';
+import { fetchUser } from '../apis/UserService';
 
 interface UserContextType {
   user: any;

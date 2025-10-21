@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { getUserMusics, getUserAlbums, deleteMusic } from '../apis/MyMusicService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import { addFavorite } from '../apis/FavoritesService';
-import { usePlayer } from '../apis/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 import { useDialogContext } from '../contexts/DialogContext';
 
 import PlaylistCard from '../components/PlaylistCard';

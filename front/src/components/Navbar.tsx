@@ -2,8 +2,8 @@ import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-import { AuthContext } from '../apis/AuthContext';
-import { useUser } from '../apis/UserContext';
+import { AuthContext } from '../contexts/AuthContext';
+import { useUser } from '../contexts/UserContext';
 
 import DropdownMenu from './DropdownMenu';
 import GlobalSearchBar from './GlobalSearchBar';

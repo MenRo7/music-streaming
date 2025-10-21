@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 
 import MediaPage from './MediaPage';
 import { getAlbumById, Album, likeAlbum, unlikeAlbum } from '../apis/AlbumService';
-import { usePlayer, Track } from '../apis/PlayerContext';
-import { useUser } from '../apis/UserContext';
+import { usePlayer, Track } from '../contexts/PlayerContext';
+import { useUser } from '../contexts/UserContext';
 
 import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
