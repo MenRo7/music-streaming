@@ -92,15 +92,15 @@ class AccountController extends Controller
             'new_password' => [
                 'required',
                 'string',
-                'min:12', // CNIL 2022 - 12 caractères minimum
-                'regex:/[a-z]/', // Au moins une minuscule
-                'regex:/[A-Z]/', // Au moins une majuscule
-                'regex:/[0-9]/', // Au moins un chiffre
-                'regex:/[@$!%*#?&]/', // Au moins un caractère spécial
+                'min:12',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*#?&]/',
                 'different:current_password',
             ],
         ], [
-            'new_password.different' => 'Le nouveau mot de passe doit être différent de l'actuel.',
+            'new_password.different' => "Le nouveau mot de passe doit être différent de l'actuel.",
             'new_password.min' => 'Le mot de passe doit contenir au moins 12 caractères.',
             'new_password.regex' => 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*#?&).',
         ]);

@@ -1,56 +1,46 @@
-import api from './api';
+import axios from 'axios';
+import { API_URL } from './api';
 
-/**
- * Export all user data in JSON format (GDPR Article 20 - Right to data portability)
- */
+const cleanToken = (t: string | null) => (t || '').replace(/^"+|"+$/g, '').trim();
+const getAuthHeaders = () => {
+  const token = cleanToken(localStorage.getItem('authToken'));
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+};
+
 export const exportUserData = async (): Promise<void> => {
   try {
-    const response = await api.get('/account/data/export', {
-      responseType: 'blob', // Important for file download
+    const response = await axios.get(`${API_URL}/account/data/export`, {
+      responseType: 'blob',
+      withCredentials: true,
+      headers: getAuthHeaders(),
     });
-
-    // Extract filename from Content-Disposition header or use default
-    const contentDisposition = response.headers['content-disposition'];
-    let filename = 'rhapsody_data_export.json';
-
-    if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
-      if (filenameMatch && filenameMatch[1]) {
-        filename = filenameMatch[1];
-      }
-    }
-
-    // Create a blob from the response
+    const contentDisposition = response.headers['content-disposition'] || '';
+    const match = /filename="?([^"]+)"?/i.exec(contentDisposition);
+    const filename = match?.[1] || 'rhapsody_data_export.json';
     const blob = new Blob([response.data], { type: 'application/json' });
-
-    // Create a temporary URL for the blob
     const url = window.URL.createObjectURL(blob);
-
-    // Create a temporary anchor element and trigger download
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename;
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
-
-    // Cleanup
-    document.body.removeChild(link);
+    link.remove();
     window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Error exporting user data:', error);
+  } catch (error: any) {
+    const status = error?.response?.status;
+    if (status === 401) {
+      throw new Error('Unauthenticated');
+    }
     throw error;
   }
 };
 
-/**
- * Get a summary of all user data (GDPR Article 15 - Right of access)
- */
 export const getUserDataSummary = async (): Promise<any> => {
-  try {
-    const response = await api.get('/account/data/summary');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching user data summary:', error);
-    throw error;
-  }
+  const response = await axios.get(`${API_URL}/account/data/summary`, {
+    withCredentials: true,
+    headers: getAuthHeaders(),
+  });
+  return response.data;
 };

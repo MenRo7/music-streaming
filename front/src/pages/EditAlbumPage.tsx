@@ -256,11 +256,6 @@ const EditAlbumPage: React.FC = () => {
             const hasAudio = Boolean(track.audio);
             const chosen = track._audioFile?.name;
             const audioLabel = hasAudio ? t('editAlbum.changeFile') : t('editAlbum.chooseFile');
-            const audioInfo = chosen
-              ? chosen
-              : hasAudio
-              ? t('editAlbum.currentFilePresent')
-              : t('editAlbum.noFileSelected');
 
             const rowStyle: React.CSSProperties = track._deleted
               ? { opacity: 0.5, filter: 'grayscale(1)' }
@@ -285,9 +280,6 @@ const EditAlbumPage: React.FC = () => {
                     onChange={(e) => onTrackAudioChange(track.id, e.target.files?.[0] ?? null)}
                     disabled={track._deleted}
                   />
-                  <small style={{ opacity: 0.8, display: 'block', marginTop: 6 }}>
-                    {audioInfo}
-                  </small>
                 </div>
 
                 <button
@@ -318,9 +310,6 @@ const EditAlbumPage: React.FC = () => {
                   accept="audio/*"
                   onChange={(e) => onNewTrackAudio(idx, e.target.files?.[0] ?? null)}
                 />
-                <small style={{ opacity: 0.8, display: 'block', marginTop: 6 }}>
-                  {nt.audio ? nt.audio.name : t('editAlbum.noFile')}
-                </small>
               </div>
 
               {newTracks.length > 1 && (

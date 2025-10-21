@@ -189,9 +189,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const now = tracks[startIndex];
       const before = tracks.slice(0, startIndex);
 
-      console.log('PlayerContext rebuildAutoFromIndex - track being set as current:', now);
-      console.log('PlayerContext rebuildAutoFromIndex - album_id:', now.album_id, 'artist_user_id:', now.artist_user_id);
-
       let tail: Track[];
       if (useShuf) {
         const pool = tracks.filter((_, i) => i !== startIndex);
@@ -201,7 +198,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
 
       const nowItem: QueueItem = { ...now, qid: uid(), origin: 'auto', from: src };
-      console.log('PlayerContext rebuildAutoFromIndex - nowItem created:', nowItem);
       setCurrentItem(nowItem);
       setHistory(useShuf ? [] : before.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
       setQueueAuto(tail.map(t => ({ ...t, qid: uid(), origin: 'auto', from: src })));
@@ -212,8 +208,6 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const setCollectionContext = useCallback<PlayerContextType['setCollectionContext']>((src, tracks) => {
     const t = Array.isArray(tracks) ? tracks.slice() : [];
-    console.log('PlayerContext setCollectionContext - setting collection with', t.length, 'tracks');
-    console.log('PlayerContext setCollectionContext - first track:', t[0]);
     if (sameSource(sourceRef.current, src) && sameTracks(collectionRef.current, t)) return;
     setSource(src);
     setCollection(t);
@@ -223,12 +217,10 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     if (trackId != null) {
       const idx = collectionRef.current.findIndex(t => t.id === trackId);
       if (idx >= 0 && sourceRef.current.type !== 'none') {
-        console.log('PlayerContext playSong - using collection, track at index:', idx, collectionRef.current[idx]);
         rebuildAutoFromIndex(collectionRef.current, idx, sourceRef.current);
         return;
       }
     }
-    console.log('PlayerContext playSong - creating manual track with opts:', opts);
     const t: Track = {
       id: trackId ?? -Date.now(),
       name,

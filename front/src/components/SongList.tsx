@@ -82,8 +82,6 @@ const SongList = <T extends UISong>({
   const handlePlaySong = (song: T) => {
     if (!song.audio) return;
     const s: any = song;
-    console.log('SongList handlePlaySong - song:', song);
-    console.log('SongList handlePlaySong - album_id:', s.album_id, 'artist_user_id:', s.artist_user_id);
     playSong(
       song.audio,
       song.name,
