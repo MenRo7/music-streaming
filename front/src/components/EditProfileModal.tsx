@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from 'react-i18next';
 
 import { updateUserProfile } from "../apis/UserService";
-import { useUser } from "../apis/UserContext";
+import { useUser } from "../contexts/UserContext";
 
 import "../styles/EditProfileModal.css";
 

@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePlayer } from '../apis/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 import SearchResultItem from './SearchResultItem';
 import '../styles/SearchResultsDropdown.css';
 

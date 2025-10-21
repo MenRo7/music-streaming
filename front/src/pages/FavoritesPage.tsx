@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getFavorites, removeFavorite } from '../apis/FavoritesService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
-import { usePlayer, Track } from '../apis/PlayerContext';
+import { usePlayer, Track } from '../contexts/PlayerContext';
 import MediaPage from './MediaPage';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { UISong } from '../components/SongList';

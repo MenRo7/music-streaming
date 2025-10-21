@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 
 import DropdownMenu from '../components/DropdownMenu';
 import SongList, { UISong } from '../components/SongList';
-import { usePlayer, Track } from '../apis/PlayerContext';
+import { usePlayer, Track } from '../contexts/PlayerContext';
 import '../styles/MediaPage.css';
 
 interface MediaSong extends Track {

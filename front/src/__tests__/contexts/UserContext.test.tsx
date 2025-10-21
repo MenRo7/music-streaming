@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { UserProvider, useUser } from '../../apis/UserContext';
+import { UserProvider, useUser } from '../../contexts/UserContext';
 import * as UserService from '../../apis/UserService';
 
 // Mock UserService

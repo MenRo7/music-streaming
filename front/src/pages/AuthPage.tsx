@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-import { AuthContext } from '../apis/AuthContext';
+import { AuthContext } from '../contexts/AuthContext';
 import { registerUser, verifyEmail, resendEmailCode, resend2fa } from '../apis/AuthService';
 
 import '../styles/AuthPage.css';
