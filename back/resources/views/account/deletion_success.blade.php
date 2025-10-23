@@ -10,6 +10,7 @@
     try {
       localStorage.removeItem('authToken');
     } catch (e) {}
-    window.location.href = '/auth';
+    // Redirect to frontend login page
+    window.location.href = '{{ config("app.frontend_url", "http://localhost:3000") }}/auth';
   </script>
 </body></html>
