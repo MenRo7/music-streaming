@@ -10,7 +10,10 @@
       "Bash(npm run test:coverage:*)",
       "Bash(php artisan:*)",
       "Bash(cat:*)",
-      "Bash(php check_users.php:*)"
+      "Bash(php check_users.php:*)",
+      "Bash(git checkout:*)",
+      "Bash(curl:*)",
+      "Bash(timeout 15 npm run type-check:*)"
     ],
     "deny": [],
     "ask": []

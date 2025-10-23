@@ -92,3 +92,31 @@
   min-width: 180px;
   z-index: 1000;
 }
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .global-search-container {
+    flex: 1;
+    padding: 0 0.5rem;
+  }
+
+  .global-search-wrapper {
+    max-width: 100%;
+  }
+
+  .global-search-input {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.75rem;
+    padding-right: 4rem;
+  }
+
+  .global-search-icon {
+    right: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .global-search-filter-icon {
+    right: 0.5rem;
+    font-size: 0.9rem;
+  }
+}

@@ -33,8 +33,12 @@ import { PlaylistProvider } from './contexts/PlaylistContext';
 import { UserProvider } from './contexts/UserContext';
 import { PlayerProvider } from './contexts/PlayerContext';
 import { DialogProvider } from './contexts/DialogContext';
+import { MobileDrawerProvider } from './contexts/MobileDrawerContext';
+
+import MobileDrawers from './components/MobileDrawers';
 
 import './App.css';
+import './styles/MobileResponsive.css';
 
 const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const token = localStorage.getItem('authToken');
@@ -219,7 +223,12 @@ const AppShell: React.FC = () => {
         />
       </Routes>
 
-      {isAuthed && !onAuthPage && <SongPlayer />}
+      {isAuthed && !onAuthPage && (
+        <>
+          <SongPlayer />
+          <MobileDrawers />
+        </>
+      )}
       {!onAuthFlow && !onLandingPage && <CookieConsent />}
     </div>
   );
@@ -232,9 +241,11 @@ const App: React.FC = () => {
         <PlaylistProvider>
           <UserProvider>
             <DialogProvider>
-              <Router>
-                <AppShell />
-              </Router>
+              <MobileDrawerProvider>
+                <Router>
+                  <AppShell />
+                </Router>
+              </MobileDrawerProvider>
             </DialogProvider>
           </UserProvider>
         </PlaylistProvider>
