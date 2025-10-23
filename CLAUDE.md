@@ -26,6 +26,9 @@ php artisan key:generate
 php artisan migrate
 php artisan db:seed
 
+# Storage setup (IMPORTANT: Required for music file serving)
+php artisan storage:link             # Create symlink: public/storage -> storage/app/public
+
 # Development server
 php artisan serve                    # Runs on http://localhost:8000
 php artisan queue:listen --tries=1   # Queue worker
@@ -110,10 +113,13 @@ npm run analyze                           # Analyze bundle size (after build)
 - Schema evolves via migrations - check `database/migrations/` for latest structure
 
 **API Routing Pattern**
-- Public: `/register`, `/login`, search
-- Throttled: email verification, 2FA, password reset (6/min or 3/min)
-- Authenticated: All CRUD operations for music/albums/playlists, favorites, user management
-- Webhook: `/stripe/webhook` for payment processing
+- Public routes: Limited public endpoints (most require authentication)
+- Rate-limited auth routes (3 requests/minute): `/register`, `/login`, `/verify-email`, 2FA endpoints, password reset
+  - Configured with `->middleware('throttle:3,1')` in `routes/api.php`
+  - Follows OWASP best practices (3-5 attempts for brute force protection)
+- Authenticated routes: All CRUD operations for music/albums/playlists, favorites, user management
+  - Protected by `->middleware('auth:sanctum')`
+- Webhook routes: `/stripe/webhook` for payment processing (no auth, uses Stripe signature verification)
 
 **Important Backend Files**
 - `routes/api.php` - All API endpoints
@@ -125,11 +131,12 @@ npm run analyze                           # Analyze bundle size (after build)
 ### Frontend Architecture
 
 **State Management**
-- Context-based global state with 4 main providers (nested order):
+- Context-based global state with 5 main providers (nested order in `App.tsx`):
   1. `PlayerProvider` - Music player state, queue management
   2. `AuthProvider` - Authentication state, user session
   3. `PlaylistProvider` - Playlist operations
   4. `UserProvider` - User profile and preferences
+  5. `DialogProvider` - Modal/dialog state management
 
 **Routing & Navigation**
 - React Router v6 with `PrivateRoute` wrapper for auth protection
@@ -142,6 +149,8 @@ npm run analyze                           # Analyze bundle size (after build)
 - Base URL: `http://127.0.0.1:8000/api`
 - **Critical**: `axios.defaults.withCredentials = true` for CSRF/session cookies
 - Service layer pattern: dedicated service files for each domain (AuthService, MusicService, PlaylistService, etc.)
+- Context providers in `src/contexts/` wrap service layer with React state
+- API services in `src/apis/` handle raw HTTP requests
 
 **Internationalization**
 - i18next with browser language detection
@@ -165,7 +174,8 @@ npm run analyze                           # Analyze bundle size (after build)
 - `src/App.tsx` - Main routing and provider hierarchy
 - `src/App.lazy.tsx` - Lazy-loaded component exports for code splitting
 - `src/App.optimized.tsx` - Optimized version with React.lazy and Suspense
-- `src/apis/` - API services and context providers
+- `src/apis/` - API service layer (HTTP requests)
+- `src/contexts/` - React context providers (state management)
 - `src/components/` - Reusable UI components
 - `src/pages/` - Route-level page components
 - `src/i18n/` - Internationalization config and translations
@@ -183,6 +193,19 @@ This project has been developed and tested on Windows. When working on Windows:
 - Ensure line endings are set correctly (Git should handle this automatically with `.gitattributes`)
 - The `composer dev` command uses `npx concurrently` which works cross-platform
 
+### Unified Development Command
+For convenience, you can run the entire stack (backend + frontend + queue) with a single command:
+```bash
+cd back
+composer dev
+```
+This starts three processes concurrently:
+1. Laravel API server (port 8000)
+2. Queue worker for background jobs
+3. Vite dev server from `../front` (port 3000)
+
+**Requirements**: Frontend dependencies must be installed first (`cd ../front && npm install`)
+
 ### Git Workflow
 - Current branch: `main`
 - No upstream branch configured (local development)
@@ -194,6 +217,7 @@ This project has been developed and tested on Windows. When working on Windows:
 Required environment variables:
 ```
 APP_URL=http://localhost:8000
+FRONTEND_URL=http://localhost:3000
 DB_CONNECTION=mysql
 DB_DATABASE=musicapp
 SANCTUM_STATEFUL_DOMAINS=localhost:3000
@@ -202,6 +226,8 @@ CORS_SUPPORTS_CREDENTIALS=true
 STRIPE_KEY, STRIPE_SECRET, STRIPE_WEBHOOK_SECRET
 MAIL_* (configure Mailhog/Mailpit for local development)
 ```
+
+**Note**: `FRONTEND_URL` is used for redirections after account deletion confirmation and other email-based workflows.
 
 ### Frontend (.env)
 Required environment variables:
@@ -218,19 +244,23 @@ All environment variables are validated and accessed via `src/config/env.ts`.
 
 **Backend**:
 1. Create migration if database changes needed: `php artisan make:migration`
-2. Create/update model in `app/Models/`
+2. Create/update model in `app/Models/` (add relationships, fillable fields, casts)
 3. Create controller: `php artisan make:controller`
 4. Add routes to `routes/api.php`
 5. Add authentication middleware if required: `->middleware('auth:sanctum')`
-6. Run migration: `php artisan migrate`
+6. Consider rate limiting for sensitive endpoints: `->middleware('throttle:3,1')`
+7. Run migration: `php artisan migrate`
+8. Run code quality checks: `composer check` (lint + analyse + test)
 
 **Frontend**:
-1. Create service file in `src/apis/` for API calls
-2. Add TypeScript interfaces/types
-3. Create/update components in `src/components/`
-4. Create page in `src/pages/` if new route needed
-5. Update routing in `src/App.tsx`
-6. Add translations to all locale files in `src/i18n/locales/`
+1. Create service file in `src/apis/` for API calls (handles HTTP)
+2. Create/update context provider in `src/contexts/` if state management needed
+3. Add TypeScript interfaces/types (consider creating in a shared types file)
+4. Create/update components in `src/components/`
+5. Create page in `src/pages/` if new route needed
+6. Update routing in `src/App.tsx` (use `PrivateRoute` for protected pages)
+7. Add translations to all locale files in `src/i18n/locales/` (at minimum: en.json, fr.json)
+8. Run code quality checks: `npm run lint && npm run type-check`
 
 ### Internationalizing a Component
 
@@ -268,10 +298,12 @@ const MyComponent = () => {
 
 ### Audio Streaming & Metadata
 - Music files streamed via HLS (HTTP Live Streaming)
-- Backend handles audio file serving (check `AudioStreamController`)
-- Frontend uses HLS.js for playback
+- Backend handles audio file serving via `AudioStreamController`
+- Audio endpoint pattern: `/api/music/{id}/stream` (protected by auth middleware)
+- Frontend uses HLS.js for playback in `SongPlayer` component
 - Audio metadata (duration, artist, title) extracted on upload using GetID3 library
 - Supported formats: MP3, M4A, WAV, FLAC, OGG
+- Files stored in `storage/app/public/music/` (symlinked to `public/storage/music/`)
 
 ### Payment Integration
 - Stripe Checkout Sessions for donations
@@ -281,10 +313,20 @@ const MyComponent = () => {
 
 ## Testing Considerations
 
-- Backend tests in `tests/Unit/` and `tests/Feature/`
-- Frontend uses React Testing Library + Jest
-- Mock authenticated state by setting `localStorage.authToken` in frontend tests
-- Backend uses array drivers for mail/cache in test environment (see `phpunit.xml`)
+### Backend Testing
+- Tests organized in `tests/Unit/` and `tests/Feature/`
+- PHPUnit configuration in `phpunit.xml`
+- Test environment uses array drivers for mail/cache/session (see `phpunit.xml`)
+- Database: Can use in-memory SQLite or actual MySQL (configure in `phpunit.xml`)
+- Run specific test suites: `vendor/bin/phpunit tests/Unit` or `tests/Feature`
+- Coverage reports generated to `coverage/` directory
+
+### Frontend Testing
+- React Testing Library + Jest
+- Test files in `src/__tests__/`
+- Mock authenticated state by setting `localStorage.authToken` in tests
+- Coverage threshold: 50% minimum (branches, functions, lines, statements)
+- Configuration in `package.json` under `jest` key
 
 ## Common Debugging Scenarios
 

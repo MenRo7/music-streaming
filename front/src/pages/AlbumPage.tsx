@@ -107,7 +107,7 @@ const AlbumPage: React.FC = () => {
         album: album.title,
         album_image: album.image || undefined,
         audio: m.audio || '',
-        duration: toDurationStr(m.duration),
+        duration: m.duration,
         playlistIds: extractPlaylistIds((m as any).playlist_ids ?? (m as any).playlists ?? (m as any).playlistIds ?? []),
         dateAdded: album.created_at || '',
         artist_user_id: m.artist_user_id ?? (album.user_id ? Number(album.user_id) : undefined),
