@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlay, faPause, faStepBackward, faStepForward, faRedo, faListUl,
-  faVolumeUp, faPlus, faShuffle, faVolumeMute,
+  faVolumeUp, faPlus, faShuffle, faVolumeMute, faBookOpen, faBars,
 } from '@fortawesome/free-solid-svg-icons';
 
 import DropdownMenu from '../components/DropdownMenu';
@@ -12,6 +12,7 @@ import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 
 import { usePlayer } from '../contexts/PlayerContext';
+import { useMobileDrawer } from '../contexts/MobileDrawerContext';
 import '../styles/SongPlayer.css';
 
 type CSSVars = React.CSSProperties & Record<string, string>;
@@ -25,6 +26,7 @@ const SongPlayer: React.FC = () => {
     next, prev, toggleShuffle, cycleRepeat, repeat, shuffle,
     currentItem, addToQueue, currentTrackId,
   } = usePlayer();
+  const { isLibraryOpen, isQueueOpen, toggleLibrary, toggleQueue } = useMobileDrawer();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [progressSec, setProgressSec] = useState(0);
@@ -43,7 +45,6 @@ const SongPlayer: React.FC = () => {
 
   const [isMuted, setIsMuted] = useState(false);
   const lastVolumeRef = useRef(100);
-  const [isQueueOpen, setIsQueueOpen] = useState(true);
 
   if (!audioRef.current) {
     const a = new Audio();
@@ -229,14 +230,6 @@ const SongPlayer: React.FC = () => {
     }
   };
 
-  const toggleQueue = () => {
-    setIsQueueOpen(v => {
-      const nv = !v;
-      window.dispatchEvent(new CustomEvent('queue:toggle', { detail: { open: nv } }));
-      return nv;
-    });
-  };
-
   const formatTime = (time: number) => {
     if (!isFinite(time) || isNaN(time)) return '0:00';
     const minutes = Math.floor(time / 60);
@@ -353,6 +346,26 @@ const SongPlayer: React.FC = () => {
 
   return (
     <div className="song-player">
+      {/* Mobile drawer buttons - only visible on mobile */}
+      <div className="mobile-drawer-buttons">
+        <button
+          className={`mobile-drawer-button ${isLibraryOpen ? 'is-active' : ''}`}
+          onClick={toggleLibrary}
+          aria-label="Toggle Library"
+          title={t('sidebar.library') || 'Bibliothèque'}
+        >
+          <FontAwesomeIcon icon={faBookOpen} />
+        </button>
+        <button
+          className={`mobile-drawer-button ${isQueueOpen ? 'is-active' : ''}`}
+          onClick={toggleQueue}
+          aria-label="Toggle Queue"
+          title={t('songPlayer.queue')}
+        >
+          <FontAwesomeIcon icon={faBars} />
+        </button>
+      </div>
+
       <div className="player-left">
         <img
           key={currentItem?.qid ?? currentTrackId ?? albumImage ?? 'noimg'}

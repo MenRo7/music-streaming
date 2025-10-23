@@ -1,0 +1,108 @@
+/* Mobile Responsive - Global adaptations for all pages */
+
+@media (max-width: 768px) {
+  /* All main content containers - full width on mobile */
+  .main-content,
+  .media-content,
+  .profile-page,
+  .preferences-page,
+  .import-page,
+  .edit-album-page {
+    position: relative !important;
+    top: 80px !important; /* Below navbar (navbar height = 80px) */
+    bottom: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    padding-bottom: 90px !important; /* Space for player (75px + margin) */
+    min-height: calc(100vh - 155px) !important; /* viewport - navbar(80px) - player(75px) */
+    max-height: none !important;
+  }
+
+  /* Navbar adjustments for mobile */
+  .navbar-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 100 !important;
+  }
+
+  .navbar {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding: 0 1rem !important;
+  }
+
+  /* Adapt sidebar and music queue for mobile drawers */
+  .sidebar,
+  .music-queue {
+    position: static !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Ensure sidebar/queue content is visible in drawers */
+  .mobile-drawer-content .sidebar,
+  .mobile-drawer-content .music-queue {
+    display: flex !important;
+    flex-direction: column !important;
+    background-color: #252525 !important;
+  }
+
+  /* Ensure inner sections are visible and scrollable */
+  .mobile-drawer-content .sidebar .nav,
+  .mobile-drawer-content .sidebar .pill-container,
+  .mobile-drawer-content .music-queue .mq-sections {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .mobile-drawer-content .music-queue .mq-sections {
+    overflow-y: visible !important;
+    padding: 8px !important;
+  }
+
+  /* Hide the separate containers on mobile (only show in drawers) */
+  body > .sidebar,
+  body > .music-queue-container,
+  .app > .sidebar,
+  .app > .music-queue-container {
+    display: none !important;
+  }
+
+  /* Adjust body/app padding */
+  body {
+    overflow-x: hidden;
+  }
+
+  .app {
+    overflow-x: hidden;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .main-content,
+  .media-content,
+  .profile-page,
+  .preferences-page,
+  .import-page,
+  .edit-album-page {
+    padding: 12px !important;
+  }
+}
