@@ -5,7 +5,7 @@ import { faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
 import DropdownMenu from './DropdownMenu';
 import PlaylistCheckboxMenu from './PlaylistCheckboxMenu';
-import { usePlayer } from '../apis/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 
 import '../styles/SongList.css';
 

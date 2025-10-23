@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faList, faTrash, faPlay, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import DropdownMenu from '../components/DropdownMenu';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
-import { usePlayer } from '../apis/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import '../styles/MusicQueue.css';
 
@@ -276,9 +276,6 @@ const MusicQueue: React.FC = () => {
                     <span className="mq-track" title={currentItem.name}>
                       {currentItem.name}
                     </span>
-                    {currentItem.duration && (
-                      <span className="mq-duration">{currentItem.duration}</span>
-                    )}
                   </div>
                   <span className="mq-artist" title={currentItem.artist}>
                     {currentItem.artist}
@@ -346,7 +343,6 @@ const MusicQueue: React.FC = () => {
                         <span className="mq-track" title={track.name}>
                           {track.name}
                         </span>
-                        {track.duration && <span className="mq-duration">{track.duration}</span>}
                       </div>
                       <span className="mq-artist" title={track.artist}>
                         {track.artist}
@@ -437,7 +433,6 @@ const MusicQueue: React.FC = () => {
                         <span className="mq-track" title={track.name}>
                           {track.name}
                         </span>
-                        {track.duration && <span className="mq-duration">{track.duration}</span>}
                       </div>
                       <span className="mq-artist" title={track.artist}>
                         {track.artist}

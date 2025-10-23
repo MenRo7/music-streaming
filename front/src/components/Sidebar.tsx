@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-import { usePlaylists } from '../apis/PlaylistContext';
+import { usePlaylists } from '../contexts/PlaylistContext';
 import { getLikesSummary } from '../apis/UserService';
 
 import PlaylistCard from './PlaylistCard';

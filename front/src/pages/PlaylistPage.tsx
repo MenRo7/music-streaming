@@ -11,12 +11,12 @@ import {
   likePlaylist,
   unlikePlaylist,
 } from '../apis/PlaylistService';
-import { usePlaylists } from '../apis/PlaylistContext';
+import { usePlaylists } from '../contexts/PlaylistContext';
 import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
-import { usePlayer } from '../apis/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 import { useDialogContext } from '../contexts/DialogContext';
 import CreateEditPlaylistModal from '../components/CreateEditPlaylistModal';
-import { useUser } from '../apis/UserContext';
+import { useUser } from '../contexts/UserContext';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import SortButton, { SortOption } from '../components/SortButton';
 

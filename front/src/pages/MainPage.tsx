@@ -9,7 +9,7 @@ import { getUserAlbums } from '../apis/MyMusicService';
 
 import PlaylistCard from '../components/PlaylistCard';
 import ProfileCircleCard from '../components/ProfileCircleCard';
-import { usePlayer } from '../apis/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 
 import '../styles/MainPage.css';
 

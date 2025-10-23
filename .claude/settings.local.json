@@ -3,7 +3,14 @@
     "allow": [
       "Bash(php check_duration.php:*)",
       "Bash(del:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(php artisan tinker:*)",
+      "Bash(composer test:coverage:*)",
+      "Bash(vendor/bin/phpunit:*)",
+      "Bash(npm run test:coverage:*)",
+      "Bash(php artisan:*)",
+      "Bash(cat:*)",
+      "Bash(php check_users.php:*)"
     ],
     "deny": [],
     "ask": []

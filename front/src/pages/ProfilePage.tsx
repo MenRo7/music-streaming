@@ -13,7 +13,7 @@ import {
 import { getUserMusics, getUserAlbums, deleteMusic } from '../apis/MyMusicService';
 import { getPlaylists, addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
-import { usePlayer } from '../apis/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 import { useDialogContext } from '../contexts/DialogContext';
 
 import EditProfileModal from '../components/EditProfileModal';

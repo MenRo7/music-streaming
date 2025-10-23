@@ -11,7 +11,7 @@ import DropdownMenu from '../components/DropdownMenu';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
 
-import { usePlayer } from '../apis/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 import '../styles/SongPlayer.css';
 
 type CSSVars = React.CSSProperties & Record<string, string>;

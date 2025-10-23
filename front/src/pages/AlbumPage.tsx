@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 
 import MediaPage from './MediaPage';
 import { getAlbumById, Album, likeAlbum, unlikeAlbum } from '../apis/AlbumService';
-import { usePlayer, Track } from '../apis/PlayerContext';
-import { useUser } from '../apis/UserContext';
+import { usePlayer, Track } from '../contexts/PlayerContext';
+import { useUser } from '../contexts/UserContext';
 
 import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
@@ -107,7 +107,7 @@ const AlbumPage: React.FC = () => {
         album: album.title,
         album_image: album.image || undefined,
         audio: m.audio || '',
-        duration: toDurationStr(m.duration),
+        duration: m.duration,
         playlistIds: extractPlaylistIds((m as any).playlist_ids ?? (m as any).playlists ?? (m as any).playlistIds ?? []),
         dateAdded: album.created_at || '',
         artist_user_id: m.artist_user_id ?? (album.user_id ? Number(album.user_id) : undefined),

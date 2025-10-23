@@ -67,6 +67,16 @@ class User extends Authenticatable
         return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 
+    public function music()
+    {
+        return $this->hasMany(Music::class);
+    }
+
+    public function albums()
+    {
+        return $this->hasMany(Album::class);
+    }
+
     public function playlists()
     {
         return $this->hasMany(Playlist::class);

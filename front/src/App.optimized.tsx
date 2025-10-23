@@ -30,10 +30,10 @@ import {
   TermsOfServicePage,
 } from './App.lazy';
 
-import { AuthProvider } from './apis/AuthContext';
-import { PlaylistProvider } from './apis/PlaylistContext';
-import { UserProvider } from './apis/UserContext';
-import { PlayerProvider } from './apis/PlayerContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { PlaylistProvider } from './contexts/PlaylistContext';
+import { UserProvider } from './contexts/UserContext';
+import { PlayerProvider } from './contexts/PlayerContext';
 
 import './App.css';
 
