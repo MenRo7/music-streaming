@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import MediaPage from './MediaPage';
+import SEOHead from '../components/SEOHead';
 import {
   getPlaylistById,
   deletePlaylist,
@@ -230,13 +231,37 @@ const PlaylistPage: React.FC = () => {
   }, [songsSorted, addToQueue, t]);
 
   return (
-    <MediaPage
-      title={playlist?.title}
-      image={playlist?.image}
-      songs={songsSorted}
-      isPlaylist={true}
-      collectionType="playlist"
-      collectionId={playlist?.id}
+    <>
+      <SEOHead
+        title={`${playlist?.title || 'Playlist'} | Rhapsody`}
+        description={`Découvrez la playlist ${playlist?.title || 'Playlist'} sur Rhapsody. ${songsSorted.length} morceaux sélectionnés avec soin.`}
+        type="music.playlist"
+        image={playlist?.image || undefined}
+        structuredData={{
+          '@type': 'ItemList',
+          name: playlist?.title,
+          numberOfItems: songsSorted.length,
+          itemListElement: songsSorted.slice(0, 10).map((track, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            item: {
+              '@type': 'MusicRecording',
+              name: track.title,
+              byArtist: {
+                '@type': 'MusicGroup',
+                name: track.artist || 'Unknown Artist',
+              },
+            },
+          })),
+        }}
+      />
+      <MediaPage
+        title={playlist?.title}
+        image={playlist?.image}
+        songs={songsSorted}
+        isPlaylist={true}
+        collectionType="playlist"
+        collectionId={playlist?.id}
       creatorName={playlist?.creator_name}
       trackCount={songsSorted.length}
       totalDuration={totalDuration}
@@ -309,6 +334,7 @@ const PlaylistPage: React.FC = () => {
         if (s.artist_user_id) navigate(`/profile?user=${s.artist_user_id}`);
       }}
     />
+    </>
   );
 };
 

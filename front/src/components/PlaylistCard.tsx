@@ -17,7 +17,7 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({ title, image, onClick }) =>
       style={onClick ? { cursor: 'pointer' } : undefined}
     >
       {image ? (
-        <img src={image} alt={title} className="playlist-image" />
+        <img src={image} alt={title} className="playlist-image" loading="lazy" decoding="async" />
       ) : (
         <div className="placeholder-image">Image</div>
       )}

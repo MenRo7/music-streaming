@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+import SEOHead from '../components/SEOHead';
 import {
   fetchUser,
   fetchUserSummary,
@@ -329,9 +330,29 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="profile-page">
-      <div className="profile-content">
-        {showDonBanner && (
+    <>
+      <SEOHead
+        title={`${profileData.name || 'Artiste'} - Profil | Rhapsody`}
+        description={`Découvrez la musique de ${profileData.name || 'cet artiste'} sur Rhapsody. ${summary.albums || 0} albums, ${summary.musics || 0} morceaux, ${summary.subscribers || 0} abonnés.`}
+        type="profile"
+        image={profileData.profile_image || undefined}
+        structuredData={{
+          '@type': 'Person',
+          name: profileData.name,
+          image: profileData.profile_image,
+          url: window.location.href,
+          interactionStatistic: [
+            {
+              '@type': 'InteractionCounter',
+              interactionType: 'https://schema.org/FollowAction',
+              userInteractionCount: summary.subscribers || 0,
+            },
+          ],
+        }}
+      />
+      <div className="profile-page">
+        <div className="profile-content">
+          {showDonBanner && (
           <div
             className={`don-banner ${donParam === 'ok' ? 'success' : 'error'}`}
             role="status"
@@ -499,6 +520,7 @@ const ProfilePage: React.FC = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

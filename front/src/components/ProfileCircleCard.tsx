@@ -15,7 +15,7 @@ const ProfileCircleCard: React.FC<ProfileCircleCardProps> = ({ name, image, onCl
       tabIndex={onClick ? 0 : -1}
     >
       {image ? (
-        <img src={image} alt={name} className="profile-circle-img" />
+        <img src={image} alt={name} className="profile-circle-img" loading="lazy" decoding="async" />
       ) : (
         <div className="profile-circle-placeholder">{name?.charAt(0)?.toUpperCase() ?? 'U'}</div>
       )}

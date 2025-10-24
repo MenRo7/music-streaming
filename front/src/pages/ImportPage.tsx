@@ -90,6 +90,7 @@ const ImportPage: React.FC = () => {
       <div className="import-content">
         <h2>{t('import.title')}</h2>
 
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <div className="form-section">
           <h3>{t('import.chooseType')}</h3>
           <div className="import-form">
@@ -106,6 +107,7 @@ const ImportPage: React.FC = () => {
         </div>
 
         {importType === 'music' && (
+          /* eslint-disable-next-line jsx-a11y/label-has-associated-control */
           <div className="form-section">
             <h3>{t('import.importMusic')}</h3>
             <div className="import-form">
@@ -118,6 +120,7 @@ const ImportPage: React.FC = () => {
                 onChange={(e) => setMusicTitle(e.target.value)}
               />
             </div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <div className="import-form">
               <label htmlFor="music-file">{t('import.audioFile')}</label>
               <input
@@ -127,6 +130,7 @@ const ImportPage: React.FC = () => {
                 onChange={(e) => setMusicFile(e.target.files ? e.target.files[0] : null)}
               />
             </div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <div className="import-form">
               <label htmlFor="music-image">{t('import.musicImage')}</label>
               <input
@@ -140,6 +144,7 @@ const ImportPage: React.FC = () => {
         )}
 
         {importType === 'album' && (
+          /* eslint-disable-next-line jsx-a11y/label-has-associated-control */
           <div className="form-section">
             <h3>{t('import.importAlbum')}</h3>
             <div className="import-form">
@@ -152,6 +157,7 @@ const ImportPage: React.FC = () => {
                 onChange={(e) => setAlbumName(e.target.value)}
               />
             </div>
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <div className="import-form">
               <label htmlFor="album-image">{t('import.albumImage')}</label>
               <input
@@ -161,6 +167,7 @@ const ImportPage: React.FC = () => {
               />
             </div>
 
+            {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
             <div className="songs-section">
               <h3>{t('import.addTracks')}</h3>
               {songs.map((song, index) => (

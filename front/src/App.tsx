@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,6 +6,8 @@ import {
   Navigate,
   useLocation
 } from 'react-router-dom';
+
+import { initGA, logPageView } from './utils/analytics';
 
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -51,6 +53,11 @@ const AppShell: React.FC = () => {
   const onAuthPage = location.pathname.startsWith('/auth');
   const onAuthFlow = location.pathname.startsWith('/auth') || location.pathname.startsWith('/forgot');
   const onLandingPage = location.pathname === '/';
+
+  // Track page views on route change
+  useEffect(() => {
+    logPageView();
+  }, [location.pathname]);
 
   return (
     <div className="app">
@@ -235,6 +242,11 @@ const AppShell: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // Initialize Google Analytics on app load
+  useEffect(() => {
+    initGA();
+  }, []);
+
   return (
     <PlayerProvider>
       <AuthProvider>

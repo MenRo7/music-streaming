@@ -13,7 +13,13 @@
       "Bash(php check_users.php:*)",
       "Bash(git checkout:*)",
       "Bash(curl:*)",
-      "Bash(timeout 15 npm run type-check:*)"
+      "Bash(timeout 15 npm run type-check:*)",
+      "Bash(while read f)",
+      "Bash(do test -f \"../__tests__/components/$f%.tsx.test.tsx\")",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

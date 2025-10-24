@@ -6,6 +6,7 @@ import MediaPage from './MediaPage';
 import { getAlbumById, Album, likeAlbum, unlikeAlbum } from '../apis/AlbumService';
 import { usePlayer, Track } from '../contexts/PlayerContext';
 import { useUser } from '../contexts/UserContext';
+import SEOHead from '../components/SEOHead';
 
 import { addFavorite, removeFavorite, getFavorites } from '../apis/FavoritesService';
 import { addMusicToPlaylist, removeMusicFromPlaylist } from '../apis/PlaylistService';
@@ -211,13 +212,30 @@ const AlbumPage: React.FC = () => {
   }
 
   return (
-    <MediaPage
-      title={album.title}
-      artist={album.artist_name || t('album.unknownArtist')}
-      image={album.image || ''}
-      songs={songs}
-      collectionType="album"
-      collectionId={Number(id)}
+    <>
+      <SEOHead
+        title={`${album.title} - ${album.artist_name || t('album.unknownArtist')} | Rhapsody`}
+        description={`Écoutez l'album ${album.title} de ${album.artist_name || t('album.unknownArtist')} sur Rhapsody. ${songs.length} morceaux disponibles en streaming.`}
+        type="music.album"
+        image={album.image || undefined}
+        structuredData={{
+          '@type': 'MusicAlbum',
+          name: album.title,
+          byArtist: {
+            '@type': 'MusicGroup',
+            name: album.artist_name || t('album.unknownArtist'),
+          },
+          numTracks: songs.length,
+          image: album.image || undefined,
+        }}
+      />
+      <MediaPage
+        title={album.title}
+        artist={album.artist_name || t('album.unknownArtist')}
+        image={album.image || ''}
+        songs={songs}
+        collectionType="album"
+        collectionId={Number(id)}
       releaseYear={(album as any).release_year}
       trackCount={songs.length}
       totalDuration={totalDuration}
@@ -261,6 +279,7 @@ const AlbumPage: React.FC = () => {
         if (album.user_id) navigate(`/profile?user=${album.user_id}`);
       }}
     />
+    </>
   );
 };
 

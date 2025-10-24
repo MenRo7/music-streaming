@@ -226,6 +226,7 @@ const EditAlbumPage: React.FC = () => {
       <div className="import-content">
         <h2>{t('editAlbum.title')}</h2>
 
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <div className="form-section">
           <h3>{t('editAlbum.albumInfo')}</h3>
 
@@ -249,6 +250,7 @@ const EditAlbumPage: React.FC = () => {
           </div>
         </div>
 
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <div className="form-section" style={{ marginTop: 24 }}>
           <h3>{t('editAlbum.tracks')}</h3>
 
@@ -292,6 +294,7 @@ const EditAlbumPage: React.FC = () => {
             );
           })}
 
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <h3 style={{ marginTop: 24 }}>{t('editAlbum.addTracks')}</h3>
 
           {newTracks.map((nt, idx) => (

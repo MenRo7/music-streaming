@@ -25,6 +25,8 @@ const SearchResultItem: React.FC<SearchResultItemProps> = ({ image, label, isRou
             src={image || DEFAULT_IMAGE}
             alt={label}
             className={`search-result-item-image ${isRounded ? 'rounded' : ''}`}
+            loading="lazy"
+            decoding="async"
           />
         )}
         <div className="search-result-content">
