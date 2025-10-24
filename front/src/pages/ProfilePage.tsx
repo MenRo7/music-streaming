@@ -49,6 +49,7 @@ const ProfilePage: React.FC = () => {
 
   const [viewer, setViewer] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
+  const [summary, setSummary] = useState<any>({});
 
   const [songs, setSongs] = useState<UISong[]>([]);
   const [albums, setAlbums] = useState<any[]>([]);
@@ -103,11 +104,12 @@ const ProfilePage: React.FC = () => {
         setSubscribed(false);
       } else {
         const summaryRes = await fetchUserSummary(targetId!);
-        const summary = summaryRes.data;
+        const summaryData = summaryRes.data;
+        setSummary(summaryData);
 
-        setUser(summary.user);
+        setUser(summaryData.user);
 
-        const formattedSongs: UISong[] = (summary.musics as any[]).map((m: any) =>
+        const formattedSongs: UISong[] = (summaryData.musics as any[]).map((m: any) =>
           ({
             id: Number(m.id),
             name: m.name,
@@ -121,16 +123,16 @@ const ProfilePage: React.FC = () => {
             ...(m.album_id != null ? { album_id: Number(m.album_id) } : {}),
             ...(m.artist_user_id != null
               ? { artist_user_id: Number(m.artist_user_id) }
-              : { artist_user_id: Number(summary?.user?.id) }),
+              : { artist_user_id: Number(summaryData?.user?.id) }),
           } as any)
         );
 
         setSongs(formattedSongs);
-        setAlbums(summary.albums || []);
-        setPlaylists(summary.playlists || []);
+        setAlbums(summaryData.albums || []);
+        setPlaylists(summaryData.playlists || []);
 
         try {
-          const isSub = await isSubscribedToUser(Number(summary.user.id));
+          const isSub = await isSubscribedToUser(Number(summaryData.user.id));
           setSubscribed(isSub);
         } catch {
           setSubscribed(false);
@@ -332,20 +334,20 @@ const ProfilePage: React.FC = () => {
   return (
     <>
       <SEOHead
-        title={`${profileData.name || 'Artiste'} - Profil | Rhapsody`}
-        description={`Découvrez la musique de ${profileData.name || 'cet artiste'} sur Rhapsody. ${summary.albums || 0} albums, ${summary.musics || 0} morceaux, ${summary.subscribers || 0} abonnés.`}
+        title={`${user?.name || 'Artiste'} - Profil | Rhapsody`}
+        description={`Découvrez la musique de ${user?.name || 'cet artiste'} sur Rhapsody. ${albums.length || 0} albums, ${songs.length || 0} morceaux.`}
         type="profile"
-        image={profileData.profile_image || undefined}
+        image={user?.profile_image || undefined}
         structuredData={{
           '@type': 'Person',
-          name: profileData.name,
-          image: profileData.profile_image,
+          name: user?.name,
+          image: user?.profile_image,
           url: window.location.href,
           interactionStatistic: [
             {
               '@type': 'InteractionCounter',
               interactionType: 'https://schema.org/FollowAction',
-              userInteractionCount: summary.subscribers || 0,
+              userInteractionCount: summary?.subscribers || 0,
             },
           ],
         }}

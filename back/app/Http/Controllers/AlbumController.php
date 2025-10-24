@@ -118,7 +118,7 @@ class AlbumController extends Controller
                 'user_id' => (int) $album->user_id,
                 'artist_name' => $album->artist_name,
             ],
-        ]);
+        ], 201);
     }
 
     public function myAlbums()

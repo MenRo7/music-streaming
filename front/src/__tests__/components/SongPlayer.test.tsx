@@ -3,17 +3,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import SongPlayer from '../../components/SongPlayer';
 import { PlayerProvider } from '../../contexts/PlayerContext';
+import { MobileDrawerProvider } from '../../contexts/MobileDrawerContext';
 import * as PlaylistService from '../../apis/PlaylistService';
 
 // Mock services
 jest.mock('../../apis/PlaylistService');
 
-// Mock react-i18next
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
-}));
+// i18n is mocked globally in setupTests.ts
 
 // Mock heavy components
 jest.mock('../../components/DropdownMenu', () => {
@@ -154,9 +150,11 @@ jest.mock('../../contexts/PlayerContext', () => ({
 const renderSongPlayer = () => {
   return render(
     <BrowserRouter>
-      <PlayerProvider>
-        <SongPlayer />
-      </PlayerProvider>
+      <MobileDrawerProvider>
+        <PlayerProvider>
+          <SongPlayer />
+        </PlayerProvider>
+      </MobileDrawerProvider>
     </BrowserRouter>
   );
 };

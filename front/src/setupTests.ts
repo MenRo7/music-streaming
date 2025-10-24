@@ -34,3 +34,27 @@ global.console = {
   error: jest.fn(),
   warn: jest.fn(),
 };
+
+// Mock react-i18next globally
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: any) => {
+      // Simple replacement for {{variable}} patterns
+      if (params && typeof params === 'object') {
+        let result = key;
+        Object.keys(params).forEach(param => {
+          const regex = new RegExp(`{{${param}}}`, 'g');
+          result = result.replace(regex, String(params[param]));
+        });
+        return result;
+      }
+      return key;
+    },
+    i18n: {
+      changeLanguage: jest.fn(),
+      language: 'en',
+    },
+  }),
+  Trans: ({ children }: any) => children,
+  I18nextProvider: ({ children }: any) => children,
+}));

@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { AuthProvider, AuthContext } from '../../apis/AuthContext';
+import { AuthProvider, AuthContext } from '../../contexts/AuthContext';
 import { loginRequest, verify2fa } from '../../apis/AuthService';
 import axios from 'axios';
 

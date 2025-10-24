@@ -96,10 +96,13 @@ export const search = async (
   perPage = 10
 ): Promise<SearchResults> => {
   try {
+    // Normalize categories to array
+    const categoriesArray = Array.isArray(categories) ? categories : [categories as Category];
+
     const response = await axios.get(`${API_URL}/search`, {
-      params: { 
+      params: {
         query,
-        categories: categories.join(','),
+        categories: categoriesArray.join(','),
         users_page: usersPage,
         playlists_page: playlistsPage,
         musics_page: musicsPage,
@@ -111,7 +114,7 @@ export const search = async (
       },
     });
 
-    return normalize(response.data, categories);
+    return normalize(response.data, categoriesArray);
   } catch (error) {
     console.error('Error while searching:', error);
     throw error;

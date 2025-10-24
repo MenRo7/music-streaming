@@ -37,7 +37,7 @@ class AccountDeletionTest extends TestCase
             'user_id' => $user->id,
         ]);
 
-        Mail::assertSent(function ($mail) use ($user) {
+        Mail::assertSent(function (\Illuminate\Mail\Mailable $mail) use ($user) {
             return $mail->hasTo($user->email);
         });
     }

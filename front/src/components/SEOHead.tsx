@@ -6,8 +6,9 @@ interface SEOHeadProps {
   description?: string;
   keywords?: string;
   image?: string;
-  type?: 'website' | 'article' | 'music.song' | 'profile';
+  type?: 'website' | 'article' | 'music.song' | 'music.album' | 'music.playlist' | 'profile';
   author?: string;
+  structuredData?: Record<string, any>;
 }
 
 const SEOHead: React.FC<SEOHeadProps> = ({
@@ -17,6 +18,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   image = '/og-image.jpg',
   type = 'website',
   author = 'MusicApp Team',
+  structuredData,
 }) => {
   const location = useLocation();
   const currentUrl = `${window.location.origin}${location.pathname}`;
@@ -58,7 +60,22 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       document.head.appendChild(canonicalLink);
     }
     canonicalLink.href = currentUrl;
-  }, [title, description, keywords, image, type, author, currentUrl]);
+
+    // Structured Data (JSON-LD)
+    if (structuredData) {
+      let scriptTag = document.querySelector('script[type="application/ld+json"]');
+      if (!scriptTag) {
+        scriptTag = document.createElement('script');
+        scriptTag.setAttribute('type', 'application/ld+json');
+        document.head.appendChild(scriptTag);
+      }
+      const jsonLd = {
+        '@context': 'https://schema.org',
+        ...structuredData,
+      };
+      scriptTag.textContent = JSON.stringify(jsonLd);
+    }
+  }, [title, description, keywords, image, type, author, currentUrl, structuredData]);
 
   return null;
 };

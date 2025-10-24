@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDialogContext } from '../contexts/DialogContext';
 import ENV from '../config/env';
+import { Analytics } from '../utils/analytics';
 
 type Props = {
   isOpen: boolean;
@@ -25,6 +26,10 @@ const DonateModal: React.FC<Props> = ({ isOpen, onClose, toUserId }) => {
     try {
       const { createDonationCheckoutSession } = await import('../apis/DonateService');
       const { id } = await createDonationCheckoutSession(toUserId, a, 'eur');
+
+      // Track donation initiation
+      Analytics.initiateDonation(a, `User ${toUserId}`);
+
       const stripeJs = await loadStripe();
       await stripeJs.redirectToCheckout({ sessionId: id });
     } catch (e: any) {

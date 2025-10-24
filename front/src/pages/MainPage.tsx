@@ -10,6 +10,7 @@ import { getUserAlbums } from '../apis/MyMusicService';
 import PlaylistCard from '../components/PlaylistCard';
 import ProfileCircleCard from '../components/ProfileCircleCard';
 import { usePlayer } from '../contexts/PlayerContext';
+import SEOHead from '../components/SEOHead';
 
 import '../styles/MainPage.css';
 
@@ -133,15 +134,21 @@ const MainPage: React.FC = () => {
   }
 
   return (
-    <main id="main-content" className="main-content">
-      <div className="main-page">
-        <h1>{t('mainPage.title')}</h1>
+    <>
+      <SEOHead
+        title={`${t('mainPage.title')} | Rhapsody`}
+        description={t('mainPage.seoDescription', { defaultValue: 'D\u00e9couvrez votre biblioth\u00e8que musicale personnalis\u00e9e sur Rhapsody. Acc\u00e9dez \u00e0 vos playlists, albums favoris, artistes suivis et morceaux pr\u00e9f\u00e9r\u00e9s.' })}
+        type="website"
+      />
+      <main id="main-content" className="main-content">
+        <div className="main-page">
+          <h1>{t('mainPage.title')}</h1>
 
-        {!hasAny && (
-          <div className="mp-empty">
-            {t('mainPage.emptyState')}
-          </div>
-        )}
+          {!hasAny && (
+            <div className="mp-empty">
+              {t('mainPage.emptyState')}
+            </div>
+          )}
 
         {playlists.length > 0 && (
           <div className="top-section">
@@ -231,6 +238,7 @@ const MainPage: React.FC = () => {
         )}
       </div>
     </main>
+    </>
   );
 };
 

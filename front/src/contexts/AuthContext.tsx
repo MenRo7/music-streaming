@@ -1,7 +1,8 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../apis/api';
 import { loginRequest, verify2fa } from '../apis/AuthService';
+import { Analytics } from '../utils/analytics';
 
 interface AuthContextType {
   user: any;
@@ -23,6 +24,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('authToken'));
 
+  // Initialize axios Authorization header on mount if token exists
+  useEffect(() => {
+    const savedToken = localStorage.getItem('authToken');
+    if (savedToken) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+      setToken(savedToken);
+    }
+  }, []);
+
   const login = async (email: string, password: string) => {
     const res = await loginRequest(email, password);
     const status = res.data?.status;
@@ -39,6 +49,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(res.data.user);
     axios.defaults.headers.common['Authorization'] = `Bearer ${t}`;
     window.dispatchEvent(new Event('auth:changed'));
+
+    // Track successful login
+    Analytics.login(res.data.user?.id);
   };
 
   const logout = async () => {
@@ -50,6 +63,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     delete axios.defaults.headers.common['Authorization'];
     window.dispatchEvent(new Event('auth:changed'));
+
+    // Track logout event
+    Analytics.logout();
   };
 
   return (

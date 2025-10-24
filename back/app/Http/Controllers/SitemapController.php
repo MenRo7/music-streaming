@@ -32,13 +32,15 @@ class SitemapController extends Controller
             ->orWhereHas('musics')
             ->get();
 
-        $frontendUrl = config('app.frontend_url', 'http://localhost:3000');
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
 
-        return response()->view('sitemap', [
-            'albums' => $albums,
-            'playlists' => $playlists,
-            'artists' => $artists,
-            'frontendUrl' => $frontendUrl,
-        ])->header('Content-Type', 'text/xml');
+        return response()
+            ->view('sitemap', [
+                'albums' => $albums,
+                'playlists' => $playlists,
+                'artists' => $artists,
+                'frontendUrl' => $frontendUrl,
+            ])
+            ->header('Content-Type', 'text/xml; charset=utf-8');
     }
 }

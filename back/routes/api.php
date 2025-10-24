@@ -14,8 +14,8 @@ use App\Http\Controllers\PreferencesController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// Auth endpoints - Rate limiting strict (OWASP: 3-5 tentatives max pour brute force)
-Route::middleware('throttle:3,1')->group(function () {
+// Auth endpoints - Rate limiting balanced (OWASP: 10 tentatives par minute est un bon équilibre)
+Route::middleware('throttle:10,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmail']);

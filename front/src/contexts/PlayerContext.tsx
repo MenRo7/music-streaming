@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import debounce from 'lodash.debounce';
 import { checkTracksExist } from '../apis/MusicService';
+import { Analytics } from '../utils/analytics';
 
 export type Track = {
   id: number;
@@ -175,6 +176,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setAlbumImage(t.album_image || '');
     setCurrentTrackId(t.id ?? null);
     setIsPlaying(true);
+
+    // Track music play event in Google Analytics
+    Analytics.playTrack(t.name, t.artist, t.album);
   }, []);
 
   const rebuildAutoFromIndex = useCallback(
@@ -252,6 +256,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const addToQueue = useCallback<PlayerContextType['addToQueue']>((track) => {
     setQueueManual(q => [...q, { ...track, qid: uid(), origin: 'manual', from: sourceRef.current }]);
+
+    // Track add to queue event
+    Analytics.addToQueue(track.name, track.artist);
   }, []);
 
   const hardReset = useCallback(() => {

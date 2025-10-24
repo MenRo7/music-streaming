@@ -106,6 +106,15 @@ export const Analytics = {
     });
   },
 
+  addToQueue: (trackTitle: string, artistName: string) => {
+    logEvent('Music', 'Add to Queue', `${artistName} - ${trackTitle}`);
+
+    ReactGA.event('add_to_queue', {
+      track_title: trackTitle,
+      artist_name: artistName,
+    });
+  },
+
   // Playlist actions
   createPlaylist: (playlistTitle: string) => {
     logEvent('Playlist', 'Create', playlistTitle);
