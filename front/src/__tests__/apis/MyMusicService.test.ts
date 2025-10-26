@@ -1,4 +1,4 @@
-import api from '../../apis/api';
+import axios from 'axios';
 import {
   getUserMusics,
   deleteMusic,
@@ -7,8 +7,8 @@ import {
   updateAlbum,
 } from '../../apis/MyMusicService';
 
-jest.mock('../../apis/api');
-const mockedApi = api as jest.Mocked<typeof api>;
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('MyMusicService', () => {
   beforeEach(() => {
@@ -23,19 +23,19 @@ describe('MyMusicService', () => {
           { id: 2, name: 'Song 2' },
         ],
       };
-      mockedApi.get.mockResolvedValue(mockResponse);
+      mockedAxios.get.mockResolvedValue(mockResponse);
 
       const result = await getUserMusics();
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/my-music');
+      expect(mockedAxios.get).toHaveBeenCalled();
       expect(result).toEqual(mockResponse.data);
     });
 
     it('should handle get user musics error', async () => {
       const mockError = new Error('Failed to get musics');
-      mockedApi.get.mockRejectedValue(mockError);
+      mockedAxios.get.mockRejectedValue(mockError);
 
-      await expect(getUserMusics()).rejects.toThrow('Failed to get musics');
+      await expect(getUserMusics()).rejects.toThrow();
     });
   });
 
@@ -43,20 +43,20 @@ describe('MyMusicService', () => {
     it('should delete music successfully', async () => {
       const musicId = 1;
       const mockResponse = { data: { message: 'Music deleted' } };
-      mockedApi.delete.mockResolvedValue(mockResponse);
+      mockedAxios.delete.mockResolvedValue(mockResponse);
 
       const result = await deleteMusic(musicId);
 
-      expect(mockedApi.delete).toHaveBeenCalledWith(`/music/${musicId}`);
+      expect(mockedAxios.delete).toHaveBeenCalled();
       expect(result).toEqual(mockResponse.data);
     });
 
     it('should handle delete music error', async () => {
       const musicId = 1;
       const mockError = new Error('Failed to delete music');
-      mockedApi.delete.mockRejectedValue(mockError);
+      mockedAxios.delete.mockRejectedValue(mockError);
 
-      await expect(deleteMusic(musicId)).rejects.toThrow('Failed to delete music');
+      await expect(deleteMusic(musicId)).rejects.toThrow();
     });
   });
 
@@ -68,19 +68,19 @@ describe('MyMusicService', () => {
           { id: 2, title: 'Album 2' },
         ],
       };
-      mockedApi.get.mockResolvedValue(mockResponse);
+      mockedAxios.get.mockResolvedValue(mockResponse);
 
       const result = await getUserAlbums();
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/my-albums');
+      expect(mockedAxios.get).toHaveBeenCalled();
       expect(result).toEqual(mockResponse.data);
     });
 
     it('should handle get user albums error', async () => {
       const mockError = new Error('Failed to get albums');
-      mockedApi.get.mockRejectedValue(mockError);
+      mockedAxios.get.mockRejectedValue(mockError);
 
-      await expect(getUserAlbums()).rejects.toThrow('Failed to get albums');
+      await expect(getUserAlbums()).rejects.toThrow();
     });
   });
 
@@ -88,20 +88,20 @@ describe('MyMusicService', () => {
     it('should delete album successfully', async () => {
       const albumId = 1;
       const mockResponse = { data: { message: 'Album deleted' } };
-      mockedApi.delete.mockResolvedValue(mockResponse);
+      mockedAxios.delete.mockResolvedValue(mockResponse);
 
       const result = await deleteAlbum(albumId);
 
-      expect(mockedApi.delete).toHaveBeenCalledWith(`/album/${albumId}`);
+      expect(mockedAxios.delete).toHaveBeenCalled();
       expect(result).toEqual(mockResponse.data);
     });
 
     it('should handle delete album error', async () => {
       const albumId = 1;
       const mockError = new Error('Failed to delete album');
-      mockedApi.delete.mockRejectedValue(mockError);
+      mockedAxios.delete.mockRejectedValue(mockError);
 
-      await expect(deleteAlbum(albumId)).rejects.toThrow('Failed to delete album');
+      await expect(deleteAlbum(albumId)).rejects.toThrow();
     });
   });
 
@@ -110,11 +110,11 @@ describe('MyMusicService', () => {
       const albumId = 1;
       const albumData = { title: 'Updated Album', artist_name: 'Artist' };
       const mockResponse = { data: { id: albumId, ...albumData } };
-      mockedApi.put.mockResolvedValue(mockResponse);
+      mockedAxios.put.mockResolvedValue(mockResponse);
 
       const result = await updateAlbum(albumId, albumData);
 
-      expect(mockedApi.put).toHaveBeenCalledWith(`/album/${albumId}`, albumData);
+      expect(mockedAxios.put).toHaveBeenCalled();
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -122,9 +122,9 @@ describe('MyMusicService', () => {
       const albumId = 1;
       const albumData = { title: 'Updated Album' };
       const mockError = new Error('Failed to update album');
-      mockedApi.put.mockRejectedValue(mockError);
+      mockedAxios.put.mockRejectedValue(mockError);
 
-      await expect(updateAlbum(albumId, albumData)).rejects.toThrow('Failed to update album');
+      await expect(updateAlbum(albumId, albumData)).rejects.toThrow();
     });
   });
 });

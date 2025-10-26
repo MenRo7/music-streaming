@@ -23,7 +23,9 @@
       "Bash(timeout 5 bash:*)",
       "Bash(test:*)",
       "Bash(timeout 60 npm test -- --coverage --watchAll=false --passWithNoTests)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": [],
     "ask": []

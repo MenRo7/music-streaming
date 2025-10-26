@@ -15,12 +15,12 @@
     "@types/react-dom": "^18.3.1",
     "axios": "^1.8.3",
     "hls.js": "^1.5.17",
-    "i18next": "^25.5.3",
+    "i18next": "^23.15.0",
     "i18next-browser-languagedetector": "^8.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-ga4": "^2.1.0",
-    "react-i18next": "^16.0.0",
+    "react-i18next": "^14.1.2",
     "react-router-dom": "^6.27.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
@@ -30,13 +30,13 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "type-check": "tsc --project tsconfig.prod.json --noEmit",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint src --ext .ts,.tsx,.js,.jsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
-    "analyze": "source-map-explorer 'build/static/js/*.js'",
-    "type-check": "tsc --noEmit"
+    "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "browserslist": {
     "production": [

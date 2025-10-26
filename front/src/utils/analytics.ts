@@ -28,10 +28,6 @@ export const initGA = (): void => {
       send_page_view: false, // We'll handle this manually
     },
   });
-
-  if (DEBUG_MODE) {
-    console.log('✅ Google Analytics 4 initialized');
-  }
 };
 
 /**
@@ -46,10 +42,6 @@ export const logPageView = (path?: string): void => {
     page,
     title: document.title,
   });
-
-  if (DEBUG_MODE) {
-    console.log(`📊 GA4 Page View: ${page}`);
-  }
 };
 
 /**
@@ -67,10 +59,6 @@ export const logEvent = (
     label,
     value,
   });
-
-  if (DEBUG_MODE) {
-    console.log(`📊 GA4 Event: ${category} - ${action}`, { label, value });
-  }
 };
 
 /**
@@ -275,10 +263,6 @@ export const setUserProperties = (userId: string, properties: Record<string, any
     user_id: userId,
     ...properties,
   });
-
-  if (DEBUG_MODE) {
-    console.log('👤 GA4 User Properties:', properties);
-  }
 };
 
 /**
@@ -296,10 +280,6 @@ export const trackTiming = (
     label,
     value,
   });
-
-  if (DEBUG_MODE) {
-    console.log(`⏱️ GA4 Timing: ${category} - ${variable}: ${value}ms`);
-  }
 };
 
 export default Analytics;

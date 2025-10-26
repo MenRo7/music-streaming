@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration ESLint + Prettier - Rhapsody Music</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 30px 40px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .config-panel {
+            padding: 30px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .config-panel:last-child {
+            border-right: none;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .panel-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 22px;
+        }
+
+        .eslint-icon {
+            background: linear-gradient(135deg, #4B32C3 0%, #6B46E5 100%);
+        }
+
+        .prettier-icon {
+            background: linear-gradient(135deg, #F7B93E 0%, #FF6B9D 100%);
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .panel-subtitle {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .config-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+
+        .code-key {
+            color: #81e6d9;
+        }
+
+        .code-string {
+            color: #fbd38d;
+        }
+
+        .code-boolean {
+            color: #fc8181;
+        }
+
+        .code-number {
+            color: #90cdf4;
+        }
+
+        .rule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            font-size: 13px;
+        }
+
+        .rule-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .rule-name {
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .rule-severity {
+            margin-left: auto;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .severity-warn {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .benefits-section {
+            background: #f8f9fa;
+            padding: 30px 40px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .benefits-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .benefit-card {
+            background: white;
+            padding: 18px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .benefit-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .benefit-text {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        .footer {
+            background: #2d3748;
+            color: white;
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .footer-highlight {
+            color: #81e6d9;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Configuration ESLint + Prettier</h1>
+            <p>Normes de code et formatage automatique pour garantir la qualité et l'homogénéité</p>
+        </div>
+
+        <div class="main-content">
+            <!-- ESLint Panel -->
+            <div class="config-panel">
+                <div class="panel-header">
+                    <div class="panel-icon eslint-icon">🔍</div>
+                    <div>
+                        <div class="panel-title">ESLint</div>
+                        <div class="panel-subtitle">Analyse statique et détection d'erreurs</div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="section-title">📄 Fichier : .eslintrc.json</div>
+                    <div class="code-block">{
+  <span class="code-key">"extends"</span>: [
+    <span class="code-string">"react-app"</span>,
+    <span class="code-string">"react-app/jest"</span>,
+    <span class="code-string">"plugin:jsx-a11y/recommended"</span>
+  ],
+  <span class="code-key">"plugins"</span>: [<span class="code-string">"jsx-a11y"</span>]
+}</div>
+                </div>
+
+                <div class="config-section">
+                    <div class="section-title">⚙️ Règles Principales (Rules)</div>
+                    <div class="rule-list">
+                        <div class="rule-item">
+                            <span class="rule-icon">🖼️</span>
+                            <span class="rule-name">jsx-a11y/alt-text</span>
+                            <span class="rule-severity severity-error">error</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">🏷️</span>
+                            <span class="rule-name">jsx-a11y/aria-props</span>
+                            <span class="rule-severity severity-error">error</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">🎭</span>
+                            <span class="rule-name">jsx-a11y/role-has-required-aria-props</span>
+                            <span class="rule-severity severity-error">error</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">🖱️</span>
+                            <span class="rule-name">jsx-a11y/click-events-have-key-events</span>
+                            <span class="rule-severity severity-warn">warn</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">🔗</span>
+                            <span class="rule-name">jsx-a11y/anchor-is-valid</span>
+                            <span class="rule-severity severity-warn">warn</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">📝</span>
+                            <span class="rule-name">no-console</span>
+                            <span class="rule-severity severity-warn">warn</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">📘</span>
+                            <span class="rule-name">@typescript-eslint/no-explicit-any</span>
+                            <span class="rule-severity severity-warn">warn</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="section-title">🎯 Focus Accessibilité</div>
+                    <div class="code-block"><span class="code-key">"plugins"</span>: [<span class="code-string">"jsx-a11y"</span>]
+
+// Validation WCAG 2.1 AA
+// - Attributs ARIA obligatoires
+// - Textes alternatifs sur images
+// - Navigation au clavier
+// - Rôles sémantiques</div>
+                </div>
+            </div>
+
+            <!-- Prettier Panel -->
+            <div class="config-panel">
+                <div class="panel-header">
+                    <div class="panel-icon prettier-icon">✨</div>
+                    <div>
+                        <div class="panel-title">Prettier</div>
+                        <div class="panel-subtitle">Formatage automatique du code</div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="section-title">📄 Fichier : .prettierrc.json</div>
+                    <div class="code-block">{
+  <span class="code-key">"semi"</span>: <span class="code-boolean">true</span>,
+  <span class="code-key">"trailingComma"</span>: <span class="code-string">"es5"</span>,
+  <span class="code-key">"singleQuote"</span>: <span class="code-boolean">true</span>,
+  <span class="code-key">"printWidth"</span>: <span class="code-number">100</span>,
+  <span class="code-key">"tabWidth"</span>: <span class="code-number">2</span>,
+  <span class="code-key">"useTabs"</span>: <span class="code-boolean">false</span>,
+  <span class="code-key">"arrowParens"</span>: <span class="code-string">"always"</span>,
+  <span class="code-key">"endOfLine"</span>: <span class="code-string">"lf"</span>
+}</div>
+                </div>
+
+                <div class="config-section">
+                    <div class="section-title">⚙️ Règles de Formatage</div>
+                    <div class="rule-list">
+                        <div class="rule-item">
+                            <span class="rule-icon">;</span>
+                            <span class="rule-name">semi: true</span>
+                            <span style="margin-left: auto; font-size: 12px; color: #6c757d;">Point-virgule obligatoire</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">'</span>
+                            <span class="rule-name">singleQuote: true</span>
+                            <span style="margin-left: auto; font-size: 12px; color: #6c757d;">Guillemets simples</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">📏</span>
+                            <span class="rule-name">printWidth: 100</span>
+                            <span style="margin-left: auto; font-size: 12px; color: #6c757d;">Largeur maximale 100 caractères</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">⭾</span>
+                            <span class="rule-name">tabWidth: 2</span>
+                            <span style="margin-left: auto; font-size: 12px; color: #6c757d;">Indentation 2 espaces</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">→</span>
+                            <span class="rule-name">useTabs: false</span>
+                            <span style="margin-left: auto; font-size: 12px; color: #6c757d;">Espaces (pas de tabs)</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">,</span>
+                            <span class="rule-name">trailingComma: "es5"</span>
+                            <span style="margin-left: auto; font-size: 12px; color: #6c757d;">Virgules finales ES5</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-icon">( )</span>
+                            <span class="rule-name">arrowParens: "always"</span>
+                            <span style="margin-left: auto; font-size: 12px; color: #6c757d;">Parenthèses obligatoires</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="section-title">🚀 Scripts npm Associés</div>
+                    <div class="code-block"><span class="code-string">"lint"</span>: <span class="code-string">"eslint src --ext .ts,.tsx"</span>
+<span class="code-string">"lint:fix"</span>: <span class="code-string">"eslint src --ext .ts,.tsx --fix"</span>
+<span class="code-string">"format"</span>: <span class="code-string">"prettier --write 'src/**/*.{ts,tsx}'"</span>
+<span class="code-string">"format:check"</span>: <span class="code-string">"prettier --check 'src/**/*.{ts,tsx}'"</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="benefits-section">
+            <div class="benefits-title">✅ Avantages de l'Industrialisation</div>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <span class="benefit-icon">🎯</span>
+                    <div class="benefit-text">
+                        <strong>Qualité homogène</strong><br>
+                        Style de code uniforme dans toute l'équipe
+                    </div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">🐛</span>
+                    <div class="benefit-text">
+                        <strong>Détection précoce</strong><br>
+                        Erreurs trouvées avant le commit
+                    </div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">♿</span>
+                    <div class="benefit-text">
+                        <strong>Accessibilité garantie</strong><br>
+                        Conformité WCAG 2.1 AA automatique
+                    </div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">⚡</span>
+                    <div class="benefit-text">
+                        <strong>Productivité accrue</strong><br>
+                        Formatage automatique, zéro débat de style
+                    </div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">🔄</span>
+                    <div class="benefit-text">
+                        <strong>Reproductibilité</strong><br>
+                        Configuration partagée entre dev et CI
+                    </div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">📚</span>
+                    <div class="benefit-text">
+                        <strong>Maintenabilité</strong><br>
+                        Code lisible et cohérent à long terme
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Fichiers : <span class="footer-highlight">.eslintrc.json</span> + <span class="footer-highlight">.prettierrc.json</span> | Technologies : ESLint 8.x + Prettier 3.x + jsx-a11y plugin
+        </div>
+    </div>
+</body>
+</html>

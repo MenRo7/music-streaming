@@ -60,3 +60,23 @@ export const updateMusic = async (id: number, data: FormData) => {
     throw error;
   }
 };
+
+export const deleteAlbum = async (id: number) => {
+  try {
+    const response = await axios.delete(`${API_URL}/album/${id}`, getAuthHeaders());
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'album :', error);
+    throw error;
+  }
+};
+
+export const updateAlbum = async (id: number, data: any) => {
+  try {
+    const response = await axios.put(`${API_URL}/album/${id}`, data, getAuthHeaders());
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de l\'album :', error);
+    throw error;
+  }
+};
