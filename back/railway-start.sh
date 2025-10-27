@@ -12,10 +12,17 @@ if [ -z "$APP_KEY" ]; then
   exit 1
 fi
 
-# 3. Exécution des migrations
+# 3. Nettoyage du cache (important pour les variables d'environnement)
+echo "🧹 Nettoyage du cache..."
+php artisan config:clear || true
+php artisan cache:clear || true
+
+# 4. Exécution des migrations
+echo "🗄️  Exécution des migrations..."
 php artisan migrate --force --no-interaction
 
-# 4. Optimisation de l'application
+# 5. Optimisation de l'application
+echo "⚡ Optimisation de l'application..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
