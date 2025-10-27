@@ -6,8 +6,11 @@ echo "🚀 Démarrage de Rhapsody API sur Railway"
 # 1. Installation des dépendances
 composer install --no-dev --optimize-autoloader --no-interaction
 
-# 2. Génération de la clé d'application si nécessaire
-php artisan key:generate --force --no-interaction
+# 2. Vérification de la clé d'application (configurée via variables Railway)
+if [ -z "$APP_KEY" ]; then
+  echo "⚠️  WARNING: APP_KEY not set!"
+  exit 1
+fi
 
 # 3. Exécution des migrations
 php artisan migrate --force --no-interaction
