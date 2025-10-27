@@ -53,7 +53,7 @@ class PlaylistTest extends TestCase
     /** @test */
     public function it_has_fillable_attributes(): void
     {
-        $playlist = new Playlist();
+        $playlist = new Playlist;
         $fillable = $playlist->getFillable();
 
         $this->assertContains('title', $fillable);

@@ -51,7 +51,7 @@ class AlbumTest extends TestCase
     /** @test */
     public function it_has_fillable_attributes(): void
     {
-        $album = new Album();
+        $album = new Album;
         $fillable = $album->getFillable();
 
         $this->assertContains('user_id', $fillable);

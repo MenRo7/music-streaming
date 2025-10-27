@@ -96,7 +96,7 @@ class AccountDeletionTest extends TestCase
             'expires_at' => now()->addHours(24),
         ]);
 
-        $response = $this->get("/api/account/delete/confirm/valid-token");
+        $response = $this->get('/api/account/delete/confirm/valid-token');
 
         $response->assertStatus(200)
             ->assertSee('Votre compte a été supprimé');

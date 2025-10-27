@@ -31,7 +31,7 @@ class CalculateMusicDurations extends Command
 
         $query = Music::query();
 
-        if (!$force) {
+        if (! $force) {
             $query->whereNull('duration');
         }
 
@@ -40,6 +40,7 @@ class CalculateMusicDurations extends Command
 
         if ($total === 0) {
             $this->info('No music files need duration calculation.');
+
             return 0;
         }
 
@@ -93,6 +94,7 @@ class CalculateMusicDurations extends Command
             return null;
         } catch (\Exception $e) {
             $this->error("Failed to get duration for {$filePath}: " . $e->getMessage());
+
             return null;
         }
     }

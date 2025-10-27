@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
             ]
         );
 
-        if (!$user->hasRole('user')) {
+        if (! $user->hasRole('user')) {
             $user->assignRole('user');
         }
 

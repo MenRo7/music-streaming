@@ -89,7 +89,7 @@ class MusicTest extends TestCase
     /** @test */
     public function it_has_fillable_attributes(): void
     {
-        $music = new Music();
+        $music = new Music;
         $fillable = $music->getFillable();
 
         $this->assertContains('user_id', $fillable);
@@ -104,7 +104,7 @@ class MusicTest extends TestCase
     /** @test */
     public function it_appends_artist_attribute(): void
     {
-        $music = new Music();
+        $music = new Music;
         $appends = $music->getAppends();
 
         $this->assertContains('artist', $appends);

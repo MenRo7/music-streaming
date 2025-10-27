@@ -308,6 +308,7 @@ class MusicController extends Controller
             return null;
         } catch (\Exception $e) {
             \Log::warning('Failed to get audio duration: ' . $e->getMessage());
+
             return null;
         }
     }
