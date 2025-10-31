@@ -54,6 +54,7 @@ class SecurityHeaders
     private function prodCsp(): string
     {
         $appUrl = config('app.url');
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
         $host = parse_url($appUrl, PHP_URL_SCHEME) . '://' . parse_url($appUrl, PHP_URL_HOST);
 
         return implode('; ', [
@@ -62,7 +63,7 @@ class SecurityHeaders
             "style-src 'self'",
             "img-src 'self' data:",
             "font-src 'self' data:",
-            "connect-src 'self' $host",
+            "connect-src 'self' $host $frontendUrl",
             "frame-ancestors 'none'",
             'frame-src https://js.stripe.com',
             "media-src 'self'",
