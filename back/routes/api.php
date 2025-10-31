@@ -24,6 +24,11 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/login/resend', [AuthController::class, 'resend2fa']);
     Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
     Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+
+    // TEMPORARY: Get verification code for debugging (REMOVE IN PRODUCTION)
+    if (env('APP_ENV') !== 'production') {
+        Route::get('/debug/verification-code/{email}', [AuthController::class, 'getVerificationCode']);
+    }
 });
 
 Route::get('/account/email/change/confirm/{token}', [AccountController::class, 'confirmEmailChange'])
