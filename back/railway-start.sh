@@ -12,12 +12,30 @@ if [ -z "$APP_KEY" ]; then
   exit 1
 fi
 
-# 3. Nettoyage du cache (important pour les variables d'environnement)
+# 3. Attendre que MySQL soit prêt
+echo "⏳ Attente de MySQL..."
+max_attempts=30
+attempt=0
+until php artisan db:show --no-interaction 2>/dev/null || [ $attempt -eq $max_attempts ]; do
+  attempt=$((attempt + 1))
+  echo "Tentative $attempt/$max_attempts - MySQL pas encore prêt..."
+  sleep 2
+done
+
+if [ $attempt -eq $max_attempts ]; then
+  echo "❌ Impossible de se connecter à MySQL après $max_attempts tentatives"
+  echo "DATABASE_URL: ${DATABASE_URL:0:30}..."
+  exit 1
+fi
+
+echo "✅ MySQL est prêt !"
+
+# 4. Nettoyage du cache (important pour les variables d'environnement)
 echo "🧹 Nettoyage du cache..."
 php artisan config:clear || true
 php artisan cache:clear || true
 
-# 4. Exécution des migrations
+# 5. Exécution des migrations
 echo "🗄️  Exécution des migrations..."
 php artisan migrate --force --no-interaction
 
