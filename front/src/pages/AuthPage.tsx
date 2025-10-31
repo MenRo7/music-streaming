@@ -283,12 +283,8 @@ const AuthPage: React.FC = () => {
                 onClick={async () => {
                   if (!email.trim()) { setError(t('auth.provideEmailFirst')); return; }
                   try {
-                    const response = await resendEmailCode(email.trim());
-                    if (response.data?.verification_code) {
-                      setInfo(`${t('auth.newVerificationCodeSent')} - DEBUG CODE: ${response.data.verification_code}`);
-                    } else {
-                      setInfo(t('auth.newVerificationCodeSent'));
-                    }
+                    await resendEmailCode(email.trim());
+                    setInfo(t('auth.newVerificationCodeSent'));
                     setError('');
                   } catch {
                     setError(t('auth.cannotSendNewCode'));

@@ -123,13 +123,7 @@ class AuthController extends Controller
 
         $this->sendEmailVerification($user);
 
-        // TEMPORARY: Return code in response for debugging email issues
-        $response = ['message' => 'A new verification code has been sent'];
-        if (env('SHOW_VERIFICATION_CODE', false)) {
-            $response['verification_code'] = $user->email_verification_code;
-        }
-
-        return response()->json($response);
+        return response()->json(['message' => 'A new verification code has been sent']);
     }
 
     public function login(Request $request)
