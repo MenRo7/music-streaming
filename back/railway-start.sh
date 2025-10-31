@@ -14,9 +14,9 @@ fi
 
 # 3. Attendre que MySQL soit prêt
 echo "⏳ Attente de MySQL..."
-max_attempts=30
+max_attempts=15
 attempt=0
-until php artisan db:show --no-interaction 2>/dev/null || [ $attempt -eq $max_attempts ]; do
+until php artisan migrate:status --no-interaction 2>/dev/null | grep -q "Migration name" || [ $attempt -eq $max_attempts ]; do
   attempt=$((attempt + 1))
   echo "Tentative $attempt/$max_attempts - MySQL pas encore prêt..."
   sleep 2
@@ -24,7 +24,6 @@ done
 
 if [ $attempt -eq $max_attempts ]; then
   echo "❌ Impossible de se connecter à MySQL après $max_attempts tentatives"
-  echo "DATABASE_URL: ${DATABASE_URL:0:30}..."
   exit 1
 fi
 
