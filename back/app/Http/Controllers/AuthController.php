@@ -30,7 +30,7 @@ class AuthController extends Controller
         $user->email_verification_expires_at = now()->addMinutes(10);
         $user->save();
 
-        Mail::to($user->email)->send(new OneTimeCodeMail($user->email_verification_code, 'Vérification e-mail'));
+        Mail::to($user->email)->queue(new OneTimeCodeMail($user->email_verification_code, 'Vérification e-mail'));
     }
 
     private function sendTwoFactor(User $user): void
@@ -39,7 +39,7 @@ class AuthController extends Controller
         $user->two_factor_expires_at = now()->addMinutes(10);
         $user->save();
 
-        Mail::to($user->email)->send(new OneTimeCodeMail($user->two_factor_code, 'Connexion'));
+        Mail::to($user->email)->queue(new OneTimeCodeMail($user->two_factor_code, 'Connexion'));
     }
 
     public function register(Request $request)

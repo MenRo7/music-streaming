@@ -47,6 +47,10 @@ php artisan view:cache
 # 5. Création du lien symbolique pour le storage
 php artisan storage:link
 
-# 6. Démarrage du serveur
+# 6. Démarrage du queue worker en arrière-plan
+echo "📧 Démarrage du queue worker..."
+php artisan queue:work --daemon --tries=3 --timeout=90 &
+
+# 7. Démarrage du serveur
 echo "✅ Application prête !"
 php artisan serve --host=0.0.0.0 --port=$PORT
