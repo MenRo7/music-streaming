@@ -63,6 +63,7 @@ class MusicController extends Controller
             'audio' => 'required|file|mimes:mp3,wav,flac',
             'image' => 'sometimes|nullable|image',
             'album_id' => 'sometimes|nullable|integer|exists:albums,id',
+            'duration' => 'sometimes|nullable|integer|min:0',
         ]);
 
         $user = Auth::user();
@@ -76,14 +77,21 @@ class MusicController extends Controller
             $music->album_id = $album->id;
         }
 
+        // Set duration from request if provided
+        if ($request->filled('duration')) {
+            $music->duration = $request->integer('duration');
+        }
+
         if ($request->hasFile('audio')) {
             $music->audio = $this->storePublicFile($request->file('audio'), 'musics');
 
-            // Calculate duration
-            $audioPath = Storage::disk('public')->path($music->audio);
-            $duration = $this->getAudioDuration($audioPath);
-            if ($duration !== null) {
-                $music->duration = $duration;
+            // Only calculate duration server-side if not provided by frontend
+            if (!$request->filled('duration')) {
+                $audioPath = Storage::disk('public')->path($music->audio);
+                $duration = $this->getAudioDuration($audioPath);
+                if ($duration !== null) {
+                    $music->duration = $duration;
+                }
             }
         }
 

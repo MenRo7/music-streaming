@@ -12,6 +12,26 @@ interface Song {
   file: File | null;
 }
 
+// Helper function to get audio duration from file
+const getAudioDuration = (file: File): Promise<number | null> => {
+  return new Promise((resolve) => {
+    const audio = new Audio();
+    const objectUrl = URL.createObjectURL(file);
+
+    audio.addEventListener('loadedmetadata', () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(Math.round(audio.duration));
+    });
+
+    audio.addEventListener('error', () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(null);
+    });
+
+    audio.src = objectUrl;
+  });
+};
+
 const ImportPage: React.FC = () => {
   const { t } = useTranslation();
   const [albumName, setAlbumName] = useState('');
@@ -44,10 +64,14 @@ const ImportPage: React.FC = () => {
   const submitMusic = async () => {
     if (!musicTitle.trim() || !musicFile) return;
 
+    // Calculate duration from audio file
+    const duration = await getAudioDuration(musicFile);
+
     const formData = new FormData();
     formData.append('title', musicTitle);
     formData.append('audio', musicFile);
     if (musicImage) formData.append('image', musicImage);
+    if (duration) formData.append('duration', duration.toString());
 
     try {
       await createMusic(formData);
@@ -66,11 +90,17 @@ const ImportPage: React.FC = () => {
     formData.append('type', albumType);
     if (albumImage) formData.append('image', albumImage);
 
-    songs.forEach((song, index) => {
+    // Calculate durations for all songs
+    for (let index = 0; index < songs.length; index++) {
+      const song = songs[index];
       formData.append(`songs[${index}][title]`, song.title);
-      if (song.file) formData.append(`songs[${index}][audio]`, song.file);
+      if (song.file) {
+        formData.append(`songs[${index}][audio]`, song.file);
+        const duration = await getAudioDuration(song.file);
+        if (duration) formData.append(`songs[${index}][duration]`, duration.toString());
+      }
       if (albumImage) formData.append(`songs[${index}][image]`, albumImage);
-    });
+    }
 
     try {
       await axios.post(`${API_URL}/album`, formData, {
