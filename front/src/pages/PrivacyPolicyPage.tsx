@@ -1,10 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import SEOHead from '../components/SEOHead';
 import '../styles/LegalPages.css';
 
 const PrivacyPolicyPage: React.FC = () => {
   return (
     <div className="legal-page">
+      <SEOHead
+        title="Politique de Confidentialité | Rhapsody"
+        description="Politique de confidentialité de Rhapsody conforme au RGPD. Découvrez comment nous collectons, utilisons et protégeons vos données personnelles."
+        keywords="politique confidentialité, RGPD, protection données, vie privée, données personnelles"
+        type="article"
+      />
       <div className="legal-container">
         <h1>Politique de Confidentialité</h1>
         <p className="last-updated">Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}</p>

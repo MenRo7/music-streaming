@@ -1,10 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import SEOHead from '../components/SEOHead';
 import '../styles/LegalPages.css';
 
 const TermsOfServicePage: React.FC = () => {
   return (
     <div className="legal-page">
+      <SEOHead
+        title="Conditions Générales d'Utilisation | Rhapsody"
+        description="Conditions générales d'utilisation de Rhapsody. Consultez les règles et obligations d'utilisation de notre plateforme de streaming musical."
+        keywords="CGU, conditions utilisation, termes service, règles plateforme"
+        type="article"
+      />
       <div className="legal-container">
         <h1>Conditions Générales d'Utilisation</h1>
         <p className="last-updated">Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}</p>

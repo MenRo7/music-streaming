@@ -12,6 +12,7 @@ import {
   Album,
   AlbumMusic,
 } from '../apis/AlbumService';
+import SEOHead from '../components/SEOHead';
 
 import '../styles/ImportPage.css';
 
@@ -223,6 +224,12 @@ const EditAlbumPage: React.FC = () => {
 
   return (
     <div className="import-page">
+      <SEOHead
+        title="Modifier l'Album | Rhapsody - Streaming Musical"
+        description="Modifiez les détails de votre album sur Rhapsody. Gérez les morceaux, la couverture et les informations de votre album musical."
+        keywords="modifier album, gérer musique, éditer album, gestion contenu musical"
+        type="website"
+      />
       <div className="import-content">
         <h2>{t('editAlbum.title')}</h2>
 

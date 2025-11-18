@@ -13,6 +13,7 @@ import PersonalInfoModal from '../components/PersonalInfoModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Toast from '../components/Toast';
 import { isAdult as checkIsAdult } from '../utils/ageCalculator';
+import SEOHead from '../components/SEOHead';
 
 import '../styles/PreferencesPage.css';
 
@@ -210,6 +211,12 @@ const PreferencesPage: React.FC = () => {
 
   return (
     <div className="preferences-page">
+      <SEOHead
+        title="Préférences | Rhapsody - Streaming Musical"
+        description="Gérez vos préférences de compte Rhapsody. Configurez votre langue, vos informations personnelles et activez les paiements Stripe Connect pour artistes."
+        keywords="préférences compte, paramètres utilisateur, stripe connect, paiements artiste, RGPD"
+        type="website"
+      />
       <div className="preferences-content">
         <h1>{t('preferences.title')}</h1>
 

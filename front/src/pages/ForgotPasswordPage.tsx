@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { forgotPassword, resetPassword } from '../apis/AuthService';
+import SEOHead from '../components/SEOHead';
 import '../styles/AuthPage.css';
 
 const ForgotPasswordPage: React.FC = () => {
@@ -51,6 +52,12 @@ const ForgotPasswordPage: React.FC = () => {
 
   return (
     <div className="auth-page">
+      <SEOHead
+        title="Mot de Passe Oublié | Rhapsody - Streaming Musical"
+        description="Réinitialisez votre mot de passe Rhapsody en toute sécurité. Recevez un code de vérification par email pour créer un nouveau mot de passe."
+        keywords="mot de passe oublié, réinitialiser mot de passe, récupération compte"
+        type="website"
+      />
       <div className="auth-container">
         <h2>
           {step === 'request' && t('forgotPassword.titleRequest')}

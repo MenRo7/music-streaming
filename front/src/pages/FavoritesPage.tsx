@@ -8,6 +8,7 @@ import MediaPage from './MediaPage';
 import PlaylistCheckboxMenu from '../components/PlaylistCheckboxMenu';
 import { UISong } from '../components/SongList';
 import SortButton, { SortOption } from '../components/SortButton';
+import SEOHead from '../components/SEOHead';
 
 const cover = '/favorites-cover.svg';
 
@@ -155,8 +156,15 @@ const FavoritesPage: React.FC = () => {
   }
 
   return (
-    <MediaPage
-      title={t('favorites.title')}
+    <>
+      <SEOHead
+        title="Mes Favoris | Rhapsody - Streaming Musical"
+        description="Accédez à tous vos morceaux favoris sur Rhapsody. Retrouvez et écoutez la musique que vous aimez en un seul endroit."
+        keywords="favoris musique, morceaux préférés, ma musique favorite, bibliothèque musicale"
+        type="website"
+      />
+      <MediaPage
+        title={t('favorites.title')}
       image={cover}
       songs={sortedSongs as unknown as (Track & { dateAdded?: string; playlistIds?: number[]; album_id?: number; artist_user_id?: number })[]}
       collectionType="favorites"
@@ -212,7 +220,8 @@ const FavoritesPage: React.FC = () => {
           },
         },
       ]}
-    />
+      />
+    </>
   );
 };
 

@@ -10,6 +10,7 @@ import {
   faCloudUploadAlt,
   faShieldAlt,
 } from '@fortawesome/free-solid-svg-icons';
+import SEOHead from '../components/SEOHead';
 import '../styles/LandingPage.css';
 
 const LandingPage: React.FC = () => {
@@ -55,6 +56,12 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="landing-page">
+      <SEOHead
+        title="Rhapsody - Streaming Musical Gratuit | Écoutez et Partagez Votre Musique"
+        description="Découvrez Rhapsody, la plateforme de streaming musical gratuite. Écoutez, partagez et découvrez de la musique. Créez vos playlists, suivez vos artistes préférés et soutenez-les via des donations."
+        keywords="streaming musical gratuit, écouter musique en ligne, plateforme musique, créer playlist, partager musique, artistes indépendants, donations artistes, mp3 streaming"
+        type="website"
+      />
       {/* Header */}
       <header className="landing-header">
         <div className="landing-container">

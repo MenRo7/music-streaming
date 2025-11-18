@@ -334,8 +334,9 @@ const ProfilePage: React.FC = () => {
   return (
     <>
       <SEOHead
-        title={`${user?.name || 'Artiste'} - Profil | Rhapsody`}
+        title={`${user?.name || 'Artiste'} - Profil | Rhapsody - Streaming Musical`}
         description={`Découvrez la musique de ${user?.name || 'cet artiste'} sur Rhapsody. ${albums.length || 0} albums, ${songs.length || 0} morceaux.`}
+        keywords={`${user?.name || ''} artiste, profil musicien, albums artiste, morceaux musique`}
         type="profile"
         image={user?.profile_image || undefined}
         structuredData={{

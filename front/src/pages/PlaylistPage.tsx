@@ -233,8 +233,9 @@ const PlaylistPage: React.FC = () => {
   return (
     <>
       <SEOHead
-        title={`${playlist?.title || 'Playlist'} | Rhapsody`}
+        title={`${playlist?.title || 'Playlist'} | Rhapsody - Streaming Musical`}
         description={`Découvrez la playlist ${playlist?.title || 'Playlist'} sur Rhapsody. ${songsSorted.length} morceaux sélectionnés avec soin.`}
+        keywords={`${playlist?.title || 'playlist'}, playlist musique, écouter playlist, collection morceaux`}
         type="music.playlist"
         image={playlist?.image || undefined}
         structuredData={{

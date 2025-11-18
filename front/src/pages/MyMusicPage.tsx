@@ -10,6 +10,7 @@ import { useDialogContext } from '../contexts/DialogContext';
 
 import PlaylistCard from '../components/PlaylistCard';
 import SongList, { UISong } from '../components/SongList';
+import SEOHead from '../components/SEOHead';
 
 const extractPlaylistIds = (val: any): number[] => {
   if (!Array.isArray(val)) return [];
@@ -76,6 +77,12 @@ const MyMusicPage: React.FC = () => {
 
   return (
     <div className="media-content">
+      <SEOHead
+        title="Ma Musique | Rhapsody - Streaming Musical"
+        description="Gérez votre bibliothèque musicale personnelle sur Rhapsody. Accédez à tous vos morceaux et albums uploadés."
+        keywords="ma musique, mes morceaux, mes albums, bibliothèque musicale personnelle, upload musique"
+        type="website"
+      />
       <div className="media-page">
         <h2>{t('myMusic.title')}</h2>
 

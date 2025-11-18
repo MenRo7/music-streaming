@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_URL } from '../apis/api';
 import { createMusic } from '../apis/MusicService';
 import { useNavigate } from 'react-router-dom';
+import SEOHead from '../components/SEOHead';
 
 import '../styles/ImportPage.css';
 
@@ -117,6 +118,12 @@ const ImportPage: React.FC = () => {
 
   return (
     <div className="import-page">
+      <SEOHead
+        title="Importer de la Musique | Rhapsody - Streaming Musical"
+        description="Importez et uploadez vos morceaux de musique sur Rhapsody. Partagez votre création musicale avec le monde entier."
+        keywords="importer musique, upload mp3, téléverser chanson, partager musique, artiste upload"
+        type="website"
+      />
       <div className="import-content">
         <h2>{t('import.title')}</h2>
 

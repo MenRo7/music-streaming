@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AuthContext } from '../contexts/AuthContext';
 import { registerUser, verifyEmail, resendEmailCode, resend2fa } from '../apis/AuthService';
+import SEOHead from '../components/SEOHead';
 
 import '../styles/AuthPage.css';
 
@@ -124,6 +125,12 @@ const AuthPage: React.FC = () => {
 
   return (
     <div className="auth-page">
+      <SEOHead
+        title={isRegistering ? "Créer un Compte | Rhapsody - Streaming Musical" : "Connexion | Rhapsody - Streaming Musical"}
+        description={isRegistering ? "Inscrivez-vous gratuitement sur Rhapsody pour commencer à écouter, partager et découvrir de la musique. Créez votre bibliothèque musicale personnelle." : "Connectez-vous à votre compte Rhapsody pour accéder à votre bibliothèque musicale, vos playlists et vos artistes préférés."}
+        keywords="inscription rhapsody, créer compte musique, connexion streaming, login musique gratuit"
+        type="website"
+      />
       <div className="auth-container">
         <h2>
           {step === 'verifyEmail'

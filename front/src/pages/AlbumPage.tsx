@@ -214,8 +214,9 @@ const AlbumPage: React.FC = () => {
   return (
     <>
       <SEOHead
-        title={`${album.title} - ${album.artist_name || t('album.unknownArtist')} | Rhapsody`}
+        title={`${album.title} - ${album.artist_name || t('album.unknownArtist')} | Rhapsody - Streaming Musical`}
         description={`Écoutez l'album ${album.title} de ${album.artist_name || t('album.unknownArtist')} sur Rhapsody. ${songs.length} morceaux disponibles en streaming.`}
+        keywords={`${album.title}, ${album.artist_name || ''}, album musique, écouter album, streaming album`}
         type="music.album"
         image={album.image || undefined}
         structuredData={{

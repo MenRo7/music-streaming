@@ -136,8 +136,9 @@ const MainPage: React.FC = () => {
   return (
     <>
       <SEOHead
-        title={`${t('mainPage.title')} | Rhapsody`}
-        description={t('mainPage.seoDescription', { defaultValue: 'D\u00e9couvrez votre biblioth\u00e8que musicale personnalis\u00e9e sur Rhapsody. Acc\u00e9dez \u00e0 vos playlists, albums favoris, artistes suivis et morceaux pr\u00e9f\u00e9r\u00e9s.' })}
+        title={`${t('mainPage.title')} | Rhapsody - Streaming Musical`}
+        description={t('mainPage.seoDescription', { defaultValue: 'Découvrez votre bibliothèque musicale personnalisée sur Rhapsody. Accédez à vos playlists, albums favoris, artistes suivis et morceaux préférés.' })}
+        keywords="ma bibliothèque, mes playlists, mes albums, artistes suivis, bibliothèque musicale"
         type="website"
       />
       <main id="main-content" className="main-content">
