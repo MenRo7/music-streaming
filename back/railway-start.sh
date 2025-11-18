@@ -49,7 +49,7 @@ php artisan storage:link
 
 # 6. Démarrage du queue worker en arrière-plan
 echo "📧 Démarrage du queue worker..."
-php artisan queue:work --daemon --tries=3 --timeout=90 &
+php artisan queue:work --tries=3 --timeout=90 &
 
 # 7. Démarrage du serveur
 echo "✅ Application prête !"
