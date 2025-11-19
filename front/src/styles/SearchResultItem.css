@@ -40,6 +40,18 @@
   border-radius: 50%;
 }
 
+.search-result-item-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #7c3aed 0%, #5e2d91 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 16px;
+  user-select: none;
+  border: 2px solid rgba(209, 179, 255, 0.3);
+}
+
 .search-result-item-label {
   font-size: 14px;
   color: #f3f0ff;

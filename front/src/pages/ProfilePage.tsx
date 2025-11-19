@@ -22,6 +22,7 @@ import DropdownMenu from '../components/DropdownMenu';
 import PlaylistCard from '../components/PlaylistCard';
 import SongList, { UISong } from '../components/SongList';
 import DonateModal from '../components/DonateModal';
+import UserAvatar from '../components/UserAvatar';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisH } from '@fortawesome/free-solid-svg-icons';
@@ -303,8 +304,6 @@ const ProfilePage: React.FC = () => {
     [addToQueue, navigate, isSelf, favoriteIds, t]
   );
 
-  const hasAvatar = Boolean(user?.profile_image);
-
   const totalStats = useMemo(() => {
     return {
       musics: songs.length,
@@ -372,9 +371,10 @@ const ProfilePage: React.FC = () => {
         )}
 
         <div className="profile-header">
-          <img
-            className="profile-image"
-            src={hasAvatar ? user.profile_image : '/placeholder-avatar.png'}
+          <UserAvatar
+            name={user?.name}
+            image={user?.profile_image}
+            className="profile-image profile-large"
             alt="User Profile"
           />
 

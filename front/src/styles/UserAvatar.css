@@ -1,0 +1,50 @@
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(209, 179, 255, 0.3);
+}
+
+.user-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #7c3aed 0%, #5e2d91 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 16px;
+  user-select: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(209, 179, 255, 0.3);
+}
+
+/* Variant for profile page (larger) */
+.user-avatar.profile-large {
+  width: 100px;
+  height: 100px;
+  font-size: 40px;
+  border: 3px solid #5e2d91;
+}
+
+.user-avatar-placeholder.profile-large {
+  width: 100px;
+  height: 100px;
+  font-size: 40px;
+  border: 3px solid #5e2d91;
+}
+
+/* Variant for navbar */
+.user-avatar.navbar-size {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+}
+
+.user-avatar-placeholder.navbar-size {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+}

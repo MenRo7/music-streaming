@@ -88,7 +88,7 @@ const LandingPage: React.FC = () => {
             <button className="btn-secondary" onClick={() => navigate('/auth')}>
               {t('landing.header.login')}
             </button>
-            <button className="btn-primary" onClick={() => navigate('/auth')}>
+            <button className="btn-primary" onClick={() => navigate('/auth?mode=register')}>
               {t('landing.header.signup')}
             </button>
           </nav>
@@ -102,7 +102,7 @@ const LandingPage: React.FC = () => {
             <h1 className="hero-title">{t('landing.hero.title')}</h1>
             <p className="hero-subtitle">{t('landing.hero.subtitle')}</p>
             <div className="hero-cta">
-              <button className="btn-cta-primary" onClick={() => navigate('/auth')}>
+              <button className="btn-cta-primary" onClick={() => navigate('/auth?mode=register')}>
                 {t('landing.hero.ctaPrimary')}
               </button>
               <button className="btn-cta-secondary" onClick={() => navigate('/auth')}>
@@ -141,7 +141,7 @@ const LandingPage: React.FC = () => {
         <div className="landing-container">
           <h2 className="cta-title">{t('landing.cta.title')}</h2>
           <p className="cta-subtitle">{t('landing.cta.subtitle')}</p>
-          <button className="btn-cta-large" onClick={() => navigate('/auth')}>
+          <button className="btn-cta-large" onClick={() => navigate('/auth?mode=register')}>
             {t('landing.cta.button')}
           </button>
         </div>

@@ -7,6 +7,7 @@ import { useUser } from '../contexts/UserContext';
 
 import DropdownMenu from './DropdownMenu';
 import GlobalSearchBar from './GlobalSearchBar';
+import UserAvatar from './UserAvatar';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faUpload, faMusic } from '@fortawesome/free-solid-svg-icons'; // ⬅️ + faMusic
@@ -37,7 +38,7 @@ const Navbar: React.FC = () => {
     || (currentUser?.id ? `uid-${currentUser.id}` : 'guest');
   const avatarSrc = currentUser?.profile_image
     ? `${currentUser.profile_image}?t=${avatarVersion}`
-    : '/default-avatar.png';
+    : null;
 
   return (
     <div className="navbar-container">
@@ -71,10 +72,11 @@ const Navbar: React.FC = () => {
                 { label: t('nav.logout'), onClick: handleLogout },
               ]}
               trigger={
-                <img
-                  src={avatarSrc}
+                <UserAvatar
+                  name={currentUser?.name}
+                  image={avatarSrc}
+                  className="navbar-profile-image navbar-size"
                   alt={t('nav.userProfile')}
-                  className="navbar-profile-image"
                 />
               }
             />

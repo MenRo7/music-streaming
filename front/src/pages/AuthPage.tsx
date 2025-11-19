@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { AuthContext } from '../contexts/AuthContext';
@@ -10,7 +10,8 @@ import '../styles/AuthPage.css';
 
 const AuthPage: React.FC = () => {
   const { t } = useTranslation();
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [isRegistering, setIsRegistering] = useState(searchParams.get('mode') === 'register');
   const [step, setStep] = useState<'form' | 'verifyEmail' | 'verify2fa'>('form');
 
   const [username, setUsername] = useState('');
@@ -33,6 +34,25 @@ const AuthPage: React.FC = () => {
     if (token) navigate('/main');
   }, [token, navigate]);
 
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 12) {
+      return t('auth.passwordTooShort');
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return t('auth.passwordNeedsLowercase');
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return t('auth.passwordNeedsUppercase');
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return t('auth.passwordNeedsNumber');
+    }
+    if (!/[@$!%*#?&]/.test(pwd)) {
+      return t('auth.passwordNeedsSpecialChar');
+    }
+    return null;
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (submitting) return;
@@ -42,21 +62,48 @@ const AuthPage: React.FC = () => {
 
     try {
       if (isRegistering) {
+        // Validation du mot de passe
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+          setError(passwordError);
+          return;
+        }
+
         if (password !== confirmPassword) {
           setError(t('auth.passwordsDoNotMatch'));
           return;
         }
 
-        if (dateOfBirth) {
-          const today = new Date();
-          const [y, m, d] = dateOfBirth.split('-').map(Number);
-          const dob = new Date(y, (m || 1) - 1, d || 1);
-          if (dob >= today) {
-            setError(t('auth.dobMustBeInPast'));
-            return;
-          }
-        } else {
+        // Validation de la date de naissance
+        if (!dateOfBirth) {
           setError(t('auth.pleaseProvideDob'));
+          return;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const [y, m, d] = dateOfBirth.split('-').map(Number);
+        const dob = new Date(y, (m || 1) - 1, d || 1);
+        dob.setHours(0, 0, 0, 0);
+
+        if (dob >= today) {
+          setError(t('auth.dobMustBeInPast'));
+          return;
+        }
+
+        // Vérifier que la date n'est pas trop ancienne (par exemple, plus de 120 ans)
+        const maxAge = new Date();
+        maxAge.setFullYear(maxAge.getFullYear() - 120);
+        if (dob < maxAge) {
+          setError(t('auth.dobTooOld'));
+          return;
+        }
+
+        // Vérifier l'âge minimum (13 ans pour la plupart des services)
+        const minAge = new Date();
+        minAge.setFullYear(minAge.getFullYear() - 13);
+        if (dob > minAge) {
+          setError(t('auth.dobTooYoung'));
           return;
         }
 
@@ -79,8 +126,21 @@ const AuthPage: React.FC = () => {
         setInfo(t('auth.loginCodeSent'));
         setStep('verify2fa');
       }
-    } catch {
-      setError(t('auth.authenticationError'));
+    } catch (err: any) {
+      // Afficher les erreurs du backend si disponibles
+      if (err?.response?.data?.errors) {
+        const errors = err.response.data.errors;
+        const firstError = Object.values(errors)[0];
+        if (Array.isArray(firstError) && firstError.length > 0) {
+          setError(firstError[0] as string);
+        } else {
+          setError(t('auth.authenticationError'));
+        }
+      } else if (err?.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError(t('auth.authenticationError'));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -132,6 +192,11 @@ const AuthPage: React.FC = () => {
         type="website"
       />
       <div className="auth-container">
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <Link to="/" style={{ marginRight: '1rem', color: '#d1b3ff', textDecoration: 'none', fontSize: '1.2rem' }}>
+            ← {t('auth.backToHome')}
+          </Link>
+        </div>
         <h2>
           {step === 'verifyEmail'
             ? t('auth.verifyYourEmail')
@@ -182,6 +247,25 @@ const AuthPage: React.FC = () => {
                 required
                 autoComplete={isRegistering ? 'new-password' : 'current-password'}
               />
+              {isRegistering && password && (
+                <div style={{ marginTop: '8px', fontSize: '0.85rem' }}>
+                  <div style={{ color: password.length >= 12 ? '#22c55e' : '#f59e0b' }}>
+                    {password.length >= 12 ? '✓' : '✗'} {t('auth.passwordTooShort')}
+                  </div>
+                  <div style={{ color: /[a-z]/.test(password) ? '#22c55e' : '#f59e0b' }}>
+                    {/[a-z]/.test(password) ? '✓' : '✗'} {t('auth.passwordNeedsLowercase')}
+                  </div>
+                  <div style={{ color: /[A-Z]/.test(password) ? '#22c55e' : '#f59e0b' }}>
+                    {/[A-Z]/.test(password) ? '✓' : '✗'} {t('auth.passwordNeedsUppercase')}
+                  </div>
+                  <div style={{ color: /[0-9]/.test(password) ? '#22c55e' : '#f59e0b' }}>
+                    {/[0-9]/.test(password) ? '✓' : '✗'} {t('auth.passwordNeedsNumber')}
+                  </div>
+                  <div style={{ color: /[@$!%*#?&]/.test(password) ? '#22c55e' : '#f59e0b' }}>
+                    {/[@$!%*#?&]/.test(password) ? '✓' : '✗'} {t('auth.passwordNeedsSpecialChar')}
+                  </div>
+                </div>
+              )}
             </div>
 
             {isRegistering && (

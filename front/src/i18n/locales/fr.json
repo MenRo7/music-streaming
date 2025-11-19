@@ -89,7 +89,15 @@
     "provideEmailFirst": "Veuillez fournir votre e-mail d'abord.",
     "newVerificationCodeSent": "Nouveau code de vérification envoyé.",
     "cannotSendNewCode": "Impossible d'envoyer un nouveau code.",
-    "newLoginCodeSent": "Nouveau code de connexion envoyé."
+    "newLoginCodeSent": "Nouveau code de connexion envoyé.",
+    "backToHome": "Retour à l'accueil",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 12 caractères.",
+    "passwordNeedsLowercase": "Le mot de passe doit contenir au moins une minuscule.",
+    "passwordNeedsUppercase": "Le mot de passe doit contenir au moins une majuscule.",
+    "passwordNeedsNumber": "Le mot de passe doit contenir au moins un chiffre.",
+    "passwordNeedsSpecialChar": "Le mot de passe doit contenir au moins un caractère spécial (@$!%*#?&).",
+    "dobTooOld": "La date de naissance saisie est trop ancienne. Veuillez vérifier.",
+    "dobTooYoung": "Vous devez avoir au moins 13 ans pour créer un compte."
   },
   "forgotPassword": {
     "titleRequest": "Mot de passe oublié",

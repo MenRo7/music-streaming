@@ -1,8 +1,26 @@
 .legal-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  /* Fixed background that covers entire scrollable area */
+  background: linear-gradient(135deg, #000000 0%, #1e1e1e 50%, #252525 100%) fixed;
+  background-size: cover;
   padding: 40px 20px;
   color: #f3f0ff;
+  position: relative;
+}
+
+.legal-page::before {
+  content: '';
+  position: fixed; /* Changed from absolute to fixed */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Subtle purple radial overlays matching landing page */
+  background:
+    radial-gradient(circle at 20% 50%, rgba(94, 45, 145, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(209, 179, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .legal-container {
@@ -12,11 +30,18 @@
   border-radius: 12px;
   padding: 60px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(94, 45, 145, 0.2); /* Purple border */
 }
 
 .legal-container h1 {
   font-size: 2.5rem;
-  color: #ff6b9d;
+  /* Purple gradient for main title matching app theme */
+  background: linear-gradient(135deg, #d1b3ff 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 10px;
   text-align: center;
 }
@@ -35,16 +60,16 @@
 
 .legal-container h2 {
   font-size: 1.8rem;
-  color: #c9adf5;
+  color: #d1b3ff; /* App's light purple */
   margin-top: 40px;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(201, 173, 245, 0.3);
+  border-bottom: 2px solid rgba(94, 45, 145, 0.4); /* Purple border */
 }
 
 .legal-container h3 {
   font-size: 1.3rem;
-  color: #e0c3fc;
+  color: #d1b3ff; /* App's light purple */
   margin-top: 25px;
   margin-bottom: 15px;
 }
@@ -73,13 +98,13 @@
 }
 
 .legal-container a {
-  color: #ff6b9d;
+  color: #d1b3ff; /* App's light purple */
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .legal-container a:hover {
-  color: #ff8fb3;
+  color: #7c3aed; /* App's bright purple */
   text-decoration: underline;
 }
 
@@ -100,10 +125,10 @@
 .legal-footer .back-link,
 .legal-footer .related-link {
   padding: 12px 24px;
-  background: rgba(255, 107, 157, 0.1);
-  border: 1px solid #ff6b9d;
+  background: rgba(94, 45, 145, 0.2); /* App's purple */
+  border: 1px solid #d1b3ff; /* App's light purple */
   border-radius: 8px;
-  color: #ff6b9d;
+  color: #d1b3ff;
   text-decoration: none;
   transition: all 0.3s ease;
   font-weight: 500;
@@ -111,9 +136,9 @@
 
 .legal-footer .back-link:hover,
 .legal-footer .related-link:hover {
-  background: rgba(255, 107, 157, 0.2);
+  background: rgba(94, 45, 145, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+  box-shadow: 0 4px 12px rgba(209, 179, 255, 0.4);
 }
 
 /* Responsive */

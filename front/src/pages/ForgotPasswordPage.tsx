@@ -22,6 +22,25 @@ const ForgotPasswordPage: React.FC = () => {
 
   const navigate = useNavigate();
 
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 12) {
+      return t('auth.passwordTooShort');
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return t('auth.passwordNeedsLowercase');
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return t('auth.passwordNeedsUppercase');
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return t('auth.passwordNeedsNumber');
+    }
+    if (!/[@$!%*#?&]/.test(pwd)) {
+      return t('auth.passwordNeedsSpecialChar');
+    }
+    return null;
+  };
+
   const handleRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setInfo('');
@@ -37,16 +56,38 @@ const ForgotPasswordPage: React.FC = () => {
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setInfo('');
+
+    // Validation du mot de passe
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     if (password !== passwordConf) {
       setError(t('forgotPassword.passwordMismatch'));
       return;
     }
+
     try {
       await resetPassword(email, code.trim().toUpperCase(), password, passwordConf);
       setInfo(t('forgotPassword.successMessage'));
       setStep('done');
-    } catch {
-      setError(t('forgotPassword.invalidCode'));
+    } catch (err: any) {
+      // Afficher les erreurs du backend si disponibles
+      if (err?.response?.data?.errors) {
+        const errors = err.response.data.errors;
+        const firstError = Object.values(errors)[0];
+        if (Array.isArray(firstError) && firstError.length > 0) {
+          setError(firstError[0] as string);
+        } else {
+          setError(t('forgotPassword.invalidCode'));
+        }
+      } else if (err?.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError(t('forgotPassword.invalidCode'));
+      }
     }
   };
 

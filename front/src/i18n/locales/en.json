@@ -89,7 +89,15 @@
     "provideEmailFirst": "Please provide your email first.",
     "newVerificationCodeSent": "New verification code sent.",
     "cannotSendNewCode": "Unable to send a new code.",
-    "newLoginCodeSent": "New login code sent."
+    "newLoginCodeSent": "New login code sent.",
+    "backToHome": "Back to home",
+    "passwordTooShort": "Password must contain at least 12 characters.",
+    "passwordNeedsLowercase": "Password must contain at least one lowercase letter.",
+    "passwordNeedsUppercase": "Password must contain at least one uppercase letter.",
+    "passwordNeedsNumber": "Password must contain at least one number.",
+    "passwordNeedsSpecialChar": "Password must contain at least one special character (@$!%*#?&).",
+    "dobTooOld": "The date of birth entered is too old. Please verify.",
+    "dobTooYoung": "You must be at least 13 years old to create an account."
   },
   "forgotPassword": {
     "titleRequest": "Forgot password",
