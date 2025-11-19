@@ -606,5 +606,15 @@
       "privacy": "Politique de confidentialité",
       "terms": "Conditions d'utilisation"
     }
+  },
+  "accountDeleted": {
+    "processingTitle": "Suppression de votre compte",
+    "processingMessage": "Traitement de votre demande en cours...",
+    "successTitle": "Compte supprimé avec succès",
+    "successMessage": "Votre compte et toutes vos données ont été définitivement supprimés. Nous vous remercions d'avoir utilisé Rhapsody.",
+    "errorTitle": "Erreur lors de la suppression",
+    "errorConfirming": "Une erreur est survenue lors de la confirmation de la suppression de votre compte.",
+    "invalidToken": "Le lien de confirmation est invalide ou a expiré.",
+    "backToHome": "Retour à l'accueil"
   }
 }

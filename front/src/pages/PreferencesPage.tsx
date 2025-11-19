@@ -110,7 +110,8 @@ const PreferencesPage: React.FC = () => {
         setLoading(true);
 
         const prefs = await getPreferences();
-        if (prefs?.locale) setLocaleState(prefs.locale);
+        // Always use current i18n language to reflect what user sees
+        setLocaleState(i18n.language);
         if (prefs?.stripe_connect_id) setConnectId(prefs.stripe_connect_id);
 
         const st = await getStripeStatus();

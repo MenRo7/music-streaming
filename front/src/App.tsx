@@ -29,6 +29,7 @@ import PreferencesPage from './pages/PreferencesPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import LandingPage from './pages/LandingPage';
+import AccountDeletedPage from './pages/AccountDeletedPage';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { PlaylistProvider } from './contexts/PlaylistContext';
@@ -68,6 +69,7 @@ const AppShell: React.FC = () => {
         <Route path="/forgot" element={<ForgotPasswordPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsOfServicePage />} />
+        <Route path="/account/deleted/:token" element={<AccountDeletedPage />} />
 
         <Route
           path="/import"
@@ -236,7 +238,7 @@ const AppShell: React.FC = () => {
           <MobileDrawers />
         </>
       )}
-      {!onAuthFlow && !onLandingPage && <CookieConsent />}
+      {!onAuthFlow && <CookieConsent />}
     </div>
   );
 };

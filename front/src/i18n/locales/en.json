@@ -604,5 +604,15 @@
       "privacy": "Privacy policy",
       "terms": "Terms of service"
     }
+  },
+  "accountDeleted": {
+    "processingTitle": "Deleting your account",
+    "processingMessage": "Processing your request...",
+    "successTitle": "Account successfully deleted",
+    "successMessage": "Your account and all your data have been permanently deleted. Thank you for using Rhapsody.",
+    "errorTitle": "Error during deletion",
+    "errorConfirming": "An error occurred while confirming your account deletion.",
+    "invalidToken": "The confirmation link is invalid or has expired.",
+    "backToHome": "Back to home"
   }
 }

@@ -60,24 +60,25 @@ class AccountDeletionController extends Controller
             ->where('expires_at', '>', now())
             ->first();
 
+        $frontendUrl = config('app.frontend_url', 'http://localhost:5173');
+
         if (! $req) {
-            return response()->view('account.deletion_error', [
-                'message' => 'Lien invalide ou expiré.',
-            ], 400);
+            // Redirect to frontend with error
+            return redirect()->to("{$frontendUrl}/account/deleted/{$token}");
         }
 
         $user = User::find($req->user_id);
         if (! $user) {
-            return response()->view('account.deletion_error', [
-                'message' => 'Utilisateur introuvable.',
-            ], 404);
+            // Redirect to frontend with error
+            return redirect()->to("{$frontendUrl}/account/deleted/{$token}");
         }
 
         $this->hardDeleteUser($user);
 
         $req->delete();
 
-        return response()->view('account.deletion_success');
+        // Redirect to frontend with success
+        return redirect()->to("{$frontendUrl}/account/deleted/{$token}");
     }
 
     private function hardDeleteUser(User $user): void
