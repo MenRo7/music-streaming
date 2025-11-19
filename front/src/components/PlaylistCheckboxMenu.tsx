@@ -14,7 +14,6 @@ const toNumberArray = (arr: Array<number | string>): number[] =>
     .filter((n) => Number.isFinite(n));
 
 const PlaylistCheckboxMenu: React.FC<PlaylistCheckboxMenuProps> = ({
-  songId,
   existingPlaylistIds,
   onToggle,
 }) => {
