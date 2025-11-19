@@ -44,8 +44,20 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# 5. Création du lien symbolique pour le storage
-php artisan storage:link
+# 5. Création de la structure du storage si nécessaire
+echo "📁 Vérification de la structure du storage..."
+mkdir -p storage/app/public/profile_images
+mkdir -p storage/app/public/album_images
+mkdir -p storage/app/public/playlist_images
+mkdir -p storage/app/public/music_files
+mkdir -p storage/framework/cache
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/logs
+
+# 6. Création du lien symbolique pour le storage
+echo "🔗 Création du lien symbolique storage..."
+php artisan storage:link --force
 
 # 6. Démarrage du queue worker en arrière-plan
 echo "📧 Démarrage du queue worker..."
