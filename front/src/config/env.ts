@@ -4,8 +4,8 @@
  */
 
 export const ENV = {
-  API_URL: process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api',
-  STRIPE_PUBLISHABLE_KEY: process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '',
+  API_URL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
+  STRIPE_PUBLISHABLE_KEY: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
 } as const;
 
 // Validate required environment variables
