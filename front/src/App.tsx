@@ -53,7 +53,6 @@ const AppShell: React.FC = () => {
   const isAuthed = Boolean(localStorage.getItem('authToken'));
   const onAuthPage = location.pathname.startsWith('/auth');
   const onAuthFlow = location.pathname.startsWith('/auth') || location.pathname.startsWith('/forgot');
-  const onLandingPage = location.pathname === '/';
 
   // Track page views on route change
   useEffect(() => {
