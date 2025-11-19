@@ -23,7 +23,6 @@ const MusicQueue: React.FC = () => {
   const { t } = useTranslation();
   const {
     currentItem,
-    upNext,
     queueManual,
     queueAuto,
     clearQueue,
